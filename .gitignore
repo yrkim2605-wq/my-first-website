@@ -7,20 +7,34 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
+# Node.js
+node_modules/
+package-lock.json
+
+# Build/cache
+dist/
 dist-ssr
+.cache/
+.vite/
+
+# Env files
 *.local
 .env
+.env.local
+.env.*.local
+
+# MCP 설정 파일
+.mcp.json
 
 # Claude Code local settings
 .claude/settings.local.json
 
-# Editor directories and files
+# Editor/OS files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
