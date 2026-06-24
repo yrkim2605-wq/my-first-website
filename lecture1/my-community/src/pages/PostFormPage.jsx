@@ -38,15 +38,24 @@ const PostFormPage = () => {
       return
     }
 
+    const uploadErrors = []
     for (const file of files) {
-      const path = `${post.id}/${crypto.randomUUID()}-${file.name}`
+      const extMatch = /\.[a-zA-Z0-9]+$/.exec(file.name)
+      const ext = extMatch ? extMatch[0] : ''
+      const path = `${post.id}/${crypto.randomUUID()}${ext}`
       const { error: uploadError } = await supabase.storage.from('post-photos').upload(path, file)
-      if (!uploadError) {
+      if (uploadError) {
+        uploadErrors.push(uploadError.message)
+      } else {
         await supabase.from('post_images').insert({ post_id: post.id, storage_path: path })
       }
     }
 
     setSubmitting(false)
+    if (uploadErrors.length > 0) {
+      setError('사진 업로드에 실패했습니다: ' + uploadErrors.join(', '))
+      return
+    }
     navigate(`/posts/${post.id}`)
   }
 
