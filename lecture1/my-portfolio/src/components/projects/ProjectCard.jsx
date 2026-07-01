@@ -72,24 +72,9 @@ function ProjectCard({ project, onViewDetails }) {
         <Typography variant="h6" component="h3" sx={{ fontWeight: 700, mb: 1 }}>
           {project.title}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: project.story ? 1 : 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {project.description}
         </Typography>
-        {project.story && (
-          <Typography
-            variant="body2"
-            sx={{
-              mb: 2,
-              fontStyle: 'italic',
-              color: 'primary.main',
-              borderLeft: '3px solid',
-              borderColor: 'primary.main',
-              pl: 1.5,
-            }}
-          >
-            “{project.story}”
-          </Typography>
-        )}
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
           {(project.tech_stack ?? []).map((tech) => (
             <Chip key={tech} label={tech} size="small" color="secondary" sx={{ fontWeight: 600 }} />
