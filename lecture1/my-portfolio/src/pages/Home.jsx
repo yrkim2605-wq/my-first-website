@@ -7,9 +7,6 @@ import Guestbook from '../components/contact/Guestbook';
 import ProjectCard from '../components/projects/ProjectCard';
 import { supabase } from '../lib/supabaseClient';
 
-const BREAD_CURSOR =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M4 19c0-7.7 5.4-13 12-13s12 5.3 12 13c0 4.4-2.4 6.5-6.5 6.5h-11C6.4 25.5 4 23.4 4 19z' fill='%23E8AA5E' stroke='%23B8732E' stroke-width='2'/%3E%3Cpath d='M11 11l2 7M16 9l1 8M21 11l-2 7' stroke='%23B8732E' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E\") 16 16, pointer";
-
 function Home() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
@@ -133,7 +130,6 @@ function Home() {
           bgcolor: 'primary.main',
           borderTop: '1px solid',
           borderColor: 'divider',
-          cursor: BREAD_CURSOR,
         }}
       >
         <Container maxWidth="md" sx={{ textAlign: 'center' }}>
