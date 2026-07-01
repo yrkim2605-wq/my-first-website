@@ -1,9 +1,8 @@
-import { Box, Container, Typography, Button, IconButton, Stack } from '@mui/material';
+import { Box, Container, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import EmailIcon from '@mui/icons-material/Email';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import InstagramIcon from '@mui/icons-material/Instagram';
 import Section from '../components/Section';
+import ContactInfo from '../components/contact/ContactInfo';
+import Guestbook from '../components/contact/Guestbook';
 
 const BREAD_CURSOR =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M4 19c0-7.7 5.4-13 12-13s12 5.3 12 13c0 4.4-2.4 6.5-6.5 6.5h-11C6.4 25.5 4 23.4 4 19z' fill='%23E8AA5E' stroke='%23B8732E' stroke-width='2'/%3E%3Cpath d='M11 11l2 7M16 9l1 8M21 11l-2 7' stroke='%23B8732E' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E\") 16 16, pointer";
@@ -93,54 +92,22 @@ function Home() {
             궁금한 점이나 같이 해보고 싶은 이야기가 있다면 언제든 편하게 연락주세요 :)
           </Typography>
 
-          <Stack spacing={3} sx={{ alignItems: 'center' }}>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<EmailIcon />}
-              href="mailto:yrkim2605@gmail.com"
-              sx={{
-                bgcolor: '#FFFFFF',
-                color: 'primary.main',
-                borderRadius: 999,
-                px: 4,
-                py: 1.5,
-                fontWeight: 700,
-                '&:hover': { bgcolor: '#FFF5EC' },
-              }}
-            >
-              이메일 보내기
-            </Button>
+          <ContactInfo />
+        </Container>
+      </Box>
 
-            <Stack direction="row" spacing={2}>
-              <IconButton
-                component="a"
-                href="https://github.com/yrkim2605-wq"
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{
-                  bgcolor: '#FFFFFF',
-                  color: 'primary.main',
-                  '&:hover': { bgcolor: '#FFF5EC' },
-                }}
-              >
-                <GitHubIcon />
-              </IconButton>
-              <IconButton
-                component="a"
-                href="https://instagram.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{
-                  bgcolor: '#FFFFFF',
-                  color: 'primary.main',
-                  '&:hover': { bgcolor: '#FFF5EC' },
-                }}
-              >
-                <InstagramIcon />
-              </IconButton>
-            </Stack>
-          </Stack>
+      {/* 방명록 섹션 (Contact 섹션 하단) */}
+      <Box
+        sx={{
+          py: { xs: 6, md: 8 },
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Container maxWidth="sm">
+          <Typography variant="h5" component="h3" sx={{ mb: 3, fontWeight: 700, color: 'primary.main', textAlign: 'center' }}>
+            📝 방명록
+          </Typography>
+          <Guestbook />
         </Container>
       </Box>
     </Box>

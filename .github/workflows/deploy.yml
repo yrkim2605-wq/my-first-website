@@ -23,21 +23,50 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install dependencies
+
+      - name: Install my-fashion-shop dependencies
         working-directory: lecture1/my-fashion-shop
         run: npm install
-      - name: Build
+      - name: Build my-fashion-shop
         working-directory: lecture1/my-fashion-shop
         env:
           VITE_SUPABASE_URL: https://zamccnhsslvushkiltfm.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_lmC4qUo70SPlja4XuREU3Q_BFMrPg-r
         run: npm run build
+
+      - name: Install my-portfolio dependencies
+        working-directory: lecture1/my-portfolio
+        run: npm install
+      - name: Build my-portfolio
+        working-directory: lecture1/my-portfolio
+        env:
+          VITE_SUPABASE_URL: https://fqwotuudxuapewhliwek.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_k97z01b5QxG2WtZAd9H00A_bhVI_vLh
+        run: npm run build
+
+      - name: Install my-community dependencies
+        working-directory: lecture1/my-community
+        run: npm install
+      - name: Build my-community
+        working-directory: lecture1/my-community
+        env:
+          VITE_SUPABASE_URL: https://fqwotuudxuapewhliwek.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_k97z01b5QxG2WtZAd9H00A_bhVI_vLh
+        run: npm run build
+
+      - name: Assemble Pages site
+        run: |
+          mkdir -p site/my-portfolio site/my-community
+          cp -r lecture1/my-fashion-shop/dist/. site/
+          cp -r my-portfolio/. site/my-portfolio/
+          cp -r my-community/. site/my-community/
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: lecture1/my-fashion-shop/dist
+          path: site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
