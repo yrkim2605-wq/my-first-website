@@ -82,7 +82,21 @@ function Projects() {
               <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 1.5, color: 'primary.main' }}>
                 {selected.title}
               </Typography>
-              <Typography sx={{ mb: 2, color: 'text.secondary' }}>{selected.description}</Typography>
+              <Typography sx={{ mb: selected.story ? 1 : 2, color: 'text.secondary' }}>{selected.description}</Typography>
+              {selected.story && (
+                <Typography
+                  sx={{
+                    mb: 3,
+                    fontStyle: 'italic',
+                    color: 'primary.main',
+                    borderLeft: '3px solid',
+                    borderColor: 'primary.main',
+                    pl: 1.5,
+                  }}
+                >
+                  “{selected.story}”
+                </Typography>
+              )}
               <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 3 }}>
                 {(selected.tech_stack ?? []).map((tech) => (
                   <Chip key={tech} label={tech} size="small" color="secondary" sx={{ fontWeight: 600 }} />
