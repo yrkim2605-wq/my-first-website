@@ -1,14 +1,33 @@
-import { Box, Container, Typography, Button } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Box, Container, Typography, Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import Section from '../components/Section';
 import ContactInfo from '../components/contact/ContactInfo';
 import Guestbook from '../components/contact/Guestbook';
+import ProjectCard from '../components/projects/ProjectCard';
+import { supabase } from '../lib/supabaseClient';
 
 const BREAD_CURSOR =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M4 19c0-7.7 5.4-13 12-13s12 5.3 12 13c0 4.4-2.4 6.5-6.5 6.5h-11C6.4 25.5 4 23.4 4 19z' fill='%23E8AA5E' stroke='%23B8732E' stroke-width='2'/%3E%3Cpath d='M11 11l2 7M16 9l1 8M21 11l-2 7' stroke='%23B8732E' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E\") 16 16, pointer";
 
 function Home() {
   const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      setLoadingProjects(true);
+      const { data } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      setProjects(data ?? []);
+      setLoadingProjects(false);
+    };
+    loadProjects();
+  }, []);
 
   return (
     <Box>
@@ -57,20 +76,53 @@ function Home() {
       />
 
       {/* Projects 섹션 */}
-      <Section
+      <Box
         id="projects-preview"
-        title="여기는 Projects 섹션입니다"
-        description="대표작 썸네일 3-4개와 '더 보기' 버튼이 들어갈 예정입니다."
+        component="section"
+        sx={{
+          py: { xs: 6, md: 10 },
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
       >
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 3 }}
-          onClick={() => navigate('/projects')}
-        >
-          더 보기
-        </Button>
-      </Section>
+        <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
+          <Typography variant="h4" component="h2" sx={{ mb: 2, fontWeight: 700, color: 'primary.main' }}>
+            Projects
+          </Typography>
+          <Typography sx={{ mb: 5, color: 'text.secondary', maxWidth: 560, mx: 'auto' }}>
+            직접 기획하고 개발한 프로젝트들을 소개합니다.
+          </Typography>
+
+          {loadingProjects ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                gap: 4,
+                textAlign: 'left',
+              }}
+            >
+              {projects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </Box>
+          )}
+
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 5 }}
+            onClick={() => navigate('/projects')}
+          >
+            더 보기
+          </Button>
+        </Container>
+      </Box>
 
       {/* Contact 섹션 */}
       <Box
