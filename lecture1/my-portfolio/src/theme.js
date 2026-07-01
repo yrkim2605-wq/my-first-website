@@ -1,6 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 
-// 컬러 팔레트 디자인 시스템.md의 CSS 변수를 그대로 매핑
+// 컬러 팔레트 디자인 시스템.md의 CSS 변수를 그대로 매핑 (라이트 모드 기본값)
 export const colors = {
   primary: '#E8540C',
   primaryLight: '#F2784A',
@@ -18,57 +18,82 @@ export const colors = {
   linkHover: '#1F9580',
 };
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: colors.primary,
-      light: colors.primaryLight,
-      dark: colors.primaryDark,
-      contrastText: '#FFFFFF',
+// 다크 모드 팔레트 - 빵집 브랜드 오렌지/크림 톤은 유지하되 배경을 반전
+export const darkColors = {
+  primary: '#F2784A',
+  primaryLight: '#F9A374',
+  primaryDark: '#E8540C',
+  secondary: '#3A2A1C',
+  accent: '#3ECBAA',
+  bgPrimary: '#1C1410',
+  bgSecondary: '#2A1F17',
+  textPrimary: '#F5E6D3',
+  textSecondary: '#C9B8A8',
+  textMuted: '#8C7A6A',
+  buttonPrimary: '#F2784A',
+  buttonHover: '#F9A374',
+  link: '#3ECBAA',
+  linkHover: '#6BE0C4',
+};
+
+export function buildTheme(mode = 'light') {
+  const palette = mode === 'dark' ? darkColors : colors;
+
+  return createTheme({
+    palette: {
+      mode,
+      primary: {
+        main: palette.primary,
+        light: palette.primaryLight,
+        dark: palette.primaryDark,
+        contrastText: '#FFFFFF',
+      },
+      secondary: {
+        main: palette.accent,
+        contrastText: '#FFFFFF',
+      },
+      background: {
+        default: palette.bgPrimary,
+        paper: palette.bgSecondary,
+      },
+      text: {
+        primary: palette.textPrimary,
+        secondary: palette.textSecondary,
+        disabled: palette.textMuted,
+      },
     },
-    secondary: {
-      main: colors.accent,
-      contrastText: '#FFFFFF',
+    typography: {
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      h1: {
+        fontSize: '2.125rem',
+        fontWeight: 500,
+      },
     },
-    background: {
-      default: colors.bgPrimary,
-      paper: colors.bgSecondary,
-    },
-    text: {
-      primary: colors.textPrimary,
-      secondary: colors.textSecondary,
-      disabled: colors.textMuted,
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: '2.125rem',
-      fontWeight: 500,
-    },
-  },
-  spacing: 8,
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        containedPrimary: {
-          '&:hover': {
-            backgroundColor: colors.buttonHover,
+    spacing: 8,
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          containedPrimary: {
+            '&:hover': {
+              backgroundColor: palette.buttonHover,
+            },
+          },
+        },
+      },
+      MuiLink: {
+        styleOverrides: {
+          root: {
+            color: palette.link,
+            '&:hover': {
+              color: palette.linkHover,
+            },
           },
         },
       },
     },
-    MuiLink: {
-      styleOverrides: {
-        root: {
-          color: colors.link,
-          '&:hover': {
-            color: colors.linkHover,
-          },
-        },
-      },
-    },
-  },
-});
+  });
+}
+
+const theme = buildTheme('light');
 
 export default theme;

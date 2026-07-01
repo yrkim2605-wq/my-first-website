@@ -90,7 +90,16 @@ const Guestbook = () => {
 
   return (
     <Box>
-      <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 4, bgcolor: '#FFF5EC' }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 4,
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark' ? 'rgba(242, 120, 74, 0.12)' : '#FFF5EC',
+        }}
+      >
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {error && <Typography color="error" variant="body2">{error}</Typography>}
 
