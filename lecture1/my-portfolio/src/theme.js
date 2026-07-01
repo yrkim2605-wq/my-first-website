@@ -36,6 +36,9 @@ export const darkColors = {
   linkHover: '#6BE0C4',
 };
 
+// gdweb.co.kr 수상작 동방푸드(dongbangfood.com)의 굵은 콘덴스드 영문 헤드라인 스타일 참고
+export const displayFontFamily = '"Anton", "Roboto", "Helvetica", "Arial", sans-serif';
+
 export function buildTheme(mode = 'light') {
   const palette = mode === 'dark' ? darkColors : colors;
 
@@ -65,18 +68,44 @@ export function buildTheme(mode = 'light') {
     typography: {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
       h1: {
+        fontFamily: displayFontFamily,
         fontSize: '2.125rem',
         fontWeight: 500,
+        letterSpacing: '0.02em',
+      },
+      h2: {
+        fontFamily: displayFontFamily,
+        letterSpacing: '0.02em',
+      },
+      h3: {
+        fontFamily: displayFontFamily,
+        letterSpacing: '0.02em',
+      },
+      h4: {
+        fontFamily: displayFontFamily,
+        letterSpacing: '0.02em',
       },
     },
     spacing: 8,
     components: {
       MuiButton: {
         styleOverrides: {
+          root: {
+            fontFamily: displayFontFamily,
+            letterSpacing: '0.03em',
+          },
           containedPrimary: {
             '&:hover': {
               backgroundColor: palette.buttonHover,
             },
+          },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            fontFamily: displayFontFamily,
+            letterSpacing: '0.04em',
           },
         },
       },
