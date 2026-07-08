@@ -9,10 +9,10 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
+import LoadingSpinner from '../LoadingSpinner';
 import { supabase } from '../../lib/supabaseClient';
 
-const EMOJI_OPTIONS = ['😊', '🍞', '❤️', '🎉', '👍', '✨'];
+const EMOJI_OPTIONS = ['😊', '💡', '❤️', '🎉', '👍', '✨'];
 const REFERRAL_OPTIONS = ['검색', 'SNS', '지인 소개', '기타'];
 
 const formatDate = (iso) =>
@@ -97,7 +97,7 @@ const Guestbook = () => {
           mb: 4,
           borderRadius: 4,
           bgcolor: (theme) =>
-            theme.palette.mode === 'dark' ? 'rgba(242, 120, 74, 0.12)' : '#FFF5EC',
+            theme.palette.mode === 'dark' ? 'rgba(124, 107, 255, 0.12)' : '#F1EEFF',
         }}
       >
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -211,7 +211,7 @@ const Guestbook = () => {
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress color="primary" />
+          <LoadingSpinner />
         </Box>
       ) : entries.length === 0 ? (
         <Typography color="text.secondary" align="center">

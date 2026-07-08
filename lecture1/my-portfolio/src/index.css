@@ -9,3 +9,8 @@ body {
 #root {
   min-height: 100svh;
 }
+
+.custom-cursor-active,
+.custom-cursor-active * {
+  cursor: none !important;
+}

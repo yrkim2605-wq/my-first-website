@@ -1,45 +1,45 @@
 import { createTheme } from '@mui/material/styles';
 
-// 컬러 팔레트 디자인 시스템.md의 CSS 변수를 그대로 매핑 (라이트 모드 기본값)
-export const colors = {
-  primary: '#E8540C',
-  primaryLight: '#F2784A',
-  primaryDark: '#B83E08',
-  secondary: '#F5E6D3',
-  accent: '#2BB89C',
-  bgPrimary: '#F5E6D3',
-  bgSecondary: '#FFFFFF',
-  textPrimary: '#2B1A0F',
-  textSecondary: '#5C4A3A',
-  textMuted: '#8C7A6A',
-  buttonPrimary: '#E8540C',
-  buttonHover: '#C8460A',
-  link: '#2BB89C',
-  linkHover: '#1F9580',
-};
-
-// 다크 모드 팔레트 - 빵집 브랜드 오렌지/크림 톤은 유지하되 배경을 반전
+// 다크 모드가 기본 브랜드 정체성 — 블랙 배경 + 인디고/바이올렛 포인트
 export const darkColors = {
-  primary: '#F2784A',
-  primaryLight: '#F9A374',
-  primaryDark: '#E8540C',
-  secondary: '#3A2A1C',
-  accent: '#3ECBAA',
-  bgPrimary: '#1C1410',
-  bgSecondary: '#2A1F17',
-  textPrimary: '#F5E6D3',
-  textSecondary: '#C9B8A8',
-  textMuted: '#8C7A6A',
-  buttonPrimary: '#F2784A',
-  buttonHover: '#F9A374',
-  link: '#3ECBAA',
-  linkHover: '#6BE0C4',
+  primary: '#4F3CF2',
+  primaryLight: '#7C6BFF',
+  primaryDark: '#3617CE',
+  secondary: '#7C6BFF',
+  accent: '#7C6BFF',
+  bgPrimary: '#000000',
+  bgSecondary: '#0D0D14',
+  textPrimary: '#F5F5F7',
+  textSecondary: 'rgba(245, 245, 247, 0.65)',
+  textMuted: 'rgba(245, 245, 247, 0.4)',
+  buttonPrimary: '#4F3CF2',
+  buttonHover: '#7C6BFF',
+  link: '#7C6BFF',
+  linkHover: '#9C90FF',
 };
 
-// gdweb.co.kr 수상작 동방푸드(dongbangfood.com)의 굵은 콘덴스드 영문 헤드라인 스타일 참고
-export const displayFontFamily = '"Anton", "Roboto", "Helvetica", "Arial", sans-serif';
+// 라이트 모드 - 같은 인디고 아이덴티티를 화이트 배경 위에 적용
+export const colors = {
+  primary: '#4F3CF2',
+  primaryLight: '#7C6BFF',
+  primaryDark: '#3617CE',
+  secondary: '#7C6BFF',
+  accent: '#4F3CF2',
+  bgPrimary: '#F5F5F8',
+  bgSecondary: '#FFFFFF',
+  textPrimary: '#0A0A0F',
+  textSecondary: '#54545F',
+  textMuted: '#8A8A96',
+  buttonPrimary: '#4F3CF2',
+  buttonHover: '#3617CE',
+  link: '#4F3CF2',
+  linkHover: '#3617CE',
+};
 
-export function buildTheme(mode = 'light') {
+export const displayFontFamily =
+  '"Pretendard Variable", "Pretendard", "Roboto", "Helvetica", "Arial", sans-serif';
+
+export function buildTheme(mode = 'dark') {
   const palette = mode === 'dark' ? darkColors : colors;
 
   return createTheme({
@@ -66,24 +66,32 @@ export function buildTheme(mode = 'light') {
       },
     },
     typography: {
-      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: displayFontFamily,
       h1: {
         fontFamily: displayFontFamily,
         fontSize: '2.125rem',
-        fontWeight: 500,
-        letterSpacing: '0.02em',
+        fontWeight: 800,
+        letterSpacing: '-0.02em',
       },
       h2: {
         fontFamily: displayFontFamily,
-        letterSpacing: '0.02em',
+        fontWeight: 800,
+        letterSpacing: '-0.02em',
       },
       h3: {
         fontFamily: displayFontFamily,
-        letterSpacing: '0.02em',
+        fontWeight: 800,
+        letterSpacing: '-0.02em',
       },
       h4: {
         fontFamily: displayFontFamily,
-        letterSpacing: '0.02em',
+        fontWeight: 700,
+        letterSpacing: '-0.01em',
+      },
+      h5: {
+        fontFamily: displayFontFamily,
+        fontWeight: 700,
+        letterSpacing: '-0.01em',
       },
     },
     spacing: 8,
@@ -92,7 +100,8 @@ export function buildTheme(mode = 'light') {
         styleOverrides: {
           root: {
             fontFamily: displayFontFamily,
-            letterSpacing: '0.03em',
+            fontWeight: 600,
+            letterSpacing: '-0.01em',
           },
           containedPrimary: {
             '&:hover': {
@@ -105,7 +114,8 @@ export function buildTheme(mode = 'light') {
         styleOverrides: {
           root: {
             fontFamily: displayFontFamily,
-            letterSpacing: '0.04em',
+            fontWeight: 600,
+            letterSpacing: '-0.01em',
           },
         },
       },
@@ -123,6 +133,6 @@ export function buildTheme(mode = 'light') {
   });
 }
 
-const theme = buildTheme('light');
+const theme = buildTheme('dark');
 
 export default theme;

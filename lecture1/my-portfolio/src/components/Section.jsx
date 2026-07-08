@@ -7,7 +7,7 @@ function Section({ id, title, description, accent = false, children }) {
       component="section"
       sx={{
         py: { xs: 6, md: 10 },
-        bgcolor: accent ? 'secondary.main' : 'background.paper',
+        bgcolor: accent ? 'secondary.main' : 'background.default',
         borderTop: '1px solid',
         borderColor: 'divider',
       }}

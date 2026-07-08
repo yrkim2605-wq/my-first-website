@@ -5,14 +5,14 @@ import { buildTheme } from '../theme';
 
 const STORAGE_KEY = 'my-portfolio-color-mode';
 
-const ColorModeContext = createContext({ mode: 'light', toggleColorMode: () => {} });
+const ColorModeContext = createContext({ mode: 'dark', toggleColorMode: () => {} });
 
 export const useColorMode = () => useContext(ColorModeContext);
 
 export function ColorModeProvider({ children }) {
   const [mode, setMode] = useState(() => {
-    if (typeof window === 'undefined') return 'light';
-    return localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+    if (typeof window === 'undefined') return 'dark';
+    return localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark';
   });
 
   const value = useMemo(

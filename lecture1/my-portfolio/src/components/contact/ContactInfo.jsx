@@ -44,7 +44,7 @@ const ContactInfo = () => (
         sx={{
           bgcolor: '#FFFFFF',
           color: 'primary.main',
-          '&:hover': { bgcolor: '#FFF5EC' },
+          '&:hover': { bgcolor: '#EDE9FE' },
         }}
       >
         <GitHubIcon />
@@ -57,7 +57,7 @@ const ContactInfo = () => (
         sx={{
           bgcolor: '#FFFFFF',
           color: 'primary.main',
-          '&:hover': { bgcolor: '#FFF5EC' },
+          '&:hover': { bgcolor: '#EDE9FE' },
         }}
       >
         <InstagramIcon />
