@@ -24,7 +24,6 @@ const Home = () => {
           variant="dark"
           sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center', mb: 4 }}
         >
-          <Box sx={{ fontSize: { xs: '3.5rem', sm: '4.5rem' }, mb: 1 }}>🥐</Box>
           <Typography variant="h1" sx={{ color: '#FFF8EC', mb: 1 }}>
             빵덕후 레벨업
           </Typography>

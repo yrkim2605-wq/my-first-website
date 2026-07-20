@@ -1,6 +1,6 @@
 :root {
-  --color-bread-orange: #a9805c;
-  --color-butter-yellow: #c9a67d;
+  --color-bread-orange: #332419;
+  --color-butter-yellow: #5c4433;
   --color-cream-bg: #faf8f5;
   --color-pink: #d9afa0;
   --color-brown-text: #2e2a25;
@@ -18,7 +18,7 @@ body {
 }
 
 .wood-panel {
-  background: #a9805c;
+  background: #332419;
   border-radius: 12px;
   box-shadow: none;
   color: #fff8ec;

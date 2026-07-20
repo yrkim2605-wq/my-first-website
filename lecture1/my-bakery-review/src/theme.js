@@ -3,16 +3,16 @@ import { createTheme } from '@mui/material/styles'
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#A9805C',
-      light: '#C9A67D',
-      dark: '#7C5A3E',
+      main: '#332419',
+      light: '#5C4433',
+      dark: '#1C130C',
       contrastText: '#FFFFFF',
     },
     secondary: {
       main: '#D9AFA0',
       light: '#EAC9C1',
       dark: '#B98576',
-      contrastText: '#3A2E24',
+      contrastText: '#1C130C',
     },
     background: {
       default: '#FAF8F5',
@@ -23,8 +23,8 @@ const theme = createTheme({
       secondary: '#7A7268',
     },
     crust: {
-      main: '#7C5A3E',
-      light: '#C9A67D',
+      main: '#332419',
+      light: '#5C4433',
     },
   },
   typography: {
@@ -94,10 +94,8 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#FFFFFF',
           backgroundImage: 'none',
           boxShadow: 'none',
-          borderBottom: '1px solid rgba(46,42,37,0.08)',
         },
       },
     },
@@ -110,7 +108,7 @@ const theme = createTheme({
         },
         bar: {
           borderRadius: 999,
-          backgroundColor: '#A9805C',
+          backgroundColor: '#332419',
         },
       },
     },
