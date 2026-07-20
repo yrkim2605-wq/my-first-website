@@ -54,12 +54,20 @@ jobs:
           VITE_SUPABASE_ANON_KEY: sb_publishable_k97z01b5QxG2WtZAd9H00A_bhVI_vLh
         run: npm run build
 
+      - name: Install my-bakery-review dependencies
+        working-directory: lecture1/my-bakery-review
+        run: npm install
+      - name: Build my-bakery-review
+        working-directory: lecture1/my-bakery-review
+        run: npm run build
+
       - name: Assemble Pages site
         run: |
-          mkdir -p site/my-portfolio site/my-community
+          mkdir -p site/my-portfolio site/my-community site/my-bakery-review
           cp -r lecture1/my-fashion-shop/dist/. site/
           cp -r my-portfolio/. site/my-portfolio/
           cp -r my-community/. site/my-community/
+          cp -r my-bakery-review/. site/my-bakery-review/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
