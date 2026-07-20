@@ -16,7 +16,7 @@ const Community = () => {
       : COMMUNITY_POSTS.filter((post) => post.categoryId === selectedCategoryId)
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl">
       <Box sx={{ py: 4 }}>
         <Typography variant="h1" sx={{ mb: 1 }}>
           커뮤니티 게시판
@@ -50,6 +50,7 @@ const Community = () => {
               xs: '1fr',
               sm: 'repeat(2, 1fr)',
               md: 'repeat(3, 1fr)',
+              lg: 'repeat(4, 1fr)',
             },
             gap: 3,
           }}

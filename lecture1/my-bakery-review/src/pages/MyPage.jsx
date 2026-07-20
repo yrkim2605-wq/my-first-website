@@ -17,7 +17,7 @@ const MyPage = () => {
   const visitedBakeries = BAKERIES.filter((b) => MOCK_USER.visitedBakeryIds.includes(b.id))
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl">
       <Box sx={{ py: 4 }}>
         <Typography variant="h1" sx={{ mb: 3 }}>
           마이 인벤토리

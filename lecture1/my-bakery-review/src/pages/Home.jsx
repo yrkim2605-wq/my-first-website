@@ -17,13 +17,13 @@ const Home = () => {
     : BAKERIES
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: { xs: 5, sm: 8 } }}>
-        <Box sx={{ textAlign: 'center', mb: { xs: 7, sm: 10 } }}>
-          <Typography variant="h1" sx={{ fontSize: { xs: '2.4rem', sm: '3.4rem' }, mb: 2 }}>
+    <Container maxWidth="xl">
+      <Box sx={{ py: { xs: 6, sm: 10 } }}>
+        <Box sx={{ textAlign: 'center', mb: { xs: 8, sm: 12 } }}>
+          <Typography variant="h1" sx={{ fontSize: { xs: '2.8rem', sm: '4.2rem' }, mb: 2 }}>
             빵덕후 레벨업
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 480, mx: 'auto' }}>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 560, mx: 'auto', fontSize: '1.05rem' }}>
             빵집을 방문하고 리뷰를 남길수록 경험치가 쌓여요. 부산 빵지순례를 시작해보세요.
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -71,6 +71,7 @@ const Home = () => {
                 xs: '1fr',
                 sm: 'repeat(2, 1fr)',
                 md: 'repeat(3, 1fr)',
+                lg: 'repeat(4, 1fr)',
               },
               gap: 3,
             }}
