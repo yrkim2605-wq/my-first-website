@@ -8,7 +8,6 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined
 
 const CommunityPostCard = ({
   categoryLabel,
-  categoryEmoji,
   title,
   author,
   content,
@@ -19,7 +18,7 @@ const CommunityPostCard = ({
   return (
     <Card elevation={0} sx={{ bgcolor: 'background.paper' }}>
       <CardContent>
-        <Chip label={`${categoryEmoji} ${categoryLabel}`} size="small" color="secondary" sx={{ mb: 1 }} />
+        <Chip label={categoryLabel} size="small" variant="outlined" sx={{ mb: 1 }} />
         <Typography variant="h3" sx={{ fontSize: '1.05rem', mb: 0.5 }}>
           {title}
         </Typography>

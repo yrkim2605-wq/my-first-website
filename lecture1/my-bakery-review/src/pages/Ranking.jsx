@@ -10,10 +10,10 @@ import { MONTHLY_REVIEWERS, TOP_VISITORS, TOP_BAKERIES, TOP_LIKED_REVIEWS } from
 import { DISTRICTS } from '../constants/districts'
 
 const TABS = [
-  { label: '이번달 리뷰왕', emoji: '✍️' },
-  { label: '방문 많은 회원', emoji: '📍' },
-  { label: '인기빵집 TOP 10', emoji: '🥐' },
-  { label: '좋아요 많은 리뷰', emoji: '❤️' },
+  { label: '이번달 리뷰왕' },
+  { label: '방문 많은 회원' },
+  { label: '인기빵집 TOP 10' },
+  { label: '좋아요 많은 리뷰' },
 ]
 
 const Ranking = () => {
@@ -78,7 +78,7 @@ const Ranking = () => {
     <Container maxWidth="md">
       <Box sx={{ py: 4 }}>
         <Typography variant="h1" sx={{ mb: 3 }}>
-          🏆 랭킹
+          랭킹
         </Typography>
 
         <Tabs
@@ -89,7 +89,7 @@ const Ranking = () => {
           sx={{ mb: 2 }}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.label} label={`${tab.emoji} ${tab.label}`} />
+            <Tab key={tab.label} label={tab.label} />
           ))}
         </Tabs>
 

@@ -3,7 +3,6 @@ import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
-import WoodPanel from '../components/common/WoodPanel'
 import PixelButton from '../components/common/PixelButton'
 import BakeryStageCard from '../components/common/BakeryStageCard'
 import { BAKERIES } from '../constants/bakeries'
@@ -19,47 +18,46 @@ const Home = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <WoodPanel
-          variant="dark"
-          sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center', mb: 4 }}
-        >
-          <Typography variant="h1" sx={{ color: '#FFF8EC', mb: 1 }}>
+      <Box sx={{ py: { xs: 5, sm: 8 } }}>
+        <Box sx={{ textAlign: 'center', mb: { xs: 7, sm: 10 } }}>
+          <Typography variant="h1" sx={{ fontSize: { xs: '2.4rem', sm: '3.4rem' }, mb: 2 }}>
             빵덕후 레벨업
           </Typography>
-          <Typography variant="body1" sx={{ color: '#FFF8EC', mb: 3 }}>
-            빵집을 방문하고 리뷰를 남길수록 경험치가 쌓여요. 부산 빵지순례를 시작해보세요!
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 480, mx: 'auto' }}>
+            빵집을 방문하고 리뷰를 남길수록 경험치가 쌓여요. 부산 빵지순례를 시작해보세요.
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <PixelButton to="/community" emoji="💬" color="secondary">
+            <PixelButton to="/community" variant="outlined" color="primary">
               커뮤니티 가기
             </PixelButton>
-            <PixelButton to="/mypage" emoji="🎒" color="secondary">
+            <PixelButton to="/mypage" variant="outlined" color="primary">
               내 인벤토리
             </PixelButton>
-            <PixelButton to="/ranking" emoji="🏆" color="secondary">
+            <PixelButton to="/ranking" variant="outlined" color="primary">
               랭킹 보기
             </PixelButton>
           </Box>
-        </WoodPanel>
+        </Box>
 
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
             <Typography variant="h2">
-              🏰 {selectedDistrict ? `${selectedDistrict.emoji} ${selectedDistrict.name}` : '전체'} 빵집
+              {selectedDistrict ? selectedDistrict.name : '전체'} 빵집
             </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
             <Chip
               label="전체"
+              variant={!selectedDistrictId ? 'filled' : 'outlined'}
               color={!selectedDistrictId ? 'primary' : 'default'}
               onClick={() => setSelectedDistrictId(null)}
             />
             {DISTRICTS.map((district) => (
               <Chip
                 key={district.id}
-                label={`${district.emoji} ${district.name}`}
+                label={district.name}
+                variant={selectedDistrictId === district.id ? 'filled' : 'outlined'}
                 color={selectedDistrictId === district.id ? 'primary' : 'default'}
                 onClick={() => setSelectedDistrictId(district.id)}
               />

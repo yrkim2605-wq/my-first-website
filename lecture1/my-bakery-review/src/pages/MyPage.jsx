@@ -20,7 +20,7 @@ const MyPage = () => {
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
         <Typography variant="h1" sx={{ mb: 3 }}>
-          🎒 마이 인벤토리
+          마이 인벤토리
         </Typography>
 
         <WoodPanel variant="light" sx={{ p: 3, mb: 3 }}>
@@ -43,12 +43,12 @@ const MyPage = () => {
             isMaxLevel={progress.isMaxLevel}
           />
           <Typography variant="body2" sx={{ mt: 2, color: 'primary.main', fontWeight: 700 }}>
-            🎁 현재 레벨 혜택: {progress.currentLevel.perk}
+            현재 레벨 혜택: {progress.currentLevel.perk}
           </Typography>
         </WoodPanel>
 
         <Typography variant="h2" sx={{ mb: 2 }}>
-          🏅 획득 배지
+          획득 배지
         </Typography>
         <Box
           sx={{
@@ -68,7 +68,7 @@ const MyPage = () => {
         </Box>
 
         <Typography variant="h2" sx={{ mb: 2 }}>
-          🏰 방문한 빵집 ({visitedBakeries.length}곳)
+          방문한 빵집 ({visitedBakeries.length}곳)
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {visitedBakeries.map((bakery) => {
@@ -90,7 +90,7 @@ const MyPage = () => {
                     </Typography>
                   </Box>
                 </Box>
-                <Chip label="완료 ✅" size="small" color="primary" />
+                <Chip label="완료" size="small" color="primary" />
               </WoodPanel>
             )
           })}

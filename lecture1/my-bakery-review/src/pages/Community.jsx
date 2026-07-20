@@ -19,7 +19,7 @@ const Community = () => {
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
         <Typography variant="h1" sx={{ mb: 1 }}>
-          💬 커뮤니티 게시판
+          커뮤니티 게시판
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           오늘의 빵집 소식과 후기를 나눠보세요.
@@ -28,13 +28,15 @@ const Community = () => {
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 4 }}>
           <Chip
             label="전체"
+            variant={selectedCategoryId === 'all' ? 'filled' : 'outlined'}
             color={selectedCategoryId === 'all' ? 'primary' : 'default'}
             onClick={() => setSelectedCategoryId('all')}
           />
           {COMMUNITY_CATEGORIES.map((category) => (
             <Chip
               key={category.id}
-              label={`${category.emoji} ${category.label}`}
+              label={category.label}
+              variant={selectedCategoryId === category.id ? 'filled' : 'outlined'}
               color={selectedCategoryId === category.id ? 'primary' : 'default'}
               onClick={() => setSelectedCategoryId(category.id)}
             />
@@ -59,7 +61,6 @@ const Community = () => {
                 key={post.id}
                 {...post}
                 categoryLabel={category?.label}
-                categoryEmoji={category?.emoji}
               />
             )
           })}

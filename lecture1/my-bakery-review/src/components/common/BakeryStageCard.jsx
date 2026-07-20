@@ -29,7 +29,7 @@ const BakeryStageCard = ({
           <Typography variant="h3" sx={{ fontSize: '1.1rem' }}>
             {emoji} {name}
           </Typography>
-          <Chip label={districtLabel} size="small" color="secondary" />
+          <Chip label={districtLabel} size="small" variant="outlined" />
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           {signatureMenu}
