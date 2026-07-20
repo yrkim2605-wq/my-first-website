@@ -1,0 +1,42 @@
+export const LEVELS = [
+  {
+    id: 'rookie',
+    name: '빵린이',
+    emoji: '🐣',
+    minVisits: 0,
+    minHearts: 0,
+    perk: '전 매장 아메리카노 사이즈업 쿠폰',
+  },
+  {
+    id: 'explorer',
+    name: '빵탐험가',
+    emoji: '🧭',
+    minVisits: 5,
+    minHearts: 0,
+    perk: '빵집 지도 확장 + 신메뉴 알림',
+  },
+  {
+    id: 'expert',
+    name: '빵전문가',
+    emoji: '🎓',
+    minVisits: 15,
+    minHearts: 100,
+    perk: '무료 시식 티켓 1매',
+  },
+  {
+    id: 'master',
+    name: '빵마스터',
+    emoji: '👑',
+    minVisits: 30,
+    minHearts: 300,
+    perk: '전 매장 10% 할인 쿠폰',
+  },
+  {
+    id: 'otaku',
+    name: '빵덕후',
+    emoji: '🏆',
+    minVisits: 50,
+    minHearts: 500,
+    perk: '연간 무료 시식 패스 + 명예의 전당 등재',
+  },
+]

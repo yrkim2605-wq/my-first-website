@@ -1,0 +1,32 @@
+:root {
+  --color-bread-orange: #a9805c;
+  --color-butter-yellow: #c9a67d;
+  --color-cream-bg: #faf8f5;
+  --color-pink: #d9afa0;
+  --color-brown-text: #2e2a25;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-cream-bg);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.wood-panel {
+  background: #a9805c;
+  border-radius: 12px;
+  box-shadow: none;
+  color: #fff8ec;
+}
+
+.wood-panel-light {
+  background: #ffffff;
+  border: 1px solid rgba(46, 42, 37, 0.08);
+  border-radius: 12px;
+  box-shadow: none;
+}
