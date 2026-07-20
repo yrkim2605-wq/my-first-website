@@ -1,7 +1,11 @@
+* {
+  cursor: url('./assets/cursors/pointer.png') 2 2, auto !important;
+}
+
 :root {
   --color-bread-orange: #332419;
   --color-butter-yellow: #5c4433;
-  --color-cream-bg: #faf8f5;
+  --color-cream-bg: #f0ede6;
   --color-pink: #d9afa0;
   --color-brown-text: #2e2a25;
 }

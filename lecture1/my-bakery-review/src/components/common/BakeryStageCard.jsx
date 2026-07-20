@@ -5,8 +5,10 @@ import Chip from '@mui/material/Chip'
 import Rating from '@mui/material/Rating'
 import Box from '@mui/material/Box'
 import FavoriteIcon from '@mui/icons-material/Favorite'
+import { Link } from 'react-router-dom'
 
 const BakeryStageCard = ({
+  id,
   name,
   districtLabel,
   emoji,
@@ -18,8 +20,13 @@ const BakeryStageCard = ({
   return (
     <Card
       elevation={0}
+      component={Link}
+      to={`/bakery/${id}`}
       sx={{
+        display: 'block',
         bgcolor: 'background.paper',
+        textDecoration: 'none',
+        color: 'inherit',
         transition: 'transform 0.15s',
         '&:hover': { transform: 'translateY(-3px)' },
       }}

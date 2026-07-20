@@ -3,40 +3,80 @@ import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
-import PixelButton from '../components/common/PixelButton'
+import TextField from '@mui/material/TextField'
+import InputAdornment from '@mui/material/InputAdornment'
+import SearchIcon from '@mui/icons-material/Search'
 import BakeryStageCard from '../components/common/BakeryStageCard'
+import HeroCarousel from '../components/common/HeroCarousel'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
+import heroImage1 from '../assets/hero/bakery-1.jpg'
+import heroImage2 from '../assets/hero/bakery-2.jpg'
+
+const HERO_IMAGES = [heroImage1, heroImage2]
+
+const FILTER_CHIP_SX = {
+  transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease',
+  '&:hover': {
+    backgroundColor: '#332419 !important',
+    color: '#F0EDE6 !important',
+    borderColor: '#332419 !important',
+  },
+}
 
 const Home = () => {
   const [selectedDistrictId, setSelectedDistrictId] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const selectedDistrict = DISTRICTS.find((d) => d.id === selectedDistrictId)
-  const filteredBakeries = selectedDistrictId
-    ? BAKERIES.filter((b) => b.districtId === selectedDistrictId)
-    : BAKERIES
+  const normalizedQuery = searchQuery.trim().toLowerCase()
+
+  const filteredBakeries = BAKERIES.filter((b) => {
+    const matchesDistrict = !selectedDistrictId || b.districtId === selectedDistrictId
+    const matchesQuery =
+      !normalizedQuery ||
+      b.name.toLowerCase().includes(normalizedQuery) ||
+      b.signatureMenu.toLowerCase().includes(normalizedQuery) ||
+      b.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery))
+    return matchesDistrict && matchesQuery
+  })
 
   return (
     <Container maxWidth="xl">
       <Box sx={{ py: { xs: 6, sm: 10 } }}>
-        <Box sx={{ textAlign: 'center', mb: { xs: 8, sm: 12 } }}>
-          <Typography variant="h1" sx={{ fontSize: { xs: '2.8rem', sm: '4.2rem' }, mb: 2 }}>
-            빵덕후 레벨업
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 560, mx: 'auto', fontSize: '1.05rem' }}>
-            빵집을 방문하고 리뷰를 남길수록 경험치가 쌓여요. 부산 빵지순례를 시작해보세요.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <PixelButton to="/community" variant="outlined" color="primary">
-              커뮤니티 가기
-            </PixelButton>
-            <PixelButton to="/mypage" variant="outlined" color="primary">
-              내 인벤토리
-            </PixelButton>
-            <PixelButton to="/ranking" variant="outlined" color="primary">
-              랭킹 보기
-            </PixelButton>
-          </Box>
+        <Box>
+          <HeroCarousel images={HERO_IMAGES} />
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 4, sm: 5 }, mb: { xs: 8, sm: 12 } }}>
+          <TextField
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="빵집 이름이나 메뉴를 검색해보세요"
+            variant="standard"
+            sx={{
+              maxWidth: 420,
+              width: '100%',
+              '& .MuiInput-underline:before': {
+                borderBottomColor: 'text.primary',
+              },
+              '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
+                borderBottomColor: 'primary.main',
+              },
+              '& .MuiInput-underline:after': {
+                borderBottomColor: 'primary.main',
+              },
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
         </Box>
 
         <Box>
@@ -52,6 +92,7 @@ const Home = () => {
               variant={!selectedDistrictId ? 'filled' : 'outlined'}
               color={!selectedDistrictId ? 'primary' : 'default'}
               onClick={() => setSelectedDistrictId(null)}
+              sx={FILTER_CHIP_SX}
             />
             {DISTRICTS.map((district) => (
               <Chip
@@ -60,6 +101,7 @@ const Home = () => {
                 variant={selectedDistrictId === district.id ? 'filled' : 'outlined'}
                 color={selectedDistrictId === district.id ? 'primary' : 'default'}
                 onClick={() => setSelectedDistrictId(district.id)}
+                sx={FILTER_CHIP_SX}
               />
             ))}
           </Box>

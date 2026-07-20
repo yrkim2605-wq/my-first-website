@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import Community from './pages/Community'
 import MyPage from './pages/MyPage'
 import Ranking from './pages/Ranking'
+import BakeryDetail from './pages/BakeryDetail'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/community" element={<Community />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/ranking" element={<Ranking />} />
+          <Route path="/bakery/:id" element={<BakeryDetail />} />
         </Route>
       </Routes>
     </HashRouter>
