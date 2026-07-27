@@ -11,8 +11,22 @@ const BadgeTile = ({ emoji, name, description, earned }) => {
         sx={{
           textAlign: 'center',
           position: 'relative',
-          opacity: earned ? 1 : 0.35,
-          filter: earned ? 'none' : 'grayscale(1)',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          ...(earned
+            ? {
+                background: 'linear-gradient(160deg, #FFF6E6 0%, #F3D9A8 100%)',
+                border: '1px solid #E3B873',
+                boxShadow: '0 4px 14px rgba(227,184,115,0.4)',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 10px 20px rgba(227,184,115,0.5)',
+                },
+              }
+            : {
+                bgcolor: '#EDEAE3',
+                border: '1px solid rgba(46,42,37,0.08)',
+                opacity: 0.6,
+              }),
         }}
       >
         {!earned && (
@@ -21,8 +35,24 @@ const BadgeTile = ({ emoji, name, description, earned }) => {
             sx={{ position: 'absolute', top: 10, right: 10, color: 'text.secondary' }}
           />
         )}
-        <Typography sx={{ fontSize: '2rem', lineHeight: 1 }}>{emoji}</Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mt: 0.5 }}>
+        <Typography
+          sx={{
+            fontSize: '2rem',
+            lineHeight: 1,
+            filter: earned ? 'none' : 'grayscale(1)',
+          }}
+        >
+          {emoji}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 700,
+            display: 'block',
+            mt: 0.5,
+            color: earned ? '#7A4A16' : 'text.secondary',
+          }}
+        >
           {name}
         </Typography>
       </WoodPanel>

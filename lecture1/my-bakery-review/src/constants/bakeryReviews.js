@@ -180,3 +180,8 @@ export const BAKERY_REVIEWS = [
     heartCount: 11,
   },
 ]
+
+export const REVIEW_COUNT_BY_BAKERY_ID = BAKERY_REVIEWS.reduce((acc, review) => {
+  acc[review.bakeryId] = (acc[review.bakeryId] || 0) + 1
+  return acc
+}, {})

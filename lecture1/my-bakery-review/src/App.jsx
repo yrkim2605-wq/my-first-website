@@ -5,6 +5,8 @@ import Community from './pages/Community'
 import MyPage from './pages/MyPage'
 import Ranking from './pages/Ranking'
 import BakeryDetail from './pages/BakeryDetail'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/bakery/:id" element={<BakeryDetail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
         </Route>
       </Routes>
     </HashRouter>

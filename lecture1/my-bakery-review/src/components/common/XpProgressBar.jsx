@@ -4,6 +4,7 @@ import LinearProgress from '@mui/material/LinearProgress'
 
 const XpProgressBar = ({
   levelEmoji,
+  levelIconImage,
   levelName,
   nextLevelName,
   percent,
@@ -13,9 +14,19 @@ const XpProgressBar = ({
 }) => {
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-        <Typography variant="body1" sx={{ fontWeight: 700 }}>
-          {levelEmoji} {levelName}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+        <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 0.75, fontWeight: 700 }}>
+          {levelIconImage ? (
+            <Box
+              component="img"
+              src={levelIconImage}
+              alt=""
+              sx={{ width: 32, height: 28, objectFit: 'cover', borderRadius: '8px' }}
+            />
+          ) : (
+            <span>{levelEmoji}</span>
+          )}
+          {levelName}
           {!isMaxLevel && ` → ${nextLevelName}`}
         </Typography>
         <Typography
@@ -25,7 +36,15 @@ const XpProgressBar = ({
           {percent}%
         </Typography>
       </Box>
-      <LinearProgress variant="determinate" value={percent} />
+      <LinearProgress
+        variant="determinate"
+        value={percent}
+        sx={{
+          '& .MuiLinearProgress-bar': {
+            backgroundImage: 'linear-gradient(90deg, #5C4433 0%, #E3B873 65%, #F6DFA8 100%)',
+          },
+        }}
+      />
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
         {isMaxLevel
           ? '최고 레벨 달성!'

@@ -4,16 +4,21 @@ import Toolbar from '@mui/material/Toolbar'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
+import mascotLogo from '../../assets/logo-mascot-photo.png'
+import heroGinghamBg from '../../assets/hero/gingham-bg.jpg'
+import HeaderLevelBadge from './HeaderLevelBadge'
 
 const NAV_ITEMS = [
-  { to: '/', label: '홈' },
   { to: '/community', label: '커뮤니티' },
   { to: '/mypage', label: '마이페이지' },
   { to: '/ranking', label: '랭킹' },
+  { to: '/login', label: '로그인' },
 ]
 
 const Header = () => {
+  const location = useLocation()
+  const isHome = location.pathname === '/'
   const navRef = useRef(null)
   const [indicator, setIndicator] = useState({ left: 0, visible: false })
 
@@ -31,30 +36,98 @@ const Header = () => {
   }
 
   return (
-    <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.default' }}>
-      <Container maxWidth="xl">
+    <AppBar
+      position="static"
+      elevation={0}
+      sx={{
+        bgcolor: 'transparent',
+        ...(isHome && {
+          backgroundImage: `url(${heroGinghamBg})`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: { xs: '40px 40px', sm: '56px 56px' },
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'top left',
+        }),
+      }}
+    >
+      <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Box
+          sx={{
+            bgcolor: '#fff',
+            borderRadius: 999,
+            boxShadow: '0 6px 20px rgba(46,42,37,0.12)',
+            px: { xs: '36px', sm: '48px' },
+          }}
+        >
         <Toolbar
           disableGutters
-          sx={{ gap: 3, flexWrap: 'wrap', pt: { xs: 3, sm: 5 }, pb: 2.5, minHeight: { xs: 'auto', sm: 88 } }}
+          sx={{
+            gap: 3,
+            flexWrap: 'wrap',
+            py: { xs: 1.5, sm: 0 },
+            minHeight: { xs: 'auto', sm: 88 },
+            display: { xs: 'flex', sm: 'grid' },
+            gridTemplateColumns: { sm: 'minmax(0, 1fr) auto minmax(0, 1fr)' },
+            alignItems: 'center',
+          }}
         >
-          <Typography
+          <Box
             component={NavLink}
             to="/"
             sx={{
-              flexGrow: 1,
-              fontSize: '1.7rem',
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              color: 'text.primary',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.25,
+              justifySelf: 'start',
               textDecoration: 'none',
+              color: 'inherit',
+              transition: 'transform 0.15s ease',
+              '&:hover': { transform: 'translateY(-1px)' },
             }}
           >
-            빵덕후 레벨업
-          </Typography>
+            <Box
+              component="img"
+              src={mascotLogo}
+              alt=""
+              sx={{ width: 44, height: 52, flexShrink: 0, objectFit: 'contain' }}
+            />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Typography
+                sx={{
+                  fontFamily: '"OwnglyphParkDaHyun", cursive',
+                  fontSize: '1.9rem',
+                  letterSpacing: '-0.01em',
+                  color: 'text.primary',
+                  WebkitTextStroke: '0.6px currentColor',
+                }}
+              >
+                빵덕후
+              </Typography>
+              <Box
+                sx={{
+                  px: 1.25,
+                  py: 0.25,
+                  borderRadius: 999,
+                  bgcolor: '#F3D9A8',
+                  color: '#7A4A16',
+                  fontFamily: '"OwnglyphParkDaHyun", cursive',
+                  fontSize: '1.1rem',
+                  WebkitTextStroke: '0.4px currentColor',
+                }}
+              >
+                레벨업
+              </Box>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: { xs: 'none', sm: 'flex' }, justifySelf: 'center' }}>
+            <HeaderLevelBadge />
+          </Box>
+
           <Box
             ref={navRef}
             onMouseLeave={handleLeave}
-            sx={{ position: 'relative', display: 'flex', gap: { xs: 2.5, sm: 4 } }}
+            sx={{ position: 'relative', display: 'flex', gap: { xs: 2.5, sm: 4 }, justifySelf: 'end' }}
           >
             <Box
               sx={{
@@ -64,7 +137,7 @@ const Header = () => {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                bgcolor: 'text.primary',
+                bgcolor: '#205A41',
                 transform: `translateX(${indicator.left - 4}px)`,
                 opacity: indicator.visible ? 1 : 0,
                 transition: 'transform 0.2s ease, opacity 0.15s ease',
@@ -79,9 +152,9 @@ const Header = () => {
                 end={item.to === '/'}
                 onMouseEnter={handleEnter}
                 sx={{
-                  fontSize: '1.4375rem',
-                  fontWeight: 600,
-                  color: 'text.primary',
+                  fontSize: '1.05rem',
+                  fontWeight: 800,
+                  color: '#205A41',
                   textDecoration: 'none',
                   transition: 'color 0.15s',
                   '&.active': {
@@ -97,6 +170,7 @@ const Header = () => {
             ))}
           </Box>
         </Toolbar>
+        </Box>
       </Container>
     </AppBar>
   )

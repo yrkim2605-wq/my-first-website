@@ -23,6 +23,7 @@ const HeroCarousel = ({ images }) => {
         width: '100%',
         height: { xs: 320, sm: 480, md: 620 },
         overflow: 'hidden',
+        borderRadius: { xs: 3, sm: 4 },
       }}
     >
       {images.map((src, i) => (

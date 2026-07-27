@@ -4,8 +4,16 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import CommunityPostCard from '../components/common/CommunityPostCard'
+import Reveal from '../components/common/Reveal'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_POSTS } from '../constants/communityPosts'
+import { BAKERY_REVIEWS } from '../constants/bakeryReviews'
+import { getAuthorLevel } from '../utils/authorLevel'
+
+const AVATAR_EMOJI_BY_AUTHOR = BAKERY_REVIEWS.reduce((acc, review) => {
+  if (!acc[review.author]) acc[review.author] = review.avatarEmoji
+  return acc
+}, {})
 
 const Community = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState('all')
@@ -55,14 +63,17 @@ const Community = () => {
             gap: 3,
           }}
         >
-          {filteredPosts.map((post) => {
+          {filteredPosts.map((post, index) => {
             const category = COMMUNITY_CATEGORIES.find((c) => c.id === post.categoryId)
             return (
-              <CommunityPostCard
-                key={post.id}
-                {...post}
-                categoryLabel={category?.label}
-              />
+              <Reveal key={post.id} delay={Math.min((index % 8) * 0.05, 0.3)}>
+                <CommunityPostCard
+                  {...post}
+                  categoryLabel={category?.label}
+                  avatarEmoji={AVATAR_EMOJI_BY_AUTHOR[post.author] || post.emoji}
+                  authorLevel={getAuthorLevel(post.author)}
+                />
+              </Reveal>
             )
           })}
         </Box>
