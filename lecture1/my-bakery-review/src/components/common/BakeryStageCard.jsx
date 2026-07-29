@@ -13,6 +13,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Link } from 'react-router-dom'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
+import { useRealBakeryPhotos } from '../../context/RealBakeryPhotosContext'
 
 const BakeryStageCard = ({
   id,
@@ -25,7 +26,8 @@ const BakeryStageCard = ({
   isNew = false,
   tags = [],
 }) => {
-  const photoSrc = BAKERY_PHOTO_BY_ID[id] || DEFAULT_BAKERY_PHOTO
+  const { photosByBakeryId } = useRealBakeryPhotos()
+  const photoSrc = BAKERY_PHOTO_BY_ID[id] || photosByBakeryId[id] || DEFAULT_BAKERY_PHOTO
   const [bookmarked, setBookmarked] = useState(false)
 
   const handleBookmarkClick = (event) => {
@@ -117,7 +119,7 @@ const BakeryStageCard = ({
           <Chip label={districtLabel} size="small" variant="outlined" />
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          {signatureMenu}
+          {signatureMenu || '메뉴 정보 준비중'}
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>

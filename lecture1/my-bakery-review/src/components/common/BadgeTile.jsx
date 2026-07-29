@@ -1,9 +1,10 @@
+import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Tooltip from '@mui/material/Tooltip'
 import LockIcon from '@mui/icons-material/Lock'
 import WoodPanel from './WoodPanel'
 
-const BadgeTile = ({ emoji, name, description, earned }) => {
+const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
   return (
     <Tooltip title={description} arrow>
       <WoodPanel
@@ -35,15 +36,30 @@ const BadgeTile = ({ emoji, name, description, earned }) => {
             sx={{ position: 'absolute', top: 10, right: 10, color: 'text.secondary' }}
           />
         )}
-        <Typography
-          sx={{
-            fontSize: '2rem',
-            lineHeight: 1,
-            filter: earned ? 'none' : 'grayscale(1)',
-          }}
-        >
-          {emoji}
-        </Typography>
+        {iconImage ? (
+          <Box
+            component="img"
+            src={iconImage}
+            alt=""
+            sx={{
+              width: 48,
+              height: 48,
+              mx: 'auto',
+              objectFit: 'contain',
+              filter: earned ? 'none' : 'grayscale(1)',
+            }}
+          />
+        ) : (
+          <Typography
+            sx={{
+              fontSize: '2rem',
+              lineHeight: 1,
+              filter: earned ? 'none' : 'grayscale(1)',
+            }}
+          >
+            {emoji}
+          </Typography>
+        )}
         <Typography
           variant="caption"
           sx={{

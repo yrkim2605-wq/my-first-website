@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import IconButton from '@mui/material/IconButton'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
 const SLIDE_INTERVAL = 3500
 
@@ -15,6 +18,9 @@ const HeroCarousel = ({ images }) => {
     }, SLIDE_INTERVAL)
     return () => clearInterval(timer)
   }, [images.length])
+
+  const goToPrev = () => setIndex((prev) => (prev - 1 + images.length) % images.length)
+  const goToNext = () => setIndex((prev) => (prev + 1) % images.length)
 
   return (
     <Box
@@ -44,8 +50,43 @@ const HeroCarousel = ({ images }) => {
         />
       ))}
 
+      {images.length > 1 && (
+        <>
+          <IconButton
+            onClick={goToPrev}
+            aria-label="이전 이미지"
+            sx={{
+              position: 'absolute',
+              left: { xs: 8, sm: 16 },
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'rgba(46,42,37,0.35)',
+              color: '#FFF8EC',
+              '&:hover': { bgcolor: 'rgba(46,42,37,0.55)' },
+            }}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <IconButton
+            onClick={goToNext}
+            aria-label="다음 이미지"
+            sx={{
+              position: 'absolute',
+              right: { xs: 8, sm: 16 },
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'rgba(46,42,37,0.35)',
+              color: '#FFF8EC',
+              '&:hover': { bgcolor: 'rgba(46,42,37,0.55)' },
+            }}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+        </>
+      )}
+
       <Box
-        onClick={() => setIndex((index + 1) % images.length)}
+        onClick={goToNext}
         sx={{
           position: 'absolute',
           left: { xs: 20, sm: 40 },

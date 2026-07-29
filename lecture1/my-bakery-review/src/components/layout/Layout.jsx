@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
+import ScrollToTopButton from '../common/ScrollToTopButton'
 
 const Layout = () => {
   const location = useLocation()
@@ -15,6 +16,7 @@ const Layout = () => {
         </Box>
       </Box>
       <Footer />
+      <ScrollToTopButton />
     </Box>
   )
 }
