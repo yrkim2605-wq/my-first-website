@@ -10,25 +10,36 @@ import BakeryStageCard from '../components/common/BakeryStageCard'
 import PopularReviewCard from '../components/common/PopularReviewCard'
 import HeroCarousel from '../components/common/HeroCarousel'
 import Reveal from '../components/common/Reveal'
+import RevealText from '../components/common/RevealText'
+import SectionDecor from '../components/common/SectionDecor'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERY_REVIEWS, REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryReviews'
+import { FILTER_CHIP_SX } from '../constants/chipStyles'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../context/BusanBakeriesContext'
 import heroImage1 from '../assets/hero/bakery-1.jpg'
 import heroImage2 from '../assets/hero/bakery-2.jpg'
 import heroGinghamBg from '../assets/hero/gingham-bg.jpg'
-import waveBottom from '../assets/hero/wave-bottom.svg'
 import iconFire from '../assets/section-icons/icon-fire.png'
 import iconStar from '../assets/section-icons/icon-star.png'
 import iconCroissant from '../assets/section-icons/icon-croissant.png'
+import decoSaltBread from '../assets/decorative/deco-salt-bread.jpg'
+import decoEggTart from '../assets/decorative/deco-egg-tart.jpg'
+import decoStrawberryChoux from '../assets/decorative/deco-strawberry-choux.jpg'
+import decoStrawberryCake from '../assets/decorative/deco-strawberry-cake.jpg'
+import decoCoconutBread from '../assets/decorative/deco-coconut-bread.jpg'
 
 const HERO_IMAGES = [heroImage1, heroImage2]
 
+const TODAY_POPULAR_DECOR = [{ src: decoSaltBread, size: 120, top: 24, right: 64, rotate: -9 }]
+const WEEKLY_REVIEW_DECOR = [{ src: decoEggTart, size: 110, top: 28, left: 64, rotate: 8 }]
+const NEW_BAKERY_DECOR = [{ src: decoStrawberryChoux, size: 128, top: 20, right: 72, rotate: -7 }]
+const ALL_BAKERY_DECOR = [{ src: decoStrawberryCake, size: 122, top: 140, left: 64, rotate: 7 }]
+
 const SECTION_TITLE_SX = {
-  fontFamily: '"OwnglyphParkDaHyun", cursive',
   color: '#205A41',
-  fontWeight: 400,
+  fontWeight: 700,
   letterSpacing: '-0.01em',
   display: 'flex',
   alignItems: 'center',
@@ -60,26 +71,20 @@ const SECTION_ICON_XL_SX = {
   height: '2.2em',
 }
 
-const FILTER_CHIP_SX = {
-  transition: 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease',
-  '&:hover': {
-    backgroundColor: '#205A41 !important',
-    color: '#F0EDE6 !important',
-    borderColor: '#205A41 !important',
-  },
-}
-
 const SCROLL_ROW_SX = {
   display: 'flex',
   gap: 2.5,
   overflowX: 'auto',
   pb: 1.5,
+  scrollSnapType: 'x proximity',
+  '& > *': { scrollSnapAlign: 'start' },
   '&::-webkit-scrollbar': { height: 6 },
   '&::-webkit-scrollbar-thumb': {
     backgroundColor: 'rgba(46,42,37,0.15)',
     borderRadius: 999,
   },
 }
+
 
 const POPULAR_REVIEWS = [...BAKERY_REVIEWS]
   .sort((a, b) => b.heartCount - a.heartCount)
@@ -140,7 +145,7 @@ const Home = () => {
           backgroundAttachment: 'fixed',
           backgroundPosition: 'top left',
           pt: { xs: 4, sm: 6 },
-          pb: { xs: '52px', sm: '72px' },
+          pb: { xs: '56px', sm: '84px' },
         }}
       >
         <Container maxWidth="xl">
@@ -152,31 +157,19 @@ const Home = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            height: { xs: 45, sm: 63 },
-            backgroundImage: `url(${waveBottom})`,
-            backgroundRepeat: 'repeat-x',
-            backgroundPosition: 'bottom left',
-            backgroundSize: { xs: '150px 45px', sm: '210px 63px' },
+            height: { xs: '56px', sm: '84px' },
+            background: 'linear-gradient(to bottom, rgba(254,236,197,0) 0%, rgba(254,236,197,1) 100%)',
+            pointerEvents: 'none',
           }}
         />
       </Box>
 
-      <Box
-        sx={{
-          bgcolor: '#FEECC5',
-          width: '100vw',
-          position: 'relative',
-          left: '50%',
-          right: '50%',
-          marginLeft: '-50vw',
-          marginRight: '-50vw',
-          py: { xs: 7, sm: 10 },
-        }}
-      >
+      <Box sx={{ position: 'relative', py: { xs: 7, sm: 10 } }}>
+        <SectionDecor stickers={TODAY_POPULAR_DECOR} />
         <Container maxWidth="xl">
-          <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2, fontSize: '1.9rem' }}>
+          <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
             <Box component="img" src={iconFire} alt="" sx={SECTION_ICON_FIRE_SX} />
-            오늘 인기 빵집
+            <RevealText text="오늘 인기 빵집" />
           </Typography>
           <Box sx={SCROLL_ROW_SX}>
             {bakeriesLoading && (
@@ -192,22 +185,12 @@ const Home = () => {
         </Container>
       </Box>
 
-      <Box
-        sx={{
-          bgcolor: '#FFF7E6',
-          width: '100vw',
-          position: 'relative',
-          left: '50%',
-          right: '50%',
-          marginLeft: '-50vw',
-          marginRight: '-50vw',
-          py: { xs: 7, sm: 9 },
-        }}
-      >
+      <Box sx={{ position: 'relative', py: { xs: 7, sm: 9 } }}>
+        <SectionDecor stickers={WEEKLY_REVIEW_DECOR} />
         <Container maxWidth="xl">
-          <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2, fontSize: '1.9rem' }}>
+          <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
             <Box component="img" src={iconStar} alt="" sx={SECTION_ICON_LARGE_SX} />
-            이번 주 인기 리뷰
+            <RevealText text="이번 주 인기 리뷰" />
           </Typography>
           <Box
             sx={{
@@ -239,22 +222,12 @@ const Home = () => {
         </Container>
       </Box>
 
-      <Box
-        sx={{
-          bgcolor: '#FEECC5',
-          width: '100vw',
-          position: 'relative',
-          left: '50%',
-          right: '50%',
-          marginLeft: '-50vw',
-          marginRight: '-50vw',
-          py: { xs: 7, sm: 9 },
-        }}
-      >
+      <Box sx={{ position: 'relative', py: { xs: 7, sm: 9 } }}>
+        <SectionDecor stickers={NEW_BAKERY_DECOR} />
         <Container maxWidth="xl">
-          <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2, fontSize: '1.9rem' }}>
+          <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
             <Box component="img" src={iconCroissant} alt="" sx={SECTION_ICON_XL_SX} />
-            <Box component="span" sx={{ ml: '-10px' }}>새로 등록된 빵집</Box>
+            <RevealText text="새로 등록된 빵집" sx={{ ml: '-10px' }} />
           </Typography>
           <Box sx={SCROLL_ROW_SX}>
             {bakeriesLoading && (
@@ -272,7 +245,7 @@ const Home = () => {
 
       <Box
         sx={{
-          bgcolor: '#FEECC5',
+          bgcolor: '#F7F1E6',
           width: '100vw',
           position: 'relative',
           left: '50%',
@@ -281,8 +254,7 @@ const Home = () => {
           marginRight: '-50vw',
         }}
       >
-      <Container maxWidth="xl">
-      <Box sx={{ pt: 0, pb: 0 }}>
+        <SectionDecor stickers={ALL_BAKERY_DECOR} />
         <Box
           sx={{
             bgcolor: '#FFE373',
@@ -292,97 +264,104 @@ const Home = () => {
             right: '50%',
             marginLeft: '-50vw',
             marginRight: '-50vw',
-            mt: 0,
             py: { xs: 4, sm: 6 },
             borderRadius: { xs: '50% 50% 0 0 / 56px 56px 0 0', sm: '50% 50% 0 0 / 96px 96px 0 0' },
           }}
         >
-        <Container maxWidth="xl">
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 6, sm: 8 } }}>
-          <TextField
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="빵집 이름이나 메뉴를 검색해보세요"
-            variant="standard"
-            sx={{
-              maxWidth: 420,
-              width: '100%',
-              '& .MuiInput-underline:before': {
-                borderBottomColor: 'text.primary',
-              },
-              '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
-                borderBottomColor: 'primary.main',
-              },
-              '& .MuiInput-underline:after': {
-                borderBottomColor: 'primary.main',
-              },
-            }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
+          <Container maxWidth="xl">
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <TextField
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="빵집 이름이나 메뉴를 검색해보세요"
+                variant="outlined"
+                sx={{
+                  maxWidth: 420,
+                  width: '100%',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 999,
+                    backgroundColor: '#FFFDF6',
+                    boxShadow: '0 2px 8px rgba(46,42,37,0.08)',
+                    '& fieldset': {
+                      borderColor: '#E3B873',
+                      borderWidth: 2,
+                      transition: 'border-color 0.35s ease',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#205A41',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#205A41',
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Box>
+          </Container>
         </Box>
 
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-            <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, fontSize: '1.9rem' }}>
-              {selectedDistrict ? selectedDistrict.name : '전체'} 빵집
-            </Typography>
-          </Box>
+        <Container maxWidth="xl">
+          <Box sx={{ pt: { xs: 6, sm: 8 }, pb: { xs: 7, sm: 10 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+              <Typography variant="h2" sx={SECTION_TITLE_SX}>
+                <RevealText key={selectedDistrictId || 'all'} text={`${selectedDistrict ? selectedDistrict.name : '전체'} 빵집`} />
+              </Typography>
+            </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
-            <Chip
-              label="전체"
-              variant={!selectedDistrictId ? 'filled' : 'outlined'}
-              color={!selectedDistrictId ? 'primary' : 'default'}
-              onClick={() => setSelectedDistrictId(null)}
-              sx={FILTER_CHIP_SX}
-            />
-            {DISTRICTS.map((district) => (
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
               <Chip
-                key={district.id}
-                label={district.name}
-                variant={selectedDistrictId === district.id ? 'filled' : 'outlined'}
-                color={selectedDistrictId === district.id ? 'primary' : 'default'}
-                onClick={() => setSelectedDistrictId(district.id)}
+                label="전체"
+                variant={!selectedDistrictId ? 'filled' : 'outlined'}
+                color={!selectedDistrictId ? 'primary' : 'default'}
+                onClick={() => setSelectedDistrictId(null)}
                 sx={FILTER_CHIP_SX}
               />
-            ))}
-          </Box>
+              {DISTRICTS.map((district) => (
+                <Chip
+                  key={district.id}
+                  label={district.name}
+                  variant={selectedDistrictId === district.id ? 'filled' : 'outlined'}
+                  color={selectedDistrictId === district.id ? 'primary' : 'default'}
+                  onClick={() => setSelectedDistrictId(district.id)}
+                  sx={FILTER_CHIP_SX}
+                />
+              ))}
+            </Box>
 
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-                lg: 'repeat(4, 1fr)',
-              },
-              gap: 3,
-            }}
-          >
-            {bakeriesLoading && (
-              <Typography color="text.secondary">부산 빵집 정보를 불러오는 중이에요...</Typography>
-            )}
-            {bakeriesError && (
-              <Typography color="error">빵집 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</Typography>
-            )}
-            {!bakeriesLoading &&
-              !bakeriesError &&
-              filteredBakeries.map((bakery, index) => renderBakeryCard(bakery, { index: index % 8 }))}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
+                  lg: 'repeat(4, 1fr)',
+                },
+                gap: 3,
+              }}
+            >
+              {bakeriesLoading && (
+                <Typography color="text.secondary">부산 빵집 정보를 불러오는 중이에요...</Typography>
+              )}
+              {bakeriesError && (
+                <Typography color="error">빵집 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</Typography>
+              )}
+              {!bakeriesLoading &&
+                !bakeriesError &&
+                filteredBakeries.map((bakery, index) => renderBakeryCard(bakery, { index: index % 8 }))}
+            </Box>
           </Box>
-        </Box>
         </Container>
-        </Box>
-      </Box>
-      </Container>
       </Box>
     </>
   )

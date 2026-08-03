@@ -98,7 +98,6 @@ const Header = () => {
                   fontSize: '1.9rem',
                   letterSpacing: '-0.01em',
                   color: 'text.primary',
-                  WebkitTextStroke: '0.6px currentColor',
                 }}
               >
                 빵덕후
@@ -112,7 +111,7 @@ const Header = () => {
                   color: '#7A4A16',
                   fontFamily: '"OwnglyphParkDaHyun", cursive',
                   fontSize: '1.1rem',
-                  WebkitTextStroke: '0.4px currentColor',
+                  fontWeight: 700,
                 }}
               >
                 레벨업
@@ -120,7 +119,7 @@ const Header = () => {
             </Box>
           </Box>
 
-          <Box sx={{ display: { xs: 'none', sm: 'flex' }, justifySelf: 'center' }}>
+          <Box sx={{ display: 'flex', justifySelf: 'center' }}>
             <HeaderLevelBadge />
           </Box>
 

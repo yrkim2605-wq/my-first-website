@@ -14,6 +14,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Link } from 'react-router-dom'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
 import { useRealBakeryPhotos } from '../../context/RealBakeryPhotosContext'
+import { HOVER_LIFT_SX } from '../../constants/motion'
 
 const BakeryStageCard = ({
   id,
@@ -51,10 +52,9 @@ const BakeryStageCard = ({
         overflow: 'hidden',
         border: '1px solid rgba(46,42,37,0.07)',
         boxShadow: '0 1px 3px rgba(46,42,37,0.05)',
-        transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
+        ...HOVER_LIFT_SX,
         '&:hover': {
-          transform: 'translateY(-6px)',
-          boxShadow: '0 18px 32px rgba(46,42,37,0.16)',
+          ...HOVER_LIFT_SX['&:hover'],
           borderColor: 'rgba(46,42,37,0.14)',
         },
       }}

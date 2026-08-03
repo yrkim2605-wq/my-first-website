@@ -1,11 +1,15 @@
+import { useState } from 'react'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
+import Button from '@mui/material/Button'
+import MenuBookIcon from '@mui/icons-material/MenuBook'
 import WoodPanel from '../components/common/WoodPanel'
 import XpProgressBar from '../components/common/XpProgressBar'
 import BadgeTile from '../components/common/BadgeTile'
 import Reveal from '../components/common/Reveal'
+import LevelBookDialog from '../components/common/LevelBookDialog'
 import { MOCK_USER } from '../constants/userProfile'
 import { BADGES } from '../constants/badges'
 import { BAKERIES } from '../constants/bakeries'
@@ -15,8 +19,10 @@ import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../constants/bakeryPho
 import { useBusanBakeries } from '../context/BusanBakeriesContext'
 import { useVisitedBakeries } from '../context/VisitedBakeriesContext'
 import { useRealBakeryPhotos } from '../context/RealBakeryPhotosContext'
+import { HOVER_LIFT_TRANSITION } from '../constants/motion'
 
 const MyPage = () => {
+  const [levelBookOpen, setLevelBookOpen] = useState(false)
   const visitedCount = MOCK_USER.visitedBakeryIds.length
   const progress = getLevelProgress(visitedCount, MOCK_USER.totalHearts)
   const visitedBakeries = BAKERIES.filter((b) => MOCK_USER.visitedBakeryIds.includes(b.id))
@@ -70,6 +76,15 @@ const MyPage = () => {
                 {MOCK_USER.joinedAt} 가입 · 방문 {visitedCount}곳 · 하트 {MOCK_USER.totalHearts}개
               </Typography>
             </Box>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<MenuBookIcon />}
+              onClick={() => setLevelBookOpen(true)}
+              sx={{ ml: 'auto' }}
+            >
+              레벨북
+            </Button>
           </Box>
           <XpProgressBar
             levelEmoji={progress.currentLevel.emoji}
@@ -125,10 +140,10 @@ const MyPage = () => {
                   justifyContent: 'space-between',
                   flexWrap: 'wrap',
                   gap: 1,
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+                  transition: HOVER_LIFT_TRANSITION,
                   '&:hover': {
-                    transform: 'translateY(-3px)',
-                    boxShadow: '0 10px 20px rgba(46,42,37,0.12)',
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 24px rgba(46,42,37,0.14)',
                     borderColor: 'rgba(46,42,37,0.16)',
                   },
                 }}
@@ -183,10 +198,10 @@ const MyPage = () => {
                       justifyContent: 'space-between',
                       flexWrap: 'wrap',
                       gap: 1,
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+                      transition: HOVER_LIFT_TRANSITION,
                       '&:hover': {
-                        transform: 'translateY(-3px)',
-                        boxShadow: '0 10px 20px rgba(46,42,37,0.12)',
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 12px 24px rgba(46,42,37,0.14)',
                         borderColor: 'rgba(46,42,37,0.16)',
                       },
                     }}
@@ -221,6 +236,12 @@ const MyPage = () => {
           </Box>
         )}
       </Box>
+
+      <LevelBookDialog
+        open={levelBookOpen}
+        onClose={() => setLevelBookOpen(false)}
+        currentLevelId={progress.currentLevel.id}
+      />
     </Container>
   )
 }

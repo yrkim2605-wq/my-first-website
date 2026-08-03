@@ -412,7 +412,7 @@ const BakeryDetail = () => {
                     onClick={() => setDraftPhoto(null)}
                     size="small"
                     color="inherit"
-                    sx={{ mt: 0.5, minWidth: 0, p: 0, fontSize: '0.75rem' }}
+                    sx={{ mt: 0.5, minWidth: 0, minHeight: 36, px: 1.25, py: 1, fontSize: '0.75rem' }}
                   >
                     사진 제거
                   </Button>

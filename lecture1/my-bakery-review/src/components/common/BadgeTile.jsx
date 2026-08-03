@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography'
 import Tooltip from '@mui/material/Tooltip'
 import LockIcon from '@mui/icons-material/Lock'
 import WoodPanel from './WoodPanel'
+import { HOVER_LIFT_TRANSITION } from '../../constants/motion'
 
 const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
   return (
@@ -12,14 +13,14 @@ const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
         sx={{
           textAlign: 'center',
           position: 'relative',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          transition: HOVER_LIFT_TRANSITION,
           ...(earned
             ? {
                 background: 'linear-gradient(160deg, #FFF6E6 0%, #F3D9A8 100%)',
                 border: '1px solid #E3B873',
                 boxShadow: '0 4px 14px rgba(227,184,115,0.4)',
                 '&:hover': {
-                  transform: 'translateY(-3px)',
+                  transform: 'translateY(-4px)',
                   boxShadow: '0 10px 20px rgba(227,184,115,0.5)',
                 },
               }

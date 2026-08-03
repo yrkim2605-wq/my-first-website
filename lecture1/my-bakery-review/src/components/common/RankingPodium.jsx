@@ -75,6 +75,8 @@ const SIZES = {
   3: { width: 160, minHeight: 220, medalPx: 34, emojiSize: '2.4rem', avatarSize: 46, nameSize: '1rem', scoreSize: '1.2rem' },
 }
 
+const RANK_ORDER = { 1: { xs: 1, sm: 0 }, 2: { xs: 2, sm: 0 }, 3: { xs: 3, sm: 0 } }
+
 const PodiumCard = ({ item }) => {
   const style = RANK_STYLES[item.rank]
   const size = SIZES[item.rank]
@@ -82,8 +84,11 @@ const PodiumCard = ({ item }) => {
   return (
     <Box
       sx={{
-        flex: `0 1 ${size.width}px`,
-        minHeight: size.minHeight,
+        order: RANK_ORDER[item.rank],
+        width: { xs: '100%', sm: size.width },
+        maxWidth: { xs: 300, sm: size.width },
+        flex: { xs: '0 1 auto', sm: `0 1 ${size.width}px` },
+        minHeight: { xs: 'auto', sm: size.minHeight },
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -154,11 +159,11 @@ const RankingPodium = ({ items }) => {
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'flex-end',
+        flexDirection: { xs: 'column', sm: 'row' },
+        alignItems: { xs: 'stretch', sm: 'flex-end' },
         justifyContent: 'center',
         gap: { xs: 1.5, sm: 3 },
         mb: 4,
-        flexWrap: 'wrap',
       }}
     >
       {second && <PodiumCard item={second} />}

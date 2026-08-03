@@ -5,10 +5,6 @@
   font-display: swap;
 }
 
-* {
-  cursor: url('./assets/cursors/bread-cursor.png') 20 20, auto !important;
-}
-
 :root {
   --color-bread-orange: #332419;
   --color-butter-yellow: #5c4433;
