@@ -26,6 +26,7 @@ import { useBusanBakeries } from '../context/BusanBakeriesContext'
 import { useVisitedBakeries } from '../context/VisitedBakeriesContext'
 import { useRealBakeryPhotos } from '../context/RealBakeryPhotosContext'
 import { resizeImageFile } from '../utils/resizeImageFile'
+import Reveal from '../components/common/Reveal'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined'
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto'
@@ -147,34 +148,38 @@ const BakeryDetail = () => {
         </Typography>
 
         {isRealBakery && (
-          <Box
-            sx={{
-              width: '100%',
-              height: { xs: 200, sm: 280 },
-              borderRadius: 3,
-              overflow: 'hidden',
-              mb: 3,
-              bgcolor: '#F3D9A8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {photosByBakeryId[bakery.id] ? (
-              <Box
-                component="img"
-                src={photosByBakeryId[bakery.id]}
-                alt={bakery.name}
-                sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <Typography variant="body2" sx={{ color: '#7A4A16', fontWeight: 600, textAlign: 'center', px: 2 }}>
-                아직 등록된 사진이 없어요. 리뷰 작성할 때 사진을 올려보세요!
-              </Typography>
-            )}
-          </Box>
+          <Reveal>
+            <Box
+              sx={{
+                width: '100%',
+                height: { xs: 200, sm: 280 },
+                borderRadius: 3,
+                overflow: 'hidden',
+                mb: 3,
+                bgcolor: '#F3D9A8',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {photosByBakeryId[bakery.id] ? (
+                <Box
+                  component="img"
+                  src={photosByBakeryId[bakery.id]}
+                  alt={bakery.name}
+                  className="soft-fade-in"
+                  sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <Typography variant="body2" sx={{ color: '#7A4A16', fontWeight: 600, textAlign: 'center', px: 2 }}>
+                  아직 등록된 사진이 없어요. 리뷰 작성할 때 사진을 올려보세요!
+                </Typography>
+              )}
+            </Box>
+          </Reveal>
         )}
 
+        <Reveal delay={0.05}>
         <Box sx={{ mb: 5 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', mb: 1 }}>
             <Typography
@@ -259,7 +264,9 @@ const BakeryDetail = () => {
             )}
           </Box>
         </Box>
+        </Reveal>
 
+        <Reveal delay={0.1}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap', mb: 2 }}>
           <Typography variant="h2">
             방문자 리뷰 ({reviews.length})
@@ -268,6 +275,7 @@ const BakeryDetail = () => {
             리뷰 작성
           </Button>
         </Box>
+        </Reveal>
 
         {reviews.length === 0 ? (
           isRealBakery ? (
@@ -277,8 +285,8 @@ const BakeryDetail = () => {
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {SAMPLE_REVIEWS.map((review) => (
+                  <Reveal key={review.id}>
                   <Box
-                    key={review.id}
                     sx={{
                       position: 'relative',
                       p: 2.5,
@@ -311,6 +319,7 @@ const BakeryDetail = () => {
                     </Box>
                     <Typography variant="body2">{review.content}</Typography>
                   </Box>
+                  </Reveal>
                 ))}
               </Box>
             </Box>
@@ -321,9 +330,9 @@ const BakeryDetail = () => {
           )
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {reviews.map((review) => (
+            {reviews.map((review, index) => (
+              <Reveal key={review.id} delay={Math.min(index * 0.05, 0.3)}>
               <Box
-                key={review.id}
                 sx={{
                   p: 2.5,
                   borderRadius: 3,
@@ -360,6 +369,7 @@ const BakeryDetail = () => {
                   <Typography variant="caption">{review.heartCount}</Typography>
                 </Box>
               </Box>
+              </Reveal>
             ))}
           </Box>
         )}

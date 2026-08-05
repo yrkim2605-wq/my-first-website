@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 
-const Reveal = ({ children, delay = 0, sx }) => {
+const Reveal = ({ children, delay = 0, distance = 20, sx }) => {
   const ref = useRef(null)
   const [visible, setVisible] = useState(false)
 
@@ -27,8 +27,8 @@ const Reveal = ({ children, delay = 0, sx }) => {
       ref={ref}
       sx={{
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(20px)',
-        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
+        transform: visible ? 'translateY(0)' : `translateY(${distance}px)`,
+        transition: `opacity 0.7s ease ${delay}s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
         ...sx,
       }}
     >

@@ -28,7 +28,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    fontFamily: '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Helvetica, Arial, sans-serif',
     h1: {
       fontSize: '2.5rem',
       fontWeight: 700,
@@ -90,6 +90,19 @@ const theme = createTheme({
         },
       },
     },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          transition: 'transform 0.15s ease, background-color 0.15s ease',
+          '&:hover': {
+            transform: 'translateY(-1px)',
+          },
+          '&:active': {
+            transform: 'scale(0.88)',
+          },
+        },
+      },
+    },
     MuiChip: {
       styleOverrides: {
         root: {
@@ -107,6 +120,7 @@ const theme = createTheme({
         root: {
           backgroundImage: 'none',
           boxShadow: 'none',
+          borderRadius: 0,
         },
       },
     },

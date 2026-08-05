@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -6,6 +7,7 @@ import Chip from '@mui/material/Chip'
 import TextField from '@mui/material/TextField'
 import InputAdornment from '@mui/material/InputAdornment'
 import SearchIcon from '@mui/icons-material/Search'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import BakeryStageCard from '../components/common/BakeryStageCard'
 import PopularReviewCard from '../components/common/PopularReviewCard'
 import HeroCarousel from '../components/common/HeroCarousel'
@@ -20,10 +22,10 @@ import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../context/BusanBakeriesContext'
 import heroImage1 from '../assets/hero/bakery-1.jpg'
 import heroImage2 from '../assets/hero/bakery-2.jpg'
-import heroGinghamBg from '../assets/hero/gingham-bg.jpg'
 import iconFire from '../assets/section-icons/icon-fire.png'
 import iconStar from '../assets/section-icons/icon-star.png'
 import iconCroissant from '../assets/section-icons/icon-croissant.png'
+import iconDefaultBakery from '../assets/section-icons/icon-default-bakery.png'
 import decoSaltBread from '../assets/decorative/deco-salt-bread.jpg'
 import decoEggTart from '../assets/decorative/deco-egg-tart.jpg'
 import decoStrawberryChoux from '../assets/decorative/deco-strawberry-choux.jpg'
@@ -47,28 +49,28 @@ const SECTION_TITLE_SX = {
 }
 
 const SECTION_ICON_SX = {
-  width: '1em',
-  height: '1em',
+  width: '1.5em',
+  height: '1.5em',
   objectFit: 'contain',
   flexShrink: 0,
 }
 
-const SECTION_ICON_LARGE_SX = {
+// icon-croissant.png / icon-default-bakery.png have a lot of transparent padding
+// baked into the source art, so they need a bigger box to read at the same visual size.
+const SECTION_ICON_PADDED_SX = {
   ...SECTION_ICON_SX,
-  width: '1.6em',
-  height: '1.6em',
+  width: '2.1em',
+  height: '2.1em',
 }
 
-const SECTION_ICON_FIRE_SX = {
-  ...SECTION_ICON_SX,
-  width: '1.35em',
-  height: '1.35em',
-}
-
-const SECTION_ICON_XL_SX = {
-  ...SECTION_ICON_SX,
-  width: '2.2em',
-  height: '2.2em',
+const FULL_BLEED_SX = {
+  width: '100vw',
+  position: 'relative',
+  left: '50%',
+  right: '50%',
+  marginLeft: '-50vw',
+  marginRight: '-50vw',
+  px: { xs: 2, sm: 3 },
 }
 
 const SCROLL_ROW_SX = {
@@ -116,7 +118,7 @@ const Home = () => {
     return matchesDistrict && matchesQuery
   })
 
-  const renderBakeryCard = (bakery, { width, index = 0 } = {}) => {
+  const renderBakeryCard = (bakery, { fillRow = false, index = 0, variant = 'default' } = {}) => {
     const district = DISTRICTS.find((d) => d.id === bakery.districtId)
     const delay = Math.min(index * 0.05, 0.3)
     const card = (
@@ -125,10 +127,11 @@ const Home = () => {
         districtLabel={district?.name}
         reviewCount={REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0}
         isNew={newBakeryIds.has(bakery.id)}
+        variant={variant}
       />
     )
     return (
-      <Reveal key={bakery.id} delay={delay} sx={width ? { flex: `0 0 ${width}px` } : undefined}>
+      <Reveal key={bakery.id} delay={delay} sx={fillRow ? { flex: '1 1 220px', minWidth: 220 } : undefined}>
         {card}
       </Reveal>
     )
@@ -136,60 +139,96 @@ const Home = () => {
 
   return (
     <>
-      <Box
-        sx={{
-          position: 'relative',
-          backgroundImage: `url(${heroGinghamBg})`,
-          backgroundRepeat: 'repeat',
-          backgroundSize: { xs: '40px 40px', sm: '56px 56px' },
-          backgroundAttachment: 'fixed',
-          backgroundPosition: 'top left',
-          pt: { xs: 4, sm: 6 },
-          pb: { xs: '56px', sm: '84px' },
-        }}
-      >
-        <Container maxWidth="xl">
-          <HeroCarousel images={HERO_IMAGES} />
-        </Container>
-        <Box
-          sx={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: { xs: '56px', sm: '84px' },
-            background: 'linear-gradient(to bottom, rgba(254,236,197,0) 0%, rgba(254,236,197,1) 100%)',
-            pointerEvents: 'none',
-          }}
-        />
+      <Box sx={{ position: 'relative' }}>
+        <HeroCarousel images={HERO_IMAGES} />
       </Box>
 
-      <Box sx={{ position: 'relative', py: { xs: 7, sm: 10 } }}>
+      <Reveal distance={28}>
+        <Container maxWidth="md">
+          <Box sx={{ pt: { xs: 22, sm: 38 }, pb: { xs: 22, sm: 38 } }}>
+            <Typography
+              sx={{
+                color: 'text.secondary',
+                textAlign: 'center',
+                lineHeight: 1.7,
+                fontSize: { xs: '1.15rem', sm: '1.4rem' },
+                fontWeight: 500,
+              }}
+            >
+              오늘도 새로운 빵을 만나고, 좋은 빵집을 함께 나누세요.
+              <br />
+              한 줄의 리뷰가 누군가의 최고의 선택이 됩니다. 빵덕후와 함께 성장하는 공간입니다.
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+              <Box
+                component={Link}
+                to="/community"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  color: 'primary.main',
+                  textDecoration: 'none',
+                  transition: 'gap 0.2s ease, color 0.2s ease',
+                  '&:hover': {
+                    gap: 1,
+                    color: '#123B29',
+                  },
+                }}
+              >
+                자세히 보기
+                <ArrowForwardIcon sx={{ fontSize: '1rem' }} />
+              </Box>
+            </Box>
+          </Box>
+        </Container>
+      </Reveal>
+
+      <Box sx={{ position: 'relative', py: { xs: 8, sm: 10 } }}>
         <SectionDecor stickers={TODAY_POPULAR_DECOR} />
         <Container maxWidth="xl">
           <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
-            <Box component="img" src={iconFire} alt="" sx={SECTION_ICON_FIRE_SX} />
+            <Box component="img" src={iconFire} alt="" sx={SECTION_ICON_SX} />
             <RevealText text="오늘 인기 빵집" />
           </Typography>
-          <Box sx={SCROLL_ROW_SX}>
-            {bakeriesLoading && (
-              <Typography color="text.secondary">부산 빵집 정보를 불러오는 중이에요...</Typography>
-            )}
-            {bakeriesError && (
-              <Typography color="error">빵집 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</Typography>
-            )}
-            {!bakeriesLoading &&
-              !bakeriesError &&
-              popularBakeries.map((bakery, index) => renderBakeryCard(bakery, { width: 260, index }))}
-          </Box>
+          {bakeriesLoading && (
+            <Typography color="text.secondary">부산 빵집 정보를 불러오는 중이에요...</Typography>
+          )}
+          {bakeriesError && (
+            <Typography color="error">빵집 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</Typography>
+          )}
         </Container>
+        {!bakeriesLoading && !bakeriesError && popularBakeries.length > 0 && (
+          <Box
+            sx={{
+              ...FULL_BLEED_SX,
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              alignItems: 'start',
+              gap: 2.5,
+            }}
+          >
+            <Reveal>
+              <BakeryStageCard
+                {...popularBakeries[0]}
+                districtLabel={DISTRICTS.find((d) => d.id === popularBakeries[0].districtId)?.name}
+                reviewCount={REVIEW_COUNT_BY_BAKERY_ID[popularBakeries[0].id] || 0}
+                isNew={newBakeryIds.has(popularBakeries[0].id)}
+                variant="featured"
+              />
+            </Reveal>
+            {popularBakeries[1] && renderBakeryCard(popularBakeries[1], { index: 1, variant: 'square' })}
+          </Box>
+        )}
       </Box>
 
-      <Box sx={{ position: 'relative', py: { xs: 7, sm: 9 } }}>
+      <Box sx={{ position: 'relative', py: { xs: 8, sm: 10 } }}>
         <SectionDecor stickers={WEEKLY_REVIEW_DECOR} />
         <Container maxWidth="xl">
           <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
-            <Box component="img" src={iconStar} alt="" sx={SECTION_ICON_LARGE_SX} />
+            <Box component="img" src={iconStar} alt="" sx={SECTION_ICON_SX} />
             <RevealText text="이번 주 인기 리뷰" />
           </Typography>
           <Box
@@ -222,12 +261,12 @@ const Home = () => {
         </Container>
       </Box>
 
-      <Box sx={{ position: 'relative', py: { xs: 7, sm: 9 } }}>
+      <Box sx={{ position: 'relative', py: { xs: 8, sm: 10 } }}>
         <SectionDecor stickers={NEW_BAKERY_DECOR} />
         <Container maxWidth="xl">
           <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
-            <Box component="img" src={iconCroissant} alt="" sx={SECTION_ICON_XL_SX} />
-            <RevealText text="새로 등록된 빵집" sx={{ ml: '-10px' }} />
+            <Box component="img" src={iconCroissant} alt="" sx={SECTION_ICON_PADDED_SX} />
+            <RevealText text="새로 등록된 빵집" />
           </Typography>
           <Box sx={SCROLL_ROW_SX}>
             {bakeriesLoading && (
@@ -238,7 +277,7 @@ const Home = () => {
             )}
             {!bakeriesLoading &&
               !bakeriesError &&
-              newBakeries.map((bakery, index) => renderBakeryCard(bakery, { width: 260, index }))}
+              newBakeries.map((bakery, index) => renderBakeryCard(bakery, { fillRow: true, index }))}
           </Box>
         </Container>
       </Box>
@@ -314,6 +353,7 @@ const Home = () => {
           <Box sx={{ pt: { xs: 6, sm: 8 }, pb: { xs: 7, sm: 10 } }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
               <Typography variant="h2" sx={SECTION_TITLE_SX}>
+                <Box component="img" src={iconDefaultBakery} alt="" sx={SECTION_ICON_PADDED_SX} />
                 <RevealText key={selectedDistrictId || 'all'} text={`${selectedDistrict ? selectedDistrict.name : '전체'} 빵집`} />
               </Typography>
             </Box>

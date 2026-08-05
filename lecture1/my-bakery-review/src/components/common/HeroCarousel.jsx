@@ -26,10 +26,15 @@ const HeroCarousel = ({ images }) => {
     <Box
       sx={{
         position: 'relative',
-        width: '100%',
-        height: { xs: 320, sm: 480, md: 620 },
+        width: '100vw',
+        left: '50%',
+        right: '50%',
+        marginLeft: '-50vw',
+        marginRight: '-50vw',
+        height: { xs: '62vh', sm: '75vh', md: '88vh' },
+        minHeight: { xs: 420, sm: 520, md: 600 },
+        maxHeight: 860,
         overflow: 'hidden',
-        borderRadius: { xs: 3, sm: 4 },
       }}
     >
       {images.map((src, i) => (

@@ -23,6 +23,7 @@ import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../constants/bakeryPho
 import { MOCK_USER } from '../constants/userProfile'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { getPostAvatarEmoji, getPostPhotoBakeryId } from '../utils/communityPostMeta'
+import Reveal from '../components/common/Reveal'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
@@ -273,6 +274,7 @@ const CommunityPostDetail = () => {
           커뮤니티로
         </Typography>
 
+        <Reveal>
         <Box
           sx={{
             width: '100%',
@@ -286,10 +288,13 @@ const CommunityPostDetail = () => {
             component="img"
             src={photoSrc}
             alt={post.title}
+            className="soft-fade-in"
             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </Box>
+        </Reveal>
 
+        <Reveal delay={0.05}>
         <Chip label={category?.label} size="small" variant="outlined" sx={{ mb: 1.5 }} />
 
         <Typography variant="h1" sx={{ fontSize: { xs: '1.6rem', sm: '2.1rem' }, mb: 2 }}>
@@ -339,6 +344,7 @@ const CommunityPostDetail = () => {
         <Typography variant="body1" sx={{ mb: 4, whiteSpace: 'pre-line' }}>
           {post.content}
         </Typography>
+        </Reveal>
 
         <Box
           sx={{
@@ -412,8 +418,9 @@ const CommunityPostDetail = () => {
               아직 댓글이 없어요. 첫 댓글을 남겨보세요!
             </Typography>
           )}
-          {comments.map((comment) => (
-            <Box key={comment.id}>
+          {comments.map((comment, index) => (
+            <Reveal key={comment.id} delay={Math.min(index * 0.05, 0.3)}>
+            <Box>
               <Box
                 sx={{
                   p: 2,
@@ -617,6 +624,7 @@ const CommunityPostDetail = () => {
                 </Box>
               )}
             </Box>
+            </Reveal>
           ))}
         </Box>
       </Box>

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -19,7 +20,7 @@ const TOP_REVIEWED_BAKERIES = [...BAKERIES]
   .slice(0, 10)
   .map((bakery, index) => ({ ...bakery, rank: index + 1 }))
 
-const TABS = [
+export const RANKING_TABS = [
   { label: '이번달 리뷰왕' },
   { label: '방문 많은 회원' },
   { label: '인기빵집 TOP 10' },
@@ -88,8 +89,18 @@ const getRankingItems = (tabIndex) => {
   }))
 }
 
+const parseTabParam = (value) => {
+  const index = Number(value)
+  return Number.isInteger(index) && index >= 0 && index < RANKING_TABS.length ? index : 0
+}
+
 const Ranking = () => {
-  const [activeTab, setActiveTab] = useState(0)
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState(() => parseTabParam(searchParams.get('tab')))
+
+  useEffect(() => {
+    setActiveTab(parseTabParam(searchParams.get('tab')))
+  }, [searchParams])
 
   const items = getRankingItems(activeTab)
   const podiumItems = items.slice(0, 3)
@@ -109,7 +120,7 @@ const Ranking = () => {
           scrollButtons="auto"
           sx={{ mb: 3 }}
         >
-          {TABS.map((tab) => (
+          {RANKING_TABS.map((tab) => (
             <Tab key={tab.label} label={tab.label} />
           ))}
         </Tabs>

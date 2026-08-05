@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -13,8 +14,13 @@ import { getAuthorLevel } from '../utils/authorLevel'
 import { getPostAvatarEmoji, getPostPhotoBakeryId } from '../utils/communityPostMeta'
 
 const Community = () => {
-  const [selectedCategoryId, setSelectedCategoryId] = useState('all')
+  const [searchParams] = useSearchParams()
+  const [selectedCategoryId, setSelectedCategoryId] = useState(searchParams.get('category') || 'all')
   const [sortBy, setSortBy] = useState('heart')
+
+  useEffect(() => {
+    setSelectedCategoryId(searchParams.get('category') || 'all')
+  }, [searchParams])
 
   const filteredPosts =
     selectedCategoryId === 'all'

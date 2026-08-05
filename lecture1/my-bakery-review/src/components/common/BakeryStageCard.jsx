@@ -26,7 +26,9 @@ const BakeryStageCard = ({
   reviewCount = 0,
   isNew = false,
   tags = [],
+  variant = 'default',
 }) => {
+  const isSquareCorner = variant !== 'default'
   const { photosByBakeryId } = useRealBakeryPhotos()
   const photoSrc = BAKERY_PHOTO_BY_ID[id] || photosByBakeryId[id] || DEFAULT_BAKERY_PHOTO
   const [bookmarked, setBookmarked] = useState(false)
@@ -50,6 +52,7 @@ const BakeryStageCard = ({
         textDecoration: 'none',
         color: 'inherit',
         overflow: 'hidden',
+        borderRadius: isSquareCorner ? 0 : undefined,
         border: '1px solid rgba(46,42,37,0.07)',
         boxShadow: '0 1px 3px rgba(46,42,37,0.05)',
         ...HOVER_LIFT_SX,
@@ -62,9 +65,12 @@ const BakeryStageCard = ({
       <Box
         sx={{
           position: 'relative',
-          height: 148,
-          flexShrink: 0,
           overflow: 'hidden',
+          ...(variant === 'featured'
+            ? { height: { xs: 260, sm: 340, md: 380 }, flexShrink: 0 }
+            : variant === 'square'
+              ? { aspectRatio: '1 / 1', flexShrink: 0 }
+              : { height: 148, flexShrink: 0 }),
         }}
       >
         <Box
@@ -111,9 +117,16 @@ const BakeryStageCard = ({
         </IconButton>
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <CardContent
+        sx={{
+          flexGrow: variant === 'featured' ? 0 : 1,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-          <Typography variant="h3" sx={{ fontSize: '1.1rem' }}>
+          <Typography variant="h3" sx={{ fontSize: variant === 'featured' ? '1.4rem' : '1.1rem' }}>
             {name}
           </Typography>
           <Chip label={districtLabel} size="small" variant="outlined" />
