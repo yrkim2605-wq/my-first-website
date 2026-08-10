@@ -59,6 +59,8 @@ jobs:
         run: npm install
       - name: Build my-bakery-review
         working-directory: lecture1/my-bakery-review
+        env:
+          VITE_KAKAO_REST_KEY: ${{ secrets.VITE_KAKAO_REST_KEY }}
         run: npm run build
 
       - name: Assemble Pages site
