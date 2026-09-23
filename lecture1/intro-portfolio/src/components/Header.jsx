@@ -19,8 +19,10 @@ const Header = () => {
         zIndex: 100,
         width: '100%',
         mixBlendMode: 'difference',
-        py: { xs: 2, md: 3 },
-        px: { xs: 3, md: 6 },
+        transform: 'translateY(5px)',
+        py: { xs: 1, md: 0.5 },
+        lineHeight: 1,
+        px: { xs: 3, md: 3 },
       }}
     >
       <Stack
@@ -34,7 +36,8 @@ const Header = () => {
             fontFamily: '"Stick No Bills", sans-serif',
             fontWeight: 800,
             fontSize: { xs: 14, md: 20 },
-            letterSpacing: '0.35em',
+            letterSpacing: '0.27em',
+            lineHeight: 1,
             color: '#ffffff',
             textDecoration: 'none',
           }}
@@ -55,7 +58,8 @@ const Header = () => {
                 fontFamily: '"Alumni Sans", sans-serif',
                 fontWeight: 600,
                 fontSize: 20,
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.07em',
+                lineHeight: 1,
                 color: '#ffffff',
                 textDecoration: 'none',
                 '&:hover': { opacity: 0.7 },

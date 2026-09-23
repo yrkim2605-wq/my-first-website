@@ -13,13 +13,13 @@
 html,
 body {
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
 }
 
 #root {
   min-height: 100svh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @keyframes spin {
@@ -28,5 +28,24 @@ body {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.2cqw);
+  }
+}
+
+@keyframes cubeSpin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
   }
 }

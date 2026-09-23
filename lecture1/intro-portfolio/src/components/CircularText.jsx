@@ -6,9 +6,13 @@ const CircularText = ({
   fontSize = 12,
   color = '#111111',
   duration = 20,
+  reverse = false,
   sx = {},
 }) => {
-  const pathId = `circular-text-path-${text.length}-${size}`;
+  const pathId = `circular-text-path-${text.length}-${size}-${reverse ? 'r' : 'f'}`;
+  const r = size / 2 - fontSize;
+  // reverse: 왼쪽 → 아래 → 오른쪽 → 위 순서(반시계)로 글자가 흐르고, 글자 윗부분이 원 중심을 향한다
+  const sweep = reverse ? 0 : 1;
 
   return (
     <Box
@@ -19,13 +23,11 @@ const CircularText = ({
         ...sx,
       }}
     >
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+      <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%">
         <defs>
           <path
             id={pathId}
-            d={`M ${size / 2}, ${size / 2} m -${size / 2 - fontSize}, 0 a ${size / 2 - fontSize},${size / 2 - fontSize} 0 1,1 ${
-              (size / 2 - fontSize) * 2
-            },0 a ${size / 2 - fontSize},${size / 2 - fontSize} 0 1,1 -${(size / 2 - fontSize) * 2},0`}
+            d={`M ${size / 2}, ${size / 2} m -${r}, 0 a ${r},${r} 0 1,${sweep} ${r * 2},0 a ${r},${r} 0 1,${sweep} -${r * 2},0`}
             fill="none"
           />
         </defs>
@@ -34,7 +36,7 @@ const CircularText = ({
           fontFamily='"Alumni Sans", sans-serif'
           fontWeight={600}
           fontSize={fontSize}
-          letterSpacing="1"
+          letterSpacing={fontSize * -0.02}
         >
           <textPath href={`#${pathId}`} startOffset="0%">
             {text}

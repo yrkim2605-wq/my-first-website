@@ -67,11 +67,11 @@ const Contact = () => {
             sx={{
               fontFamily: '"Alumni Sans", sans-serif',
               fontWeight: 600,
-              fontSize: 20,
+              fontSize: 35,
               letterSpacing: '-0.02em',
             }}
           >
-            CONTACT →
+            CONTACT ›
           </Typography>
         </Box>
       </Stack>
@@ -87,7 +87,7 @@ const Contact = () => {
           justifyContent: 'space-between',
           fontFamily: '"Alumni Sans", sans-serif',
           fontWeight: 600,
-          fontSize: 14,
+          fontSize: 16,
           color: '#949494',
         }}
       >

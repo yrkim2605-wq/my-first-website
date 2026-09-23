@@ -89,7 +89,8 @@ const Skills = () => {
               sx={{
                 fontFamily: '"Anton", sans-serif',
                 fontWeight: 400,
-                fontSize: 24,
+                fontSize: 30,
+                letterSpacing: '-0.02em',
               }}
             >
               WHO AM I ?

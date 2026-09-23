@@ -1,8 +1,19 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularText from './CircularText';
+import RibbonBand from './RibbonBand';
+import GlassCube from './GlassCube';
 
-const RIBBON_BARS = [0, 1, 2, 3, 4, 5, 6];
+const bigDisplaySx = {
+  position: 'absolute',
+  fontFamily: '"Anton", sans-serif',
+  fontWeight: 400,
+  fontSize: { xs: '30cqw', md: '21cqw' },
+  lineHeight: 1,
+  letterSpacing: '-0.05em',
+  whiteSpace: 'nowrap',
+  userSelect: 'none',
+};
 
 const Hero = () => {
   return (
@@ -10,79 +21,85 @@ const Hero = () => {
       id="home"
       sx={{
         position: 'relative',
-        bgcolor: '#000000',
-        color: '#ffffff',
+        mt: '30px',
+        bgcolor: '#ffffff',
         overflow: 'hidden',
-        pt: { xs: 6, md: 10 },
-        pb: { xs: 10, md: 16 },
-        px: { xs: 3, md: 6 },
+        containerType: 'inline-size',
+        aspectRatio: { xs: '4 / 5', md: '1192 / 600' },
       }}
     >
-      <Box
+      {/* IDEA — 검정에서 회색으로 흐르는 그라데이션 + 세로 줄무늬 */}
+      <Typography
+        component="h1"
         sx={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: { xs: 260, md: 420 },
+          ...bigDisplaySx,
+          left: '-1.2cqw',
+          top: { xs: '4%', md: '7.3%' },
+          color: 'transparent',
+          backgroundImage: `
+            repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 0.32cqw, rgba(255,255,255,0.28) 0.32cqw 0.4cqw),
+            linear-gradient(90deg, #000000 0%, #3a3a3a 25%, #9a9a9a 60%, #dcdcdc 100%)
+          `,
+          backgroundSize: '100% 100%',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
         }}
       >
-        <Typography
-          sx={{
-            fontFamily: '"Anton", sans-serif',
-            fontWeight: 400,
-            fontSize: { xs: '22vw', sm: '18vw', md: 'clamp(120px, 16vw, 300px)' },
-            lineHeight: 0.85,
-            letterSpacing: '-0.03em',
-            textAlign: 'center',
-          }}
-        >
-          IDEA
-        </Typography>
+        IDEA
+      </Typography>
 
-        <Box
-          aria-hidden
-          sx={{
-            position: 'absolute',
-            right: { xs: '5%', md: '8%' },
-            top: '50%',
-            transform: 'translateY(-50%) rotate(-8deg)',
-            display: 'flex',
-            gap: '2px',
-            opacity: 0.9,
-            pointerEvents: 'none',
-          }}
-        >
-          {RIBBON_BARS.map((i) => (
-            <Box
-              key={i}
-              sx={{
-                width: { xs: 14, md: 26 },
-                height: { xs: 90, md: 170 },
-                borderRadius: '4px',
-                background: `linear-gradient(180deg, rgba(255,255,255,${0.9 - i * 0.1}) 0%, rgba(120,120,120,${0.5 - i * 0.05}) 60%, rgba(20,20,20,0.9) 100%)`,
-                transform: `skewY(${(i - 3) * 3}deg)`,
-              }}
-            />
-          ))}
-        </Box>
-      </Box>
+      {/* MADE — 외곽선만 있는 글자 */}
+      <Typography
+        aria-hidden
+        sx={{
+          ...bigDisplaySx,
+          left: { xs: '30%', md: '61%' },
+          top: { xs: '58%', md: '41%' },
+          color: 'transparent',
+          WebkitTextStroke: '1px #111111',
+        }}
+      >
+        MADE
+      </Typography>
 
-      <Box
+      <GlassCube
         sx={{
           position: 'absolute',
-          right: { xs: 12, md: 48 },
-          bottom: { xs: 24, md: 48 },
+          left: { xs: '8%', md: '6.5%' },
+          top: { xs: '24%', md: '35%' },
+          transform: { xs: 'scale(1.5)', md: 'none' },
+          zIndex: 2,
         }}
-      >
-        <CircularText
-          text="TURNING EVERY IDEA INTO A VISUAL EXPERIENCE, "
-          size={150}
-          fontSize={9}
-          color="#ffffff"
-          duration={24}
-        />
-      </Box>
+      />
+
+      <RibbonBand
+        sx={{
+          position: 'absolute',
+          left: { xs: '30%', md: '27%' },
+          top: { xs: '16%', md: '6%' },
+          transform: { xs: 'scale(1.35)', md: 'none' },
+          width: '46cqw',
+          height: '40cqw',
+          zIndex: 1,
+        }}
+      />
+
+      <CircularText
+        text="TURNING EVERY IDEA INTO A VISUAL EXPERIENCE THAT CONNECTS PEOPLE, STORIES AND BRANDS. "
+        size={380}
+        fontSize={30}
+        color="#111111"
+        duration={30}
+        reverse
+        sx={{
+          position: 'absolute',
+          left: { xs: '50%', md: '69.5%' },
+          top: { xs: '60%', md: '44%' },
+          width: { xs: '40cqw', md: '23cqw' },
+          height: { xs: '40cqw', md: '23cqw' },
+          zIndex: 3,
+        }}
+      />
     </Box>
   );
 };
