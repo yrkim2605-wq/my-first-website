@@ -8,6 +8,11 @@ import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakery
 import { useRealBakeryPhotos } from '../../context/RealBakeryPhotosContext'
 import { HOVER_LIFT_SX } from '../../constants/motion'
 
+const IMAGE_HEIGHT_BY_SIZE = { lg: 220, default: 150, sm: 96 }
+const PADDING_BY_SIZE = { lg: 3, default: 2.5, sm: 1.75 }
+const CLAMP_BY_SIZE = { lg: 3, default: 2, sm: 1 }
+const AUTHOR_FONT_BY_SIZE = { lg: '0.9rem', default: '0.875rem', sm: '0.8rem' }
+
 const PopularReviewCard = ({
   bakeryId,
   bakeryName,
@@ -18,6 +23,7 @@ const PopularReviewCard = ({
   author,
   rating,
   content,
+  size = 'default',
 }) => {
   const { photosByBakeryId } = useRealBakeryPhotos()
   const photoSrc = BAKERY_PHOTO_BY_ID[bakeryId] || photosByBakeryId[bakeryId] || DEFAULT_BAKERY_PHOTO
@@ -44,7 +50,7 @@ const PopularReviewCard = ({
         },
       }}
     >
-      <Box sx={{ position: 'relative', height: 130, flexShrink: 0, overflow: 'hidden' }}>
+      <Box sx={{ position: 'relative', height: IMAGE_HEIGHT_BY_SIZE[size], flexShrink: 0, overflow: 'hidden', transition: 'height 0.35s ease' }}>
         <Box
           component="img"
           src={photoSrc}
@@ -62,13 +68,13 @@ const PopularReviewCard = ({
         />
       </Box>
 
-      <Box sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ p: PADDING_BY_SIZE[size], flexGrow: 1, display: 'flex', flexDirection: 'column', transition: 'padding 0.35s ease' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Avatar variant="rounded" src={avatarImage} sx={{ width: 28, height: 26, borderRadius: '7px', fontSize: '1rem' }}>
               {avatarEmoji}
             </Avatar>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: AUTHOR_FONT_BY_SIZE[size] }}>
               {author}
             </Typography>
           </Box>
@@ -79,11 +85,10 @@ const PopularReviewCard = ({
           color="text.secondary"
           sx={{
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: CLAMP_BY_SIZE[size],
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
             mb: 1.5,
-            minHeight: '2.6em',
           }}
         >
           {content}
