@@ -1,0 +1,89 @@
+@font-face {
+  font-family: 'OwnglyphParkDaHyun';
+  src: url('./assets/fonts/Ownglyph_ParkDaHyun.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --color-bread-orange: #332419;
+  --color-butter-yellow: #5c4433;
+  --color-cream-bg: #f0ede6;
+  --color-pink: #d9afa0;
+  --color-brown-text: #2e2a25;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-cream-bg);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.wood-panel {
+  background: #332419;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(51, 36, 25, 0.12);
+  color: #fff8ec;
+}
+
+.wood-panel-light {
+  background: #fffbf4;
+  border: 1px solid rgba(46, 42, 37, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(51, 36, 25, 0.05);
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-fade {
+  animation: pageFadeIn 0.4s ease;
+}
+
+@keyframes softFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.soft-fade-in {
+  animation: softFadeIn 0.5s ease;
+}
+
+@keyframes mascotFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+}
+
+.mascot-float {
+  animation: mascotFloat 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade,
+  .soft-fade-in,
+  .mascot-float {
+    animation: none;
+  }
+}
