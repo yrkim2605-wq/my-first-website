@@ -46,7 +46,7 @@ const Header = () => {
         </Typography>
         <Stack
           direction="row"
-          spacing={{ xs: 2, md: 5 }}
+          spacing={{ xs: 3, md: 8 }}
           sx={{ display: { xs: 'none', sm: 'flex' } }}
         >
           {NAV_ITEMS.map((item) => (

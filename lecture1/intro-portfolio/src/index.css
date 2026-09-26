@@ -49,3 +49,24 @@ body {
     transform: rotateY(360deg);
   }
 }
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    left: 130%;
+  }
+}
+
+@keyframes bandSpin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-360deg);
+  }
+}

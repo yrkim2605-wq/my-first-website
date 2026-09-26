@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import Box from '@mui/material/Box';
 
 const CircularText = ({
@@ -9,7 +10,7 @@ const CircularText = ({
   reverse = false,
   sx = {},
 }) => {
-  const pathId = `circular-text-path-${text.length}-${size}-${reverse ? 'r' : 'f'}`;
+  const pathId = `circular-text-path-${useId()}`;
   const r = size / 2 - fontSize;
   // reverse: 왼쪽 → 아래 → 오른쪽 → 위 순서(반시계)로 글자가 흐르고, 글자 윗부분이 원 중심을 향한다
   const sweep = reverse ? 0 : 1;
