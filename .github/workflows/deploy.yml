@@ -63,13 +63,22 @@ jobs:
           VITE_KAKAO_REST_KEY: ${{ secrets.VITE_KAKAO_REST_KEY }}
         run: npm run build
 
+      - name: Install intro-portfolio dependencies
+        working-directory: lecture1/intro-portfolio
+        run: npm install
+      - name: Build intro-portfolio
+        working-directory: lecture1/intro-portfolio
+        # 로컬 개발(npm run dev)은 그대로 두고, 배포 빌드에서만 하위 경로를 지정한다
+        run: npm run build -- --base=/my-first-website/intro-portfolio/
+
       - name: Assemble Pages site
         run: |
-          mkdir -p site/my-portfolio site/my-community site/my-bakery-review
+          mkdir -p site/my-portfolio site/my-community site/my-bakery-review site/intro-portfolio
           cp -r lecture1/my-fashion-shop/dist/. site/
           cp -r my-portfolio/. site/my-portfolio/
           cp -r my-community/. site/my-community/
           cp -r my-bakery-review/. site/my-bakery-review/
+          cp -r lecture1/intro-portfolio/dist/. site/intro-portfolio/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
