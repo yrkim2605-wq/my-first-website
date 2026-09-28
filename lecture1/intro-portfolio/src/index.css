@@ -70,3 +70,112 @@ body {
     transform: rotateY(-360deg);
   }
 }
+
+/* 자기소개 페이지: 전등이 깜빡이며 켜진다 */
+@keyframes lampOn {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.8;
+  }
+  26% {
+    opacity: 0.1;
+  }
+  40%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 자기소개 페이지: 매달린 그림이 천천히 흔들린다 */
+@keyframes frameSway {
+  0%,
+  100% {
+    transform: rotate(-1.2deg);
+  }
+  50% {
+    transform: rotate(1.2deg);
+  }
+}
+
+/* 프로젝트 상세 페이지 등장 연출
+   transform 대신 개별 속성(translate·scale)을 움직여, 요소에 이미 있는 transform(가운데 맞춤 등)과 겹치지 않게 한다 */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    translate: 0 1.2cqw;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    translate: 0 -2cqw;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes growDown {
+  from {
+    scale: 1 0;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+
+@keyframes growRight {
+  from {
+    scale: 0 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    scale: 0;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* SVG 선이 처음부터 끝까지 그려진다 (pathLength=1, strokeDasharray=1 기준) */
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 메인 ↔ 자기소개 페이지를 오갈 때 화면을 덮는 검은 막 (src/utils/pageTransition.js) */
+.pageCover {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pageCover.isVisible {
+  opacity: 1;
+  pointer-events: auto;
+}

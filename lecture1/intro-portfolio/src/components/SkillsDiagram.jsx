@@ -7,6 +7,8 @@ import Box from '@mui/material/Box';
 // - 커서가 선에 닿으면 그 부분만 작은 입자로 부서졌다가 멀어지면 다시 이어진다 (가끔 저절로 부서지기도 한다)
 // - 가장 가까운 선은 가운데에서부터 진한 선이 차오르고, 글자가 진해지며 커서 쪽으로 살짝 끌린다
 // - 커서가 사각형에 가까워지면 사각형이 커지며 "WHO AM I ?"가 나타나고, 움직일 땐 진행 방향으로 늘어난다
+// - 누를 수 있다는 걸 알리도록: 처음 화면에 들어오면 한 번 저절로 커졌다 작아지고(맛보기),
+//   평소엔 몇 초마다 네모 물결이 퍼지며, 커졌을 땐 "CLICK →"이 함께 보인다
 // 모든 좌표는 시안 viewBox(2000 × 1026) 단위로 계산하고, 캔버스에 맞춰 축소·확대해 그린다.
 
 const VIEW_W = 2000;
@@ -19,6 +21,17 @@ const SQUARE_HOVER_SIZE = 150;
 const SQUARE_HOVER_RADIUS = 185 * U; // 이 안에 커서가 오면 커진다
 const SQUARE_FOLLOW = [72 * U, 70 * U]; // 커서가 끝에 있을 때 따라가는 최대 거리
 const SQUARE_LABEL = 'WHO AM I ?';
+const SQUARE_CTA = 'CLICK';
+
+// 맛보기 — 선이 다 그려진 뒤 사각형이 저절로 한 번 커졌다 작아진다
+const TEASER_DELAY_MS = 1500; // 섹션이 보이기 시작한 뒤 기다리는 시간
+const TEASER_HOLD_MS = 1600; // 커진 채로 보여주는 시간
+
+// 물결 — 사각형 둘레로 네모 테두리가 퍼져 나간다
+const RIPPLE_EVERY_MS = 4500;
+const RIPPLE_MS = 1600; // 한 번 퍼지는 데 걸리는 시간
+const RIPPLE_GROW = 90; // 퍼지면서 커지는 크기 (viewBox 단위)
+const RIPPLE_ECHO_MS = 280; // 두 번째 테두리가 뒤따라오는 간격
 
 // 선
 const HOVER_RADIUS = 95 * U; // 가장 가까운 선 강조 거리
@@ -35,7 +48,6 @@ const LINE_STYLE = {
   sub: { width: 0.9, color: 'rgba(0, 0, 0, 0.3)' }, // 세부 스킬: 옅은 회색
 };
 const GHOST_COUNT = 24; // 배경 선 개수
-const GRID_GAP = 60 * U; // 배경 격자 간격
 
 // 커서
 const CURSOR_FRAME_FOLLOW = 0.18; // 네모 테두리가 따라오는 속도 (작을수록 느긋하게)
@@ -68,8 +80,13 @@ const createRandom = (seed) => {
   };
 };
 
-const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
+const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize, onSquareClick }) => {
   const canvasRef = useRef(null);
+  // 클릭 콜백은 ref로 들고 있어 바뀌어도 애니메이션을 다시 시작하지 않는다
+  const onSquareClickRef = useRef(onSquareClick);
+  useEffect(() => {
+    onSquareClickRef.current = onSquareClick;
+  }, [onSquareClick]);
 
   // 선마다 움직임 성격(흔들림 크기·속도, 커서를 따라가는 정도, 등장 타이밍)을 정해 둔다
   const lines = useMemo(() => {
@@ -159,6 +176,7 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
     const cursorDot = { x: 0, y: 0 }; // 커서 안쪽 점의 쏠림
     let cursorSize = 9;
     let squareHover = 0;
+    let squareHalf = SQUARE_SIZE / 2; // 지금 그려진 사각형의 절반 크기 (클릭 판정용)
     let enterStart = null;
     let nextStray = performance.now() + STRAY_EVERY_MS[0];
     let visible = false;
@@ -182,6 +200,17 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
     };
     canvas.addEventListener('pointermove', handleMove);
     canvas.addEventListener('pointerleave', handleLeave);
+    // 가운데 사각형(WHO AM I ?)을 누르면 자기소개 페이지로 이동
+    const handleClick = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left - view.ox) / view.scale;
+      const y = (e.clientY - rect.top - view.oy) / view.scale;
+      const reach = Math.max(squareHalf, SQUARE_SIZE); // 작을 때도 누르기 쉽게 여유를 둔다
+      if (Math.abs(x - square.x) <= reach && Math.abs(y - square.y) <= reach) {
+        onSquareClickRef.current?.();
+      }
+    };
+    canvas.addEventListener('click', handleClick);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -219,10 +248,15 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
 
       // 커서가 사각형에 가까우면 커진다 (커질 땐 빠르게, 작아질 땐 천천히)
       const squareDist = Math.hypot(mouse.x - square.x, mouse.y - square.y);
-      const hoverTarget = mouse.on && !reduceMotion ? smootherstep(1 - squareDist / SQUARE_HOVER_RADIUS) : 0;
+      const mouseTarget = mouse.on && !reduceMotion ? smootherstep(1 - squareDist / SQUARE_HOVER_RADIUS) : 0;
+      // 맛보기: 섹션이 보인 뒤 잠깐 저절로 커진다 (움직임 줄이기 설정이면 건너뛴다)
+      const teaserAt = enterStart === null || reduceMotion ? Infinity : now - enterStart - TEASER_DELAY_MS;
+      const teaserTarget = teaserAt >= 0 && teaserAt < TEASER_HOLD_MS ? 1 : 0;
+      const hoverTarget = Math.max(mouseTarget, teaserTarget);
       squareHover += (hoverTarget - squareHover) * (1 - Math.exp(-dt / (hoverTarget > squareHover ? 75 : 120)));
       const squareSize = lerp(SQUARE_SIZE, SQUARE_HOVER_SIZE, easeOut3(squareHover));
       const half = squareSize / 2;
+      squareHalf = half;
 
       // 마우스 움직임 관성 — 빠르게 움직이면 선 끝이 끌려왔다가 돌아간다
       let mdx = mouse.on ? mouse.x - prevMouse.x : 0;
@@ -278,23 +312,6 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
       // ── 그리기 ──
       ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
       ctx.clearRect(0, 0, view.w, view.h);
-
-      // 아주 옅은 배경 격자 — 가운데 사각형을 기준으로 화면 끝까지 깐다
-      const gap = GRID_GAP * view.scale;
-      const gx = view.ox + center.x * view.scale;
-      const gy = view.oy + center.y * view.scale;
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.055)';
-      ctx.lineWidth = 0.5;
-      ctx.beginPath();
-      for (let x = gx % gap; x <= view.w; x += gap) {
-        ctx.moveTo(Math.round(x) + 0.5, 0);
-        ctx.lineTo(Math.round(x) + 0.5, view.h);
-      }
-      for (let y = gy % gap; y <= view.h; y += gap) {
-        ctx.moveTo(0, Math.round(y) + 0.5);
-        ctx.lineTo(view.w, Math.round(y) + 0.5);
-      }
-      ctx.stroke();
 
       ctx.setTransform(
         view.dpr * view.scale,
@@ -530,8 +547,27 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
       } else {
         ctx.fillRect(square.x - half, square.y - half, squareSize, squareSize);
       }
+      // 물결 — 사각형이 작을 때만, 맛보기가 끝난 뒤부터 몇 초마다 두 겹으로 퍼진다
+      const rippleFrom = enterStart === null ? Infinity : enterStart + TEASER_DELAY_MS + TEASER_HOLD_MS + 1200;
+      const rippleCalm = 1 - smootherstep(squareHover / 0.15); // 커지기 시작하면 물결은 사라진다
+      if (!reduceMotion && now > rippleFrom && rippleCalm > 0.01) {
+        const since = (now - rippleFrom) % RIPPLE_EVERY_MS;
+        ctx.save();
+        ctx.lineWidth = 1.2;
+        [0, RIPPLE_ECHO_MS].forEach((offset) => {
+          const p = (since - offset) / RIPPLE_MS;
+          if (p <= 0 || p >= 1) return;
+          const size = SQUARE_SIZE + RIPPLE_GROW * easeOut3(p);
+          ctx.strokeStyle = `rgba(0, 0, 0, ${(1 - p) * 0.45 * rippleCalm})`;
+          ctx.strokeRect(square.x - size / 2, square.y - size / 2, size, size);
+        });
+        ctx.restore();
+      }
+
       const labelAlpha = smootherstep((squareHover - 0.28) / 0.62);
       if (labelAlpha > 0.01) {
+        // "CLICK →"은 이름보다 조금 늦게 나타나고, 화살표가 오른쪽으로 살짝씩 움직인다
+        const ctaAlpha = smootherstep((squareHover - 0.55) / 0.45);
         ctx.save();
         ctx.globalAlpha = labelAlpha;
         ctx.fillStyle = '#ffffff';
@@ -539,7 +575,25 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
         if ('letterSpacing' in ctx) ctx.letterSpacing = '-0.6px';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(SQUARE_LABEL, square.x, square.y);
+        ctx.fillText(SQUARE_LABEL, square.x, square.y - 10 * ctaAlpha);
+        if (ctaAlpha > 0.01) {
+          const ctaY = square.y + 32;
+          const nudge = reduceMotion ? 0 : (Math.sin(t * 5) + 1) * 2.5;
+          ctx.globalAlpha = labelAlpha * ctaAlpha * 0.85;
+          ctx.font = '600 19px "Alumni Sans", sans-serif';
+          if ('letterSpacing' in ctx) ctx.letterSpacing = '1.5px';
+          ctx.textAlign = 'right';
+          ctx.fillText(SQUARE_CTA, square.x + 6, ctaY);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(square.x + 14 + nudge, ctaY);
+          ctx.lineTo(square.x + 32 + nudge, ctaY);
+          ctx.moveTo(square.x + 26 + nudge, ctaY - 5);
+          ctx.lineTo(square.x + 32 + nudge, ctaY);
+          ctx.lineTo(square.x + 26 + nudge, ctaY + 5);
+          ctx.stroke();
+        }
         ctx.restore();
       }
 
@@ -570,6 +624,7 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize }) => {
       resizeObserver.disconnect();
       canvas.removeEventListener('pointermove', handleMove);
       canvas.removeEventListener('pointerleave', handleLeave);
+      canvas.removeEventListener('click', handleClick);
     };
   }, [lines, center, subColor, titleSize, subSize]);
 

@@ -9,7 +9,8 @@ const NAV_ITEMS = [
   { label: 'CONTACT', href: '#contact' },
 ];
 
-const Header = () => {
+// linkPrefix: 다른 페이지(예: 자기소개)에서 쓸 때 메인 페이지 주소를 앞에 붙여 메인의 각 섹션으로 돌아가게 한다
+const Header = ({ linkPrefix = '' }) => {
   return (
     <Box
       component="header"
@@ -31,7 +32,7 @@ const Header = () => {
       >
         <Typography
           component="a"
-          href="#home"
+          href={`${linkPrefix}#home`}
           sx={{
             fontFamily: '"Stick No Bills", sans-serif',
             fontWeight: 800,
@@ -53,7 +54,7 @@ const Header = () => {
             <Typography
               key={item.label}
               component="a"
-              href={item.href}
+              href={`${linkPrefix}${item.href}`}
               sx={{
                 fontFamily: '"Alumni Sans", sans-serif',
                 fontWeight: 600,

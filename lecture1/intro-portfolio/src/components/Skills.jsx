@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import SkillsDiagram from './SkillsDiagram';
+import { navigateWithFade } from '../utils/pageTransition';
 
 // 좌표는 2000 × 1026 시안 기준 (viewBox 단위)
 // line: 선이 끝나는 지점, label: 글자 위치, anchor: 글자 정렬 기준
@@ -70,13 +71,21 @@ const SKILLS = [
   },
 ];
 
+// 가운데 "WHO AM I ?" 사각형을 누르면 열리는 자기소개 페이지
+const ABOUT_ME_URL = `${import.meta.env.BASE_URL}about.html`;
+const handleWhoAmIClick = () => {
+  navigateWithFade(() => {
+    window.location.href = ABOUT_ME_URL;
+  });
+};
+
 const SUB_COLOR = '#949494';
 // 폰트 명세(1440px 기준)를 이 viewBox(2000) 단위로 환산: 25px → 34.7, 16px → 22.2
 const TITLE_SIZE = (25 / 1440) * 2000;
 const SUB_SIZE = (16 / 1440) * 2000;
 
-// 시안의 거친 종이 질감을 내는 노이즈
-const NOISE = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E")`;
+// 필름 그레인 같은 노이즈 — 흑백 입자의 대비를 키워(feComponentTransfer) 겹치면(overlay) 거친 질감이 난다
+const NOISE = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.4' intercept='-0.7'/%3E%3CfeFuncG type='linear' slope='2.4' intercept='-0.7'/%3E%3CfeFuncB type='linear' slope='2.4' intercept='-0.7'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
 
 const CAPTIONS = [
   '(03) SKILLS & TOOLS',
@@ -96,16 +105,38 @@ const captionSx = {
 const Skills = () => {
   return (
     <Box
+      id="skills"
       sx={{
         bgcolor: '#c4c4c4',
-        backgroundImage: NOISE,
         color: '#111111',
         px: { xs: 3, md: 0 },
         py: { xs: 8, md: 0 },
         height: { md: '100svh' },
         position: 'relative',
+        isolation: 'isolate', // 노이즈 층(zIndex -1)이 배경색 위·다이어그램 아래에 깔리도록
       }}
     >
+      {/* 노이즈 층 — 움직이지 않는 거친 필름 질감 */}
+      <Box
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: -1,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: NOISE,
+            backgroundSize: '240px 240px',
+            opacity: 0.45,
+            mixBlendMode: 'overlay',
+          },
+        }}
+      />
+
       {/* Desktop radial diagram — 마우스에 반응한다 */}
       <SkillsDiagram
         skills={SKILLS}
@@ -113,6 +144,7 @@ const Skills = () => {
         subColor={SUB_COLOR}
         titleSize={TITLE_SIZE}
         subSize={SUB_SIZE}
+        onSquareClick={handleWhoAmIClick}
       />
 
       {/* 아래 모서리 작은 캡션 — 편집 디자인 같은 정돈된 느낌 */}
@@ -138,7 +170,12 @@ const Skills = () => {
 
       {/* Mobile fallback list */}
       <Stack spacing={2.5} sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
-        <Box sx={{ width: 12, height: 12, bgcolor: '#000000', mb: 1 }} />
+        <Box
+          component="a"
+          href={ABOUT_ME_URL}
+          aria-label="WHO AM I ? — 자기소개 페이지로 이동"
+          sx={{ width: 12, height: 12, bgcolor: '#000000', mb: 1 }}
+        />
         {SKILLS.map((skill) => (
           <Stack key={skill.title} spacing={0.25} sx={{ textAlign: 'center' }}>
             <Typography

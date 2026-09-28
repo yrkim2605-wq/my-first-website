@@ -5,48 +5,60 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
 import FitStage from './FitStage';
+import { navigateWithFade } from '../utils/pageTransition';
+import drJartThumb from '../assets/project-drjart.jpg';
+import aiInfluencerThumb from '../assets/project-ai-influencer.jpg';
+import illustrationThumb from '../assets/project-illustration.png';
 
 // image: 나중에 이미지 경로를 넣으면 회색 박스 대신 이미지가 보인다
-// link: CLICK을 눌렀을 때 열릴 주소 (없으면 null)
+// link: CLICK·썸네일을 눌렀을 때 열릴 주소 (없으면 null)
+//   외부 사이트(http…)는 새 탭으로, 포트폴리오 안의 페이지는 같은 탭에서 화면이 어두워지며 넘어간다
 // backdrop: 카드가 맨 위에 있을 때 뒤에 깔리는 선 장식 ('rays' | 'petals' | 'arcs')
 // aspect: 카드 비율
+// framed: true면 카드에 흰 테두리를 둘러 검은 배경에서 또렷하게 보이게 한다
 const PROJECTS = [
   {
-    title: 'DR.JART+ WEBSITE REDESIGN',
-    body: '더마 코스메틱 브랜드 Dr.Jart+의 웹사이트를 리디자인한 프로젝트',
-    image: null,
-    link: null,
+    title: 'DR.JART+ REDESIGN',
+    body: '"Doctor Joins Art, 의학과 예술의 만남"이라는 브랜드 가치를 실험실 무드의 과학적인 비주얼로 풀어낸 리디자인',
+    image: drJartThumb, // 리디자인한 사이트의 데스크톱 첫 화면(hero) 캡처
+    link: 'https://yrkim2605-wq.github.io/dr-jart-website/',
     backdrop: 'rays',
-    aspect: '3 / 4',
+    aspect: '1440 / 800',
   },
   {
     title: 'AI INFLUENCER PROJECT  X  SIWOOENT',
     body: 'AI 인플루언서를 기획하여 이미지 및 영상을 제작하여 시우이엔티 기업 인스타그램 운영 및 이커머스 판매',
-    image: null,
-    link: null,
+    image: aiInfluencerThumb, // AI 인플루언서 '이서연' 정면·옆모습
+    link: `${import.meta.env.BASE_URL}project-ai.html`, // 프로젝트 상세 페이지
     backdrop: 'petals',
-    aspect: '3 / 4',
+    aspect: '3 / 2',
   },
   {
     title: 'ILLUSTRATION ARCHIVE',
     body: 'CLIP STUDIO 를 활용해 다양한 캐릭터와 비주얼 스타일 제작',
-    image: null,
-    link: null,
+    image: illustrationThumb, // 거울 캐릭터 일러스트
+    link: `${import.meta.env.BASE_URL}project-illustration.html`, // 프로젝트 상세 페이지
     backdrop: 'arcs',
     aspect: '1 / 1',
+    framed: true, // 이미지 가장자리가 검은색이라 배경과 섞이므로
   },
 ];
 
 // 좌표·크기는 2000 × 955 시안 기준 (cqw = 무대 너비의 1%)
-const STAGE_HEIGHT = (955 / 2000) * 100; // 47.75cqw
 const CARD_WIDTH = 33.5; // cqw
-const CARD_START_TOP = 26.3; // cqw — 처음 카드 위치
+const CARD_START_TOP = 27; // cqw — 처음 카드 위치 (아래 카드가 밑에 살짝만 보이도록)
+const CARD_GAP = 1; // cqw — 쌓이기 전, 앞 카드와 그 밑에 대기하는 다음 카드 사이 간격
 // 쌓임 상태별 카드 배치 (시안 좌표): STACK_LAYOUTS[k][i] = k번 카드가 맨 위일 때 i번 카드의 위치·크기
 const STACK_LAYOUTS = [
   [{ top: 14.25, scale: 1 }],
   [{ top: 9.85, scale: 0.9 }, { top: 14.25, scale: 1 }],
   [{ top: 7.25, scale: 0.78 }, { top: 8.75, scale: 0.87 }, { top: 10.4, scale: 1 }],
 ];
+// 카드 높이(cqw) — 너비와 비율로 계산한다
+const cardHeight = (i) => {
+  const [w, h] = PROJECTS[i].aspect.split('/').map(Number);
+  return (CARD_WIDTH * h) / w;
+};
 const STEP_VH = 80; // 카드 한 장이 올라오는 데 필요한 스크롤 양 (창 높이 %)
 const STEPS = PROJECTS.length; // 첫 카드 올라오기 + 나머지 카드들
 const HOLD_VH = 40; // 마지막 카드가 쌓인 뒤 잠시 머무는 스크롤 양
@@ -72,6 +84,21 @@ const PETALS = [
 ];
 const petalPath = ({ length: l, width: w }) =>
   `M0,0 C${w},${-l * 0.3} ${w * 0.9},${-l} 0,${-l} C${-w * 0.9},${-l} ${-w},${-l * 0.3} 0,0`;
+
+// 링크 종류에 맞는 <a> 속성 — 외부 사이트는 새 탭, 내부 페이지는 페이드 전환 후 같은 탭
+const linkProps = (link) => {
+  if (!link) return {};
+  if (/^https?:\/\//.test(link)) return { href: link, target: '_blank', rel: 'noreferrer' };
+  return {
+    href: link,
+    onClick: (event) => {
+      event.preventDefault();
+      navigateWithFade(() => {
+        window.location.href = link;
+      });
+    },
+  };
+};
 
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -107,32 +134,51 @@ const useStackProgress = (ref) => {
   return progress;
 };
 
-// 카드 i의 위치·기울기·크기를 진행도로부터 계산한다
+// 카드 i의 세로 위치(cqw)를 진행도로부터 계산한다
 // 진행도 i → i+1: i번 카드가 올라와 자리 잡는다 (그동안 아래 카드들은 다음 배치로 밀린다)
-const cardStyle = (i, progress) => {
-  let top;
-  let scale = 1;
-  let tilt = 0;
+// 모든 카드는 차례가 오기 전까지 바로 앞 카드 밑에 CARD_GAP만큼 떨어져 대기하며 따라 올라온다
+// (시안: 네번째 섹션.png — 첫 화면에서 두 번째 카드가 밑에 살짝 보인다)
+const cardTop = (i, progress) => {
+  if (progress <= i) {
+    return i === 0 ? CARD_START_TOP : cardTop(i - 1, progress) + cardHeight(i - 1) + CARD_GAP;
+  }
   if (progress <= i + 1) {
-    const local = easeOut(clamp(progress - i, 0, 1));
-    const from = i === 0 ? CARD_START_TOP : STAGE_HEIGHT + 2; // 무대 아래에서 올라온다
-    top = lerp(from, STACK_LAYOUTS[i][i].top, local);
-    if (i > 0) tilt = (1 - local) * 28; // 책장이 펴지듯 기울기가 0으로
-  } else {
-    const state = progress - 1; // 0 ~ STEPS-1: 지금 맨 위 카드 번호 (연속값)
+    return lerp(cardTop(i, i), STACK_LAYOUTS[i][i].top, easeOut(progress - i));
+  }
+  const state = progress - 1; // 0 ~ STEPS-1: 지금 맨 위 카드 번호 (연속값)
+  const s0 = Math.floor(state);
+  const s1 = Math.min(s0 + 1, STEPS - 1);
+  return lerp(STACK_LAYOUTS[s0][i].top, STACK_LAYOUTS[s1][i].top, easeOut(state - s0));
+};
+
+const TILT_DEG = 28; // 카드가 올라오기 전 뒤로 젖혀진 각도
+
+// 카드 i의 위치·기울기·크기·잘림을 진행도로부터 계산한다
+const cardStyle = (i, progress) => {
+  let scale = 1;
+  // 모든 카드는 뒤로 젖혀진 채 대기하다가, 올라오면서 책장이 펴지듯 기울기가 0으로
+  // (윗변을 기준으로 젖혀지므로 앞 카드와의 간격은 그대로다)
+  const tilt = (1 - easeOut(clamp(progress - i, 0, 1))) * TILT_DEG;
+  if (progress > i + 1) {
+    const state = progress - 1;
     const s0 = Math.floor(state);
     const s1 = Math.min(s0 + 1, STEPS - 1);
-    const t = easeOut(state - s0);
-    top = lerp(STACK_LAYOUTS[s0][i].top, STACK_LAYOUTS[s1][i].top, t);
-    scale = lerp(STACK_LAYOUTS[s0][i].scale, STACK_LAYOUTS[s1][i].scale, t);
+    scale = lerp(STACK_LAYOUTS[s0][i].scale, STACK_LAYOUTS[s1][i].scale, easeOut(state - s0));
   }
   // 덮인 카드는 윗부분만 남기고 잘라, 짧은 카드 아래로 긴 카드가 삐져나오지 않게 한다
   const covered = clamp(progress - (i + 1), 0, 1);
+  // 세 번째 카드부터는 앞 카드가 올라오기 시작하기 전까지 숨긴다 (무대 한참 아래에 대기하므로)
+  const isWaiting = i >= 2 && progress < i - 1;
   return {
-    transform: `perspective(120cqw) translateY(${top}cqw) rotateX(${tilt}deg) scale(${scale})`,
+    transform: `perspective(120cqw) translateY(${cardTop(i, progress)}cqw) rotateX(${tilt}deg) scale(${scale})`,
     clipPath: `inset(0 0 ${covered * 65}% 0)`,
+    visibility: isWaiting ? 'hidden' : 'visible',
   };
 };
+
+// CLICK의 세로 위치 — 첫 화면의 첫 카드 윗변 옆에 고정한다 (cqw)
+// 카드들이 자리 잡은 뒤에도 이 높이는 맨 위 카드 옆 범위 안에 들어온다
+const CLICK_TOP = CARD_START_TOP + 0.3;
 
 // 지금 맨 위에 자리 잡은 카드 번호 (카드가 절반 이상 올라오면 바뀐다)
 const activeIndex = (progress) => clamp(Math.floor(progress + 0.5) - 1, 0, STEPS - 1);
@@ -197,9 +243,15 @@ const Arcs = () => (
 
 const BACKDROPS = { rays: Rays, petals: Petals, arcs: Arcs };
 
-const ProjectCard = ({ project, index }) => (
+// link: 주소가 있으면 썸네일을 눌러도 CLICK과 같은 곳이 열린다
+const ProjectCard = ({ project, index, link }) => (
   <Box
+    component={link ? 'a' : 'div'}
+    {...linkProps(link)}
+    aria-label={link ? `${project.title.replace(/\s+/g, ' ')} 열기` : undefined}
     sx={{
+      display: 'block',
+      cursor: link ? 'pointer' : 'default',
       position: 'relative',
       width: '100%',
       aspectRatio: project.aspect,
@@ -208,6 +260,7 @@ const ProjectCard = ({ project, index }) => (
       backgroundSize: 'cover',
       backgroundPosition: 'center top',
       color: '#3a3a3a',
+      border: project.framed ? { xs: '3px solid #ffffff', md: '0.25cqw solid #ffffff' } : 'none',
       boxShadow: '0 -1cqw 3cqw rgba(0, 0, 0, 0.45)',
     }}
   >
@@ -244,37 +297,19 @@ const ProjectCard = ({ project, index }) => (
   </Box>
 );
 
-const Intro = ({ sizes }) => (
-  <Stack spacing={sizes.gap}>
-    <Typography
-      component="h2"
-      sx={{
-        fontFamily: '"Anton", sans-serif',
-        fontWeight: 400,
-        fontSize: sizes.title,
-        letterSpacing: '-0.02em',
-        lineHeight: 1,
-      }}
-    >
-      SELECTED PROJECTS
-    </Typography>
-    <Stack spacing={sizes.subGap}>
-      <Typography
-        sx={{
-          fontFamily: '"Alumni Sans", sans-serif',
-          fontWeight: 600,
-          fontSize: sizes.sub,
-          letterSpacing: '-0.02em',
-          lineHeight: 1.1,
-        }}
-      >
-        TURNING IDEAS INTO VISUAL EXPERIENCES ACROSS DESIGN, WEB AND AI
-      </Typography>
-      <Typography sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 600, fontSize: sizes.ko, letterSpacing: '-0.02em' }}>
-        아이디어를 다양한 방식으로 탐구하고 시각적 경험으로 구현한 프로젝트 입니다.
-      </Typography>
-    </Stack>
-  </Stack>
+const Intro = ({ size }) => (
+  <Typography
+    component="h2"
+    sx={{
+      fontFamily: '"Anton", sans-serif',
+      fontWeight: 400,
+      fontSize: size,
+      letterSpacing: '-0.02em',
+      lineHeight: 1,
+    }}
+  >
+    SELECTED PROJECTS
+  </Typography>
 );
 
 const ProjectInfo = ({ project, sizes }) => (
@@ -309,9 +344,7 @@ const ProjectInfo = ({ project, sizes }) => (
 const ClickHint = ({ link }) => (
   <Stack
     component={link ? 'a' : 'div'}
-    href={link ?? undefined}
-    target={link ? '_blank' : undefined}
-    rel={link ? 'noreferrer' : undefined}
+    {...linkProps(link)}
     direction="row"
     sx={{
       alignItems: 'center',
@@ -356,7 +389,9 @@ const Projects = () => {
       {/* Desktop: 스크롤하면 카드가 아래에서 올라와 책장처럼 포개진다 */}
       <FitStage
         ratio={[2000, 955]}
-        sx={{ display: { xs: 'none', md: 'flex' }, position: 'sticky', top: 0 }}
+        // 무대를 화면 아래에 붙인다 — 화면이 무대보다 세로로 길 때 남는 여백이 아래에 생기면
+        // 첫 화면에서 두 번째 카드가 그만큼 더 드러나기 때문에, 여백을 위쪽으로 보낸다
+        sx={{ display: { xs: 'none', md: 'flex' }, position: 'sticky', top: 0, alignItems: 'flex-end' }}
       >
         {/* 배경 선 장식 — 맨 위 카드에 맞춰 바뀐다 */}
         {PROJECTS.map((project, i) => {
@@ -380,23 +415,21 @@ const Projects = () => {
           );
         })}
 
-        {/* 왼쪽 위 글 — 처음엔 섹션 소개, 두 번째 카드부터는 그 프로젝트 소개 */}
-        <Box sx={{ position: 'absolute', left: '1.4cqw', top: '4.6cqw', ...fadeSx(active === 0) }}>
-          <Intro
-            sizes={{ title: dpx(65), sub: dpx(25), ko: dpx(12), gap: '1.6cqw', subGap: '0.5cqw' }}
-          />
-        </Box>
-        {PROJECTS.slice(1).map((project, i) => (
-          <Box
-            key={project.title}
-            sx={{ position: 'absolute', left: '1.6cqw', top: '5.2cqw', ...fadeSx(active === i + 1) }}
-          >
-            <ProjectInfo
-              project={project}
-              sizes={{ title: dpx(25), body: dpx(12), bodyWidth: '26cqw', gap: '1.4cqw' }}
-            />
+        {/* 왼쪽 위 글 — 섹션 제목은 고정, 그 밑의 프로젝트 소개만 맨 위 카드에 맞춰 바뀐다 */}
+        <Stack spacing="1.6cqw" sx={{ position: 'absolute', left: '1.4cqw', top: '1cqw' }}>
+          <Intro size={dpx(65)} />
+          {/* 세 소개 글을 같은 칸에 겹쳐 두고 지금 카드의 글만 보이게 한다 */}
+          <Box sx={{ display: 'grid' }}>
+            {PROJECTS.map((project, i) => (
+              <Box key={project.title} sx={{ gridArea: '1 / 1', ...fadeSx(active === i) }}>
+                <ProjectInfo
+                  project={project}
+                  sizes={{ title: dpx(25), body: dpx(12), bodyWidth: '26cqw', gap: '1.4cqw' }}
+                />
+              </Box>
+            ))}
           </Box>
-        ))}
+        </Stack>
 
         {PROJECTS.map((project, i) => (
           <Box
@@ -412,20 +445,21 @@ const Projects = () => {
             }}
             style={cardStyle(i, progress)}
           >
-            <ProjectCard project={project} index={i} />
+            {/* 맨 위 카드만 클릭된다 — 뒤로 포개진 카드의 윗부분을 잘못 눌러 열리지 않게 */}
+            <ProjectCard project={project} index={i} link={i === active ? project.link : null} />
           </Box>
         ))}
 
-        {/* CLICK — 맨 위 카드 오른쪽 위 */}
+        {/* CLICK — 맨 위 카드 오른쪽, 한 자리에 고정 (첫 카드는 첫 화면부터 보인다) */}
         {PROJECTS.map((project, i) => (
           <Box
             key={project.title}
             sx={{
               position: 'absolute',
               left: `${50 + CARD_WIDTH / 2 + 0.8}cqw`,
-              top: `${STACK_LAYOUTS[i][i].top + 0.3}cqw`,
               zIndex: STEPS + 1,
-              ...fadeSx(i === active && progress >= i + 0.5),
+              top: `${CLICK_TOP}cqw`,
+              ...fadeSx(i === active && (i === 0 || progress >= i + 0.5)),
             }}
           >
             <ClickHint link={project.link} />
@@ -435,10 +469,10 @@ const Projects = () => {
 
       {/* Mobile: 세로 목록 */}
       <Stack spacing={6} sx={{ display: { xs: 'flex', md: 'none' }, px: 3, py: 8 }}>
-        <Intro sizes={{ title: '12vw', sub: 18, ko: 13, gap: 2, subGap: 1 }} />
+        <Intro size="12vw" />
         {PROJECTS.map((project, i) => (
           <Stack key={project.title} spacing={2}>
-            <ProjectCard project={project} index={i} />
+            <ProjectCard project={project} index={i} link={project.link} />
             <ProjectInfo project={project} sizes={{ title: 20, body: 13, bodyWidth: 'none', gap: 1 }} />
           </Stack>
         ))}
