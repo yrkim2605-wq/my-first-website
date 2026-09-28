@@ -2,6 +2,8 @@ import Box from '@mui/material/Box';
 import Header from '../components/Header';
 import BackButton from '../components/about-me/BackButton';
 import ProjectDetailIntro from '../components/project-detail/ProjectDetailIntro';
+import ProjectDetailGallery from '../components/project-detail/ProjectDetailGallery';
+import SceneFade from '../components/about-me/SceneFade';
 import useSmoothScroll from '../hooks/useSmoothScroll';
 
 // 프로젝트 상세 페이지 — 메인 네 번째 섹션의 카드(썸네일·CLICK)를 누르면 열린다
@@ -21,9 +23,21 @@ const ProjectDetail = ({ project }) => {
 
       <BackButton section="projects" />
 
-      <Box id={project.sections[0].id}>
-        <ProjectDetailIntro project={project} />
-      </Box>
+      {project.gallery ? (
+        <>
+          {/* 01은 화면에 붙은 채 뒤로 물러나고, 02가 그 위를 덮으며 올라온다 (자기소개 페이지와 같은 방식) */}
+          <SceneFade id={project.sections[0].id}>
+            <ProjectDetailIntro project={project} />
+          </SceneFade>
+          <Box sx={{ position: 'relative', zIndex: 1, bgcolor: '#000000' }}>
+            <ProjectDetailGallery project={project} />
+          </Box>
+        </>
+      ) : (
+        <Box id={project.sections[0].id}>
+          <ProjectDetailIntro project={project} />
+        </Box>
+      )}
     </Box>
   );
 };
