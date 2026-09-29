@@ -31,7 +31,7 @@ const FitStage = ({
         sx={{
           position: 'relative',
           containerType: 'inline-size',
-          width: { xs: '100%', md: `min(100cqw, calc(100cqh * ${w} / ${h}))` },
+          width: '100%',
           aspectRatio: { md: `${w} / ${h}` },
           ...stageSx,
         }}
