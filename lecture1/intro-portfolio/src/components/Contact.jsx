@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
 import FitStage from './FitStage';
+import WaveText from './WaveText';
 
 const MAIL = 'melon0503@naver.com';
 const TEL = '010.7221.2605';
@@ -66,7 +67,7 @@ const Contact = () => {
             letterSpacing: '-0.02em',
           }}
         >
-          CONTACT
+          <WaveText text="CONTACT" charDelay={45} />
         </Typography>
 
         <Typography

@@ -4,6 +4,7 @@ import { dpx } from '../constants/typography';
 import Typography from '@mui/material/Typography';
 import WhatIDo from './WhatIDo';
 import FitStage from './FitStage';
+import WaveText from './WaveText';
 
 // 데스크톱: 섹션을 화면에 고정해 두고, 이만큼(창 높이 %) 더 스크롤하는 동안 WHAT I DO 큐브가 구른다
 const ROLL_VH = 120;
@@ -39,9 +40,9 @@ const About = () => {
             letterSpacing: '-0.02em',
           }}
         >
-          FROM CURIOSITY,
+          <WaveText text="FROM CURIOSITY," />
           <br />
-          INTO EXPERIENCE
+          <WaveText text="INTO EXPERIENCE" startDelay={320} />
         </Typography>
 
         <Typography

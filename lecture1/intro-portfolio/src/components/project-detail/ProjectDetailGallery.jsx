@@ -76,13 +76,14 @@ const ProjectDetailGallery = ({ project }) => {
         ))}
       </Typography>
 
-      {/* 설명 */}
+      {/* 설명 — maxWidth로 오른쪽 이미지와 겹치지 않게 자동 줄바꿈한다 */}
       <Typography
         sx={{
           ...aboutKoreanSx,
           position: 'absolute',
           left: dpx(300),
           top: dpx(312),
+          maxWidth: dpx(360),
           fontWeight: 400,
           fontSize: dpx(15),
           lineHeight: 1.5,

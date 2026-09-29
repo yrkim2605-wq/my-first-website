@@ -32,13 +32,20 @@ const BackButton = ({ section = 'skills' }) => {
         alignItems: 'center',
         gap: 1.25,
         py: 1,
-        pr: 1,
+        pl: 1.5,
+        pr: 2,
+        borderRadius: 999,
+        // 페이지 배경이 거의 검정이라 어두운 판은 묻히므로, 테두리가 있는 밝은 유리판을 깐다
+        // → 검정 배경에서도 테두리로 또렷하고, 사진 위에서도 흐림 효과로 도드라진다
+        bgcolor: 'rgba(255, 255, 255, 0.12)',
+        border: '1px solid rgba(255, 255, 255, 0.4)',
+        backdropFilter: 'blur(8px)',
         color: '#ffffff',
         textDecoration: 'none',
-        mixBlendMode: 'difference',
+        transition: 'background-color 0.25s ease, border-color 0.25s ease',
+        '&:hover, &:focus-visible': { bgcolor: 'rgba(255, 255, 255, 0.24)', borderColor: 'rgba(255, 255, 255, 0.7)' },
         '& .backArrow': { transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' },
         '&:hover .backArrow, &:focus-visible .backArrow': { transform: 'translateX(-6px)' },
-        '&:hover .backLabel': { opacity: 0.7 },
       }}
     >
       <Box

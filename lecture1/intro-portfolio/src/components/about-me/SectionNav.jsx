@@ -87,6 +87,15 @@ const SectionNav = ({ activeIndex, sections = ABOUT_SECTIONS, label = '자기소
           transform: 'translateX(-50%)',
           color: '#ffffff',
           textDecoration: 'none',
+          // 검정 배경에서도 테두리로 또렷하고, 사진 위에서도 흐림 효과로 도드라지는 유리판 (BACK 버튼과 짝을 이룬다)
+          px: dpx(14),
+          py: dpx(10),
+          borderRadius: dpx(999),
+          bgcolor: 'rgba(255, 255, 255, 0.12)',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+          backdropFilter: 'blur(8px)',
+          transition: 'background-color 0.25s ease, border-color 0.25s ease',
+          '&:hover, &:focus-visible': { bgcolor: 'rgba(255, 255, 255, 0.24)', borderColor: 'rgba(255, 255, 255, 0.7)' },
         }}
       >
         <Typography sx={{ ...aboutTextSx, fontWeight: 400, fontSize: dpx(12) }}>Scroll</Typography>
@@ -98,7 +107,8 @@ const SectionNav = ({ activeIndex, sections = ABOUT_SECTIONS, label = '자기소
             mt: dpx(10),
             width: dpx(24),
             height: dpx(34),
-            animation: 'float 2.4s ease-in-out infinite',
+            // floatSmall: 창 아래로 밀려나지 않도록, 원래 float보다 적게 움직이는 전용 버전을 쓴다
+            animation: 'floatSmall 2.4s ease-in-out infinite',
             '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
           }}
         >

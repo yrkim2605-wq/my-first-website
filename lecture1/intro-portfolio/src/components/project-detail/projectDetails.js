@@ -10,6 +10,13 @@ import bookRabbit from '../../assets/book-rabbit.jpg';
 import bookLazyAfternoon from '../../assets/book-lazy-afternoon.jpg';
 import bookSwim from '../../assets/book-swim.png';
 import bookWarning from '../../assets/book-warning.png';
+import appleslateKeyring from '../../assets/project-appleslate-keyring.jpg';
+import goodsLaptopSticker from '../../assets/goods-laptop-sticker.jpg';
+import goodsLaptopSticker2 from '../../assets/goods-laptop-sticker-2.jpg';
+import goodsFlatlay from '../../assets/goods-flatlay.jpg';
+import goodsOutdoorKeyring from '../../assets/goods-outdoor-keyring.jpg';
+import goodsIphoneSticker from '../../assets/goods-iphone-sticker.jpg';
+import amuziOcean from '../../assets/amuzi-ocean.jpg';
 
 // 프로젝트 상세 페이지 내용 — 화면 구성(ProjectDetailIntro)은 같고, 여기 값만 프로젝트마다 다르다
 // sheet: 전등 아래 걸리는 큰 이미지 (src가 null이면 회색 자리 표시 상자)
@@ -24,8 +31,8 @@ import bookWarning from '../../assets/book-warning.png';
 const makeSections = (prefix, readyCount = 1) => [
   { id: `${prefix}-01`, label: '01', isReady: true },
   { id: `${prefix}-02`, label: '02', isReady: readyCount >= 2 },
-  { id: `${prefix}-03`, label: '03', isReady: false },
-  { id: `${prefix}-04`, label: '04', isReady: false },
+  { id: `${prefix}-03`, label: '03', isReady: readyCount >= 3 },
+  { id: `${prefix}-04`, label: '04', isReady: readyCount >= 4 },
 ];
 
 export const PROJECT_DETAILS = {
@@ -67,9 +74,8 @@ export const PROJECT_DETAILS = {
     },
   },
 
-  // TODO: 세부 내용은 시안이 나오면 채운다 — 지금은 AI 인플루언서와 같은 구성의 자리 표시
   illustration: {
-    sections: makeSections('project-illustration'),
+    sections: makeSections('project-illustration', 2),
     title: 'ILLUSTRATION\nARCHIVE',
     // 레이아웃 — 제목을 가장 크게, 왼쪽 글 묶음은 모두 같은 너비(columnWidth)로 오른쪽 끝을 맞춘다
     titleDisplay: true,
@@ -123,6 +129,47 @@ export const PROJECT_DETAILS = {
         // 맺음 페이지 — 그림이 홀수 장이라 마지막 쪽을 글로 채운다
         { title: 'AMUZI', lines: ['DAILY ARCHIVE', '2022 — PRESENT'] },
       ],
+    },
+    // 02 화면 — 01과 같은 구성(전등 + 넘겨 보는 책자)으로, 굿즈로 태어나 일상에서 쓰이는 모습을 보여준다
+    // TODO: 문구는 자리 표시 — 실제 판매 채널·수량이 정해지면 다듬는다
+    second: {
+      title: 'AMUZI\nGOODS',
+      titleDisplay: true,
+      titleTop: 92,
+      columnWidth: 340,
+      lampX: 970,
+      showLink: false,
+      description:
+        '일상을 기록하던 어뮤지가 스티커와 키링 같은 실제로 만질 수 있는 굿즈로 태어나 일상 곳곳에 자리를 잡았습니다.',
+      rows: [
+        { label: 'PLATFORM', lines: ['NAVERPLACE'] },
+        { label: 'MARKETING', lines: ['INSTAGRAM'] },
+      ],
+      // 설명글이 01보다 한 줄 짧아서, 01과 같은 간격이 되도록 그만큼 위로 당긴다
+      rowCenters: [281, 309],
+      dividerY: 335,
+      // 구분선 아래 빈 공간 — 바다 버전 어뮤지 그림
+      master: {
+        label: 'Character Drawing',
+        src: amuziOcean,
+        alt: '물놀이하는 어뮤지와 포포 — 바다 컨셉의 어뮤지 캐릭터 그림',
+        aspect: '1 / 1',
+        width: 260, // BACK 버튼과 겹치지 않도록 01의 캐릭터 그림보다 작게
+        top: 379,
+      },
+      book: {
+        spineX: 970,
+        top: 246,
+        page: { w: 360 }, // 01 화면 책자와 같은 크기
+        pages: [
+          { src: appleslateKeyring, title: 'HAPPY SUCCESS', alt: 'APPLESLATE에서 제작한 어뮤지 캐릭터 아크릴 키링 3종 — SUCCESS, FRIEND, LUCKY' },
+          { src: goodsOutdoorKeyring, title: 'OUT & ABOUT', alt: '손에 들고 야외에서 촬영한 어뮤지 키링 3종' },
+          { src: goodsFlatlay, title: 'STICKER & KEYRING', alt: '어뮤지 스티커 시트와 아크릴 키링 2종을 나란히 놓은 플랫레이' },
+          { src: goodsLaptopSticker, title: 'ON LAPTOP', alt: '노트북 상판과 화면 테두리에 붙인 어뮤지 스티커들' },
+          { src: goodsLaptopSticker2, title: 'STICKER PACK', alt: '노트북에 붙인 곰 캐릭터, Marshall 스피커, 체크무늬 컵, 헤드셋 낀 어뮤지 스티커들' },
+          { src: goodsIphoneSticker, title: 'ON IPHONE', alt: '아이폰 뒷면에 붙인 어뮤지 캐릭터 스티커' },
+        ],
+      },
     },
   },
 };

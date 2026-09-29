@@ -6,6 +6,7 @@ import Skills from './components/Skills';
 import Projects from './components/Projects';
 import Contact from './components/Contact';
 import SharedDecor from './components/SharedDecor';
+import ScrollTopButton from './components/ScrollTopButton';
 import useSmoothScroll from './hooks/useSmoothScroll';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
       <Skills />
       <Projects />
       <Contact />
+      <ScrollTopButton />
     </Box>
   );
 }

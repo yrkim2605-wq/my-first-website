@@ -23,7 +23,17 @@ const ProjectDetail = ({ project }) => {
 
       <BackButton section="projects" />
 
-      {project.gallery ? (
+      {project.second ? (
+        <>
+          {/* 01은 화면에 붙은 채 뒤로 물러나고, 02가 같은 구성(전등 + 책자)으로 그 위를 덮으며 올라온다 */}
+          <SceneFade id={project.sections[0].id}>
+            <ProjectDetailIntro project={project} activeIndex={0} />
+          </SceneFade>
+          <Box sx={{ position: 'relative', zIndex: 1, bgcolor: '#000000' }}>
+            <ProjectDetailIntro project={project} data={project.second} activeIndex={1} id={project.sections[1].id} />
+          </Box>
+        </>
+      ) : project.gallery ? (
         <>
           {/* 01은 화면에 붙은 채 뒤로 물러나고, 02가 그 위를 덮으며 올라온다 (자기소개 페이지와 같은 방식) */}
           <SceneFade id={project.sections[0].id}>

@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 
 const NAV_ITEMS = [
   { label: 'HOME', href: '#home' },
-  { label: 'ABOUT', href: '#about' },
+  { label: 'ABOUT', href: '#skills' }, // 세 번째 섹션(Skills)으로 이동
   { label: 'PROJECTS', href: '#projects' },
   { label: 'CONTACT', href: '#contact' },
 ];
@@ -56,6 +56,7 @@ const Header = ({ linkPrefix = '' }) => {
               component="a"
               href={`${linkPrefix}${item.href}`}
               sx={{
+                position: 'relative',
                 fontFamily: '"Alumni Sans", sans-serif',
                 fontWeight: 600,
                 fontSize: 20,
@@ -63,7 +64,20 @@ const Header = ({ linkPrefix = '' }) => {
                 lineHeight: 1,
                 color: '#ffffff',
                 textDecoration: 'none',
-                '&:hover': { opacity: 0.7 },
+                // 마우스를 올리면 밑줄이 왼쪽에서부터 그어진다
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  bottom: '-0.25em',
+                  height: '1px',
+                  bgcolor: 'currentColor',
+                  transform: 'scaleX(0)',
+                  transformOrigin: 'right',
+                  transition: 'transform 0.35s ease',
+                },
+                '&:hover::after, &:focus-visible::after': { transform: 'scaleX(1)', transformOrigin: 'left' },
               }}
             >
               {item.label}

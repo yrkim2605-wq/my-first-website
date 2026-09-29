@@ -41,6 +41,17 @@ body {
   }
 }
 
+/* Scroll 화살표용 — float보다 적게 움직여서, 위쪽 글자와 부딪히지 않는다 */
+@keyframes floatSmall {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.4cqw);
+  }
+}
+
 @keyframes cubeSpin {
   from {
     transform: rotateY(0deg);

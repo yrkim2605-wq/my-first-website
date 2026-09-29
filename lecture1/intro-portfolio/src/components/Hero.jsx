@@ -86,6 +86,8 @@ const Hero = () => {
       ratio={[1192, 600]}
       // 헤더(28px)와 위 여백(30px)을 뺀 만큼만 차지해 첫 화면에 딱 들어오게 한다
       height="calc(100svh - 58px)"
+      // 좌우 여백 없이 항상 가로를 꽉 채운다 (넘치는 세로는 overflow: hidden으로 크롭)
+      fullWidth
       sx={{ mt: '30px', bgcolor: '#ffffff' }}
       stageSx={{ overflow: 'hidden', aspectRatio: { xs: '4 / 5', md: '1192 / 600' } }}
     >

@@ -7,8 +7,9 @@ import { isDesktop } from '../constants/decor';
 
 // WHAT I DO ? 큐브 (참고: dayonedream.com 두 번째 섹션)
 // 평소엔 납작한 검은 박스처럼 보이지만 사실은 정육면체다.
-// 섹션에 들어오면 앞면에 할 수 있는 일이 한 글자씩 타이핑되고,
-// 스크롤을 내리면 앞으로 굴러가며 앞면(목록)은 위로 넘어가고, 아랫면(WHAT I DO ?)이 올라와 앞에 선다.
+// 처음엔 앞면에 질문(WHAT I DO ?)이 보이고, 섹션에 들어오면 아랫면(할 수 있는 일 목록)이
+// 한 글자씩 타이핑되며 준비된다. 스크롤을 내리면 앞으로 굴러가며 앞면(질문)은 위로 넘어가고,
+// 아랫면(목록)이 올라와 답으로 앞에 선다.
 
 const LINES = [
   'WEB DESIGN',
@@ -121,11 +122,27 @@ const WhatIDo = ({ sectionRef }) => {
             willChange: 'transform',
           }}
         >
-          {/* 앞면: 할 수 있는 일 목록 — 섹션에 들어오면 타이핑된다 */}
+          {/* 앞면: WHAT I DO ? — 질문을 먼저 보여 준다 */}
           <Box
             sx={{
               ...faceSx,
               transform: { xs: 'translateZ(35cqw)', md: 'translateZ(10.6cqw)' },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography sx={{ ...textSx, fontSize: { xs: '8cqw', md: dpx(30) } }}>WHAT I DO ?</Typography>
+          </Box>
+
+          {/* 아랫면: 할 수 있는 일 목록 — 구르면 앞으로 올라오며 답으로 타이핑된다 */}
+          <Box
+            sx={{
+              ...faceSx,
+              transform: {
+                xs: 'rotateX(-90deg) translateZ(35cqw)',
+                md: 'rotateX(-90deg) translateZ(10.6cqw)',
+              },
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -146,22 +163,6 @@ const WhatIDo = ({ sectionRef }) => {
                 )}
               </Typography>
             ))}
-          </Box>
-
-          {/* 아랫면: WHAT I DO ? — 구르면 앞으로 올라온다 */}
-          <Box
-            sx={{
-              ...faceSx,
-              transform: {
-                xs: 'rotateX(-90deg) translateZ(35cqw)',
-                md: 'rotateX(-90deg) translateZ(10.6cqw)',
-              },
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Typography sx={{ ...textSx, fontSize: { xs: '8cqw', md: dpx(30) } }}>WHAT I DO ?</Typography>
           </Box>
         </Box>
       </Box>

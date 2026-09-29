@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
 import FitStage from './FitStage';
+import WaveText from './WaveText';
 import { navigateWithFade } from '../utils/pageTransition';
 import drJartThumb from '../assets/project-drjart.jpg';
 import aiInfluencerThumb from '../assets/project-ai-influencer.jpg';
@@ -308,7 +309,7 @@ const Intro = ({ size }) => (
       lineHeight: 1,
     }}
   >
-    SELECTED PROJECTS
+    <WaveText text="SELECTED PROJECTS" charDelay={18} />
   </Typography>
 );
 

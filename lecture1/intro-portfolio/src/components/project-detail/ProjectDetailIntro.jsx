@@ -66,32 +66,37 @@ const lampOnSx = {
   '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
 };
 
-const ProjectDetailIntro = ({ project }) => {
-  const { sections, title, description, rows, persona, sheet, book, master, character } = project;
+// project: 섹션 번호(sections)를 담고 있는 프로젝트 전체 데이터
+// data: 이 화면 하나에 실제로 쓰이는 글·이미지 — 기본은 project 자신(01 화면).
+//   02 화면도 같은 구성으로 보여주고 싶을 때, project.second 같은 별도 데이터를 data로 넘기고
+//   activeIndex·id로 몇 번째 화면인지 알려주면 이 컴포넌트를 그대로 재사용할 수 있다
+const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) => {
+  const { sections } = project;
+  const { title, description, rows, persona, sheet, book, master, character } = data;
   // 시트 위치·크기 — 프로젝트에서 sheet.left / width / aspect를 주면 그 값을 쓴다
   // book이 있으면 시트 대신 넘겨 보는 책자가 전등 아래 걸리고, 선은 책 표지 왼쪽 끝에 닿는다
   const sheetBox = {
-    left: book ? book.spineX - book.page.w - COVER_PAD : (sheet.left ?? SHEET.left),
+    left: book ? book.spineX - book.page.w - COVER_PAD : (sheet?.left ?? SHEET.left),
     width: sheet?.width ?? SHEET.width,
     aspect: sheet?.aspect ?? SHEET.aspect,
   };
-  const lampX = project.lampX ?? LAMP_X;
+  const lampX = data.lampX ?? LAMP_X;
   // 왼쪽 글 묶음 — 제목 위치와 너비(구분선·캐릭터 소개도 같은 너비로 맞춘다)
-  const titleTop = project.titleTop ?? 113;
-  const columnWidth = project.columnWidth ?? 305;
-  const showLink = project.showLink ?? true; // master → sheet 선
-  const rowCenters = project.rowCenters ?? ROW_CENTERS;
-  const dividerY = project.dividerY ?? DIVIDER_Y;
-  const masterImages = master.images ?? [{ src: master.src, alt: master.alt }];
-  const masterWidth = master.width ?? MASTER.width;
-  const masterTop = master.top ?? MASTER.top;
-  const masterAspect = master.aspect ?? MASTER.aspect;
+  const titleTop = data.titleTop ?? 113;
+  const columnWidth = data.columnWidth ?? 305;
+  const showLink = data.showLink ?? Boolean(master); // master → sheet 선 (master가 없으면 그을 곳이 없다)
+  const rowCenters = data.rowCenters ?? ROW_CENTERS;
+  const dividerY = data.dividerY ?? DIVIDER_Y;
+  const masterImages = master ? (master.images ?? [{ src: master.src, alt: master.alt }]) : [];
+  const masterWidth = master?.width ?? MASTER.width;
+  const masterTop = master?.top ?? MASTER.top;
+  const masterAspect = master?.aspect ?? MASTER.aspect;
   const masterImageWidth = (masterWidth - MASTER_GAP * (masterImages.length - 1)) / masterImages.length;
   const masterBottom = masterTop + masterImageWidth / parseAspect(masterAspect);
   const linkPoints = makeLinkPoints(MASTER.left + masterWidth, masterTop + MASTER_LINK_OFFSET, sheetBox.left);
 
   return (
-    <FitStage {...aboutStageProps}>
+    <FitStage id={id} {...aboutStageProps}>
       {/* 불빛 — 전구에서 바닥까지 퍼지는 빛기둥 (자기소개 페이지와 같은 방식) */}
       <Box aria-hidden sx={{ position: 'absolute', inset: 0, filter: `blur(${dpx(10)})`, ...lampOnSx }}>
         <Box
@@ -297,7 +302,7 @@ const ProjectDetailIntro = ({ project }) => {
             letterSpacing: '-0.01em',
             whiteSpace: 'pre',
             // titleDisplay: 제목을 화면에서 가장 큰 글씨(Anton)로 — 페이지의 주인공이 먼저 보이게
-            ...(project.titleDisplay && {
+            ...(data.titleDisplay && {
               fontFamily: '"Anton", sans-serif',
               fontWeight: 400,
               fontSize: dpx(52),
@@ -319,7 +324,7 @@ const ProjectDetailIntro = ({ project }) => {
             lineHeight: 1.4,
             wordBreak: 'keep-all',
             // textWrap: balance — 마지막 줄에 한 단어만 떨어지지 않게 줄 길이를 고르게 나눈다
-            ...(project.titleDisplay && { mt: dpx(16), width: dpx(columnWidth), fontWeight: 400, lineHeight: 1.6, textWrap: 'balance' }),
+            ...(data.titleDisplay && { mt: dpx(16), width: dpx(columnWidth), fontWeight: 400, lineHeight: 1.6, textWrap: 'balance' }),
             ...enterSx('riseIn', TIMING.text + 0.1),
           }}
         >
@@ -402,7 +407,9 @@ const ProjectDetailIntro = ({ project }) => {
         </Box>
       )}
 
-      {/* 왼쪽 아래 — master 이름표 + 이미지 + 설명 */}
+      {/* 왼쪽 아래 — master 이름표 + 이미지 + 설명 (master가 있는 화면만) */}
+      {master && (
+      <>
       <Box
         sx={{
           position: 'absolute',
@@ -466,6 +473,8 @@ const ProjectDetailIntro = ({ project }) => {
         ))}
       </Box>
       )}
+      </>
+      )}
 
       {/* 오른쪽 01~04 표시와 Scroll 안내 — 모든 등장이 끝날 즈음 나타난다
           감싼 상자는 클릭을 막지 않고, 안의 링크만 눌린다 */}
@@ -478,7 +487,7 @@ const ProjectDetailIntro = ({ project }) => {
           ...enterSx('riseIn', TIMING.nav),
         }}
       >
-        <SectionNav activeIndex={0} sections={sections} label="프로젝트 상세 섹션" />
+        <SectionNav activeIndex={activeIndex} sections={sections} label="프로젝트 상세 섹션" />
       </Box>
     </FitStage>
   );
