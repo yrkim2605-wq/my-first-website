@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import FitStage from '../FitStage';
+import ArchiveBook, { COVER_PAD } from './ArchiveBook';
 import SectionNav from '../about-me/SectionNav';
 import { dpx } from '../../constants/typography';
 import { aboutKoreanSx, aboutStageProps, aboutTextSx } from '../about-me/aboutMeStyles';
@@ -10,19 +11,31 @@ import { aboutKoreanSx, aboutStageProps, aboutTextSx } from '../about-me/aboutMe
 // 구성은 모든 프로젝트가 같고, 글·이미지는 project(projectDetails.js)에서 받는다.
 
 const STAGE = { w: 1440, h: 784 };
-const LAMP_X = 732; // 전등·전선의 가운데 x (시안 px)
+const LAMP_X = 732; // 전등·전선의 가운데 x (시안 px) — 프로젝트에서 lampX를 주면 그 값을 쓴다
 const BULB_Y = 77; // 전구 가운데 y
 const BEAM_HALF = 420; // 바닥에서 빛기둥의 절반 너비
 const SHEET = { left: 536, top: 236, width: 808, aspect: '1422 / 796' };
-const MASTER = { left: 24, top: 553, width: 171 };
-// master → sheet를 잇는 선 (꺾이는 점들)
-const LINK_POINTS = [
-  [196, 585],
-  [270, 585],
-  [SHEET.left - 5, 462],
+const MASTER = { left: 24, top: 553, width: 171, aspect: '3 / 2' };
+const MASTER_GAP = 10; // master 이미지가 여러 장일 때 사이 간격
+// master 이름표·설명·선은 이미지 위치에서 이만큼 떨어진다 (이미지를 옮기면 같이 따라간다)
+const MASTER_LABEL_OFFSET = 24; // 이미지 윗변 → 이름표 가운데
+const MASTER_CAPTION_GAP = 5; // 이미지 아랫변 → 설명
+const MASTER_LINK_OFFSET = 32; // 이미지 윗변 → 선이 나가는 높이
+// master → sheet를 잇는 선 (꺾이는 점들) — 시작점은 master 오른쪽 끝에 붙는다
+const makeLinkPoints = (masterRight, linkY, sheetLeft) => [
+  [masterRight + 1, linkY],
+  [Math.max(270, masterRight + 16), linkY],
+  [sheetLeft - 5, 462],
 ];
-// ROLE / TOOL / PERIOD 줄의 세로 가운데 위치 (위에서부터 차례로)
+// '3 / 2' 같은 비율 글자 → 3 / 2 = 1.5
+const parseAspect = (aspect) => {
+  const [w, h] = aspect.split('/').map(Number);
+  return w / h;
+};
+// ROLE / TOOL / PERIOD 줄의 세로 가운데 위치 (위에서부터 차례로)와 그 아래 구분선 위치
+// 프로젝트에서 rowCenters / dividerY를 주면 그 값을 쓴다
 const ROW_CENTERS = [254, 327, 393];
+const DIVIDER_Y = 462;
 
 const pctX = (x) => `${((x / STAGE.w) * 100).toFixed(2)}%`;
 const pctY = (y) => `${((y / STAGE.h) * 100).toFixed(2)}%`;
@@ -54,7 +67,28 @@ const lampOnSx = {
 };
 
 const ProjectDetailIntro = ({ project }) => {
-  const { sections, title, description, rows, persona, sheet, master } = project;
+  const { sections, title, description, rows, persona, sheet, book, master, character } = project;
+  // 시트 위치·크기 — 프로젝트에서 sheet.left / width / aspect를 주면 그 값을 쓴다
+  // book이 있으면 시트 대신 넘겨 보는 책자가 전등 아래 걸리고, 선은 책 표지 왼쪽 끝에 닿는다
+  const sheetBox = {
+    left: book ? book.spineX - book.page.w - COVER_PAD : (sheet.left ?? SHEET.left),
+    width: sheet?.width ?? SHEET.width,
+    aspect: sheet?.aspect ?? SHEET.aspect,
+  };
+  const lampX = project.lampX ?? LAMP_X;
+  // 왼쪽 글 묶음 — 제목 위치와 너비(구분선·캐릭터 소개도 같은 너비로 맞춘다)
+  const titleTop = project.titleTop ?? 113;
+  const columnWidth = project.columnWidth ?? 305;
+  const showLink = project.showLink ?? true; // master → sheet 선
+  const rowCenters = project.rowCenters ?? ROW_CENTERS;
+  const dividerY = project.dividerY ?? DIVIDER_Y;
+  const masterImages = master.images ?? [{ src: master.src, alt: master.alt }];
+  const masterWidth = master.width ?? MASTER.width;
+  const masterTop = master.top ?? MASTER.top;
+  const masterAspect = master.aspect ?? MASTER.aspect;
+  const masterImageWidth = (masterWidth - MASTER_GAP * (masterImages.length - 1)) / masterImages.length;
+  const masterBottom = masterTop + masterImageWidth / parseAspect(masterAspect);
+  const linkPoints = makeLinkPoints(MASTER.left + masterWidth, masterTop + MASTER_LINK_OFFSET, sheetBox.left);
 
   return (
     <FitStage {...aboutStageProps}>
@@ -64,10 +98,10 @@ const ProjectDetailIntro = ({ project }) => {
           sx={{
             position: 'absolute',
             inset: 0,
-            clipPath: `polygon(${pctX(LAMP_X - 22)} ${pctY(BULB_Y)}, ${pctX(LAMP_X + 22)} ${pctY(BULB_Y)}, ${pctX(LAMP_X + BEAM_HALF)} 100%, ${pctX(LAMP_X - BEAM_HALF)} 100%)`,
+            clipPath: `polygon(${pctX(lampX - 22)} ${pctY(BULB_Y)}, ${pctX(lampX + 22)} ${pctY(BULB_Y)}, ${pctX(lampX + BEAM_HALF)} 100%, ${pctX(lampX - BEAM_HALF)} 100%)`,
             background: [
-              `radial-gradient(ellipse 30% 75% at ${pctX(LAMP_X)} ${pctY(BULB_Y)}, rgba(255, 244, 205, 0.4), transparent 70%)`,
-              `radial-gradient(ellipse 55% 110% at ${pctX(LAMP_X)} ${pctY(BULB_Y)}, rgba(236, 226, 196, 0.38), rgba(170, 165, 146, 0.22) 50%, rgba(40, 40, 36, 0.1) 95%)`,
+              `radial-gradient(ellipse 30% 75% at ${pctX(lampX)} ${pctY(BULB_Y)}, rgba(255, 244, 205, 0.4), transparent 70%)`,
+              `radial-gradient(ellipse 55% 110% at ${pctX(lampX)} ${pctY(BULB_Y)}, rgba(236, 226, 196, 0.38), rgba(170, 165, 146, 0.22) 50%, rgba(40, 40, 36, 0.1) 95%)`,
             ].join(', '),
           }}
         />
@@ -78,7 +112,7 @@ const ProjectDetailIntro = ({ project }) => {
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(LAMP_X),
+          left: dpx(lampX),
           top: 0,
           height: dpx(SHEET.top),
           width: '1px',
@@ -91,7 +125,7 @@ const ProjectDetailIntro = ({ project }) => {
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(LAMP_X - 29),
+          left: dpx(lampX - 29),
           top: dpx(46),
           width: dpx(58),
           height: dpx(26),
@@ -104,7 +138,7 @@ const ProjectDetailIntro = ({ project }) => {
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(LAMP_X - 70),
+          left: dpx(lampX - 70),
           top: dpx(BULB_Y - 70),
           width: dpx(140),
           height: dpx(140),
@@ -117,7 +151,7 @@ const ProjectDetailIntro = ({ project }) => {
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(LAMP_X - 7),
+          left: dpx(lampX - 7),
           top: dpx(BULB_Y - 7),
           width: dpx(14),
           height: dpx(14),
@@ -134,7 +168,7 @@ const ProjectDetailIntro = ({ project }) => {
           aria-hidden
           sx={{
             position: 'absolute',
-            left: dpx(LAMP_X - 3),
+            left: dpx(lampX - 3),
             top: dpx(y - 3),
             width: dpx(7),
             height: dpx(7),
@@ -144,11 +178,12 @@ const ProjectDetailIntro = ({ project }) => {
           }}
         />
       ))}
+      {persona && (
       <Typography
         sx={{
           ...aboutTextSx,
           position: 'absolute',
-          left: dpx(LAMP_X + 10),
+          left: dpx(lampX + 10),
           top: dpx(151),
           transform: 'translateY(-50%)',
           fontWeight: 400,
@@ -158,16 +193,25 @@ const ProjectDetailIntro = ({ project }) => {
       >
         {persona}
       </Typography>
+      )}
 
       {/* 대표 이미지(sheet) — 불빛 아래 걸린 메인 이미지. 전선 끝에 매달리듯 위에서 살짝 내려앉는다
+          book이 있으면 그 자리에 넘겨 보는 책자가 같은 방식으로 내려앉는다
           이미지가 아직 없으면 같은 크기의 회색 자리 표시 상자를 보여 준다 */}
+      {book ? (
+        // zIndex: 확대된 그림이 master에서 오는 선보다 위에 오게 한다
+        <ArchiveBook
+          book={book}
+          sx={{ zIndex: 1, transformOrigin: 'top center', ...enterSx('sheetIn', TIMING.sheet, 1.2) }}
+        />
+      ) : (
       <Box
         sx={{
           position: 'absolute',
-          left: dpx(SHEET.left),
+          left: dpx(sheetBox.left),
           top: dpx(SHEET.top),
-          width: dpx(SHEET.width),
-          aspectRatio: SHEET.aspect,
+          width: dpx(sheetBox.width),
+          aspectRatio: sheetBox.aspect,
           boxShadow: `0 ${dpx(22)} ${dpx(50)} rgba(0, 0, 0, 0.55)`,
           transformOrigin: 'top center',
           ...enterSx('sheetIn', TIMING.sheet, 1.2),
@@ -197,8 +241,10 @@ const ProjectDetailIntro = ({ project }) => {
           </Box>
         )}
       </Box>
+      )}
 
       {/* master → 시트를 잇는 선 — 시작 점이 나타난 뒤 선이 그려지고, 시트에 닿으면 끝 점이 톡 나타난다 */}
+      {showLink && (
       <Box
         component="svg"
         aria-hidden
@@ -214,7 +260,7 @@ const ProjectDetailIntro = ({ project }) => {
       >
         <Box
           component="polyline"
-          points={LINK_POINTS.map((point) => point.join(',')).join(' ')}
+          points={linkPoints.map((point) => point.join(',')).join(' ')}
           pathLength={1}
           fill="none"
           stroke="#ffffff"
@@ -224,24 +270,25 @@ const ProjectDetailIntro = ({ project }) => {
         />
         <Box
           component="circle"
-          cx={LINK_POINTS[0][0]}
-          cy={LINK_POINTS[0][1]}
+          cx={linkPoints[0][0]}
+          cy={linkPoints[0][1]}
           r={3.5}
           fill="#ffffff"
           sx={enterSx('popIn', TIMING.link - 0.15, 0.4)}
         />
         <Box
           component="circle"
-          cx={LINK_POINTS[2][0]}
-          cy={LINK_POINTS[2][1]}
+          cx={linkPoints[2][0]}
+          cy={linkPoints[2][1]}
           r={5}
           fill="#ffffff"
           sx={enterSx('popIn', TIMING.link + 0.8, 0.5)}
         />
       </Box>
+      )}
 
       {/* 왼쪽 위 — 프로젝트 제목과 소개 (왼쪽 글은 위에서부터 한 줄씩 떠오른다) */}
-      <Box sx={{ position: 'absolute', left: dpx(25), top: dpx(113), width: dpx(380) }}>
+      <Box sx={{ position: 'absolute', left: dpx(25), top: dpx(titleTop), width: dpx(Math.max(columnWidth, 380)) }}>
         <Typography
           component="h1"
           sx={{
@@ -249,6 +296,14 @@ const ProjectDetailIntro = ({ project }) => {
             fontSize: dpx(23),
             letterSpacing: '-0.01em',
             whiteSpace: 'pre',
+            // titleDisplay: 제목을 화면에서 가장 큰 글씨(Anton)로 — 페이지의 주인공이 먼저 보이게
+            ...(project.titleDisplay && {
+              fontFamily: '"Anton", sans-serif',
+              fontWeight: 400,
+              fontSize: dpx(52),
+              lineHeight: 1.02,
+              letterSpacing: '0.005em',
+            }),
             ...enterSx('riseIn', TIMING.text),
           }}
         >
@@ -263,6 +318,8 @@ const ProjectDetailIntro = ({ project }) => {
             fontSize: dpx(12),
             lineHeight: 1.4,
             wordBreak: 'keep-all',
+            // textWrap: balance — 마지막 줄에 한 단어만 떨어지지 않게 줄 길이를 고르게 나눈다
+            ...(project.titleDisplay && { mt: dpx(16), width: dpx(columnWidth), fontWeight: 400, lineHeight: 1.6, textWrap: 'balance' }),
             ...enterSx('riseIn', TIMING.text + 0.1),
           }}
         >
@@ -277,7 +334,7 @@ const ProjectDetailIntro = ({ project }) => {
           sx={{
             position: 'absolute',
             left: dpx(25),
-            top: dpx(ROW_CENTERS[i]),
+            top: dpx(rowCenters[i]),
             transform: 'translateY(-50%)',
             display: 'flex',
             alignItems: 'center',
@@ -303,8 +360,8 @@ const ProjectDetailIntro = ({ project }) => {
         sx={{
           position: 'absolute',
           left: dpx(25),
-          top: dpx(462),
-          width: dpx(305),
+          top: dpx(dividerY),
+          width: dpx(columnWidth),
           height: '1px',
           bgcolor: 'rgba(255, 255, 255, 0.3)',
           transformOrigin: 'left',
@@ -312,13 +369,46 @@ const ProjectDetailIntro = ({ project }) => {
         }}
       />
 
+      {/* 구분선 아래 — 캐릭터 소개 (character가 있는 프로젝트만) */}
+      {character && (
+        <Box
+          sx={{
+            position: 'absolute',
+            left: dpx(25),
+            top: dpx(dividerY + 24),
+            width: dpx(columnWidth),
+            ...enterSx('riseIn', TIMING.text + 0.8),
+          }}
+        >
+          <Typography sx={{ ...aboutTextSx, fontSize: dpx(12), letterSpacing: '0.08em', color: '#a3a3a3' }}>
+            {character.label}
+          </Typography>
+          <Box sx={{ mt: dpx(8), display: 'flex', alignItems: 'baseline', gap: dpx(8) }}>
+            <Typography component="h2" sx={{ ...aboutTextSx, fontFamily: '"Anton", sans-serif', fontWeight: 400, fontSize: dpx(30) }}>
+              {character.name}
+            </Typography>
+            <Typography sx={{ ...aboutKoreanSx, color: '#ffffff', fontSize: dpx(12) }}>{character.nameKo}</Typography>
+          </Box>
+          <Box sx={{ mt: dpx(8) }}>
+            {character.description.map((line) => (
+              <Typography
+                key={line}
+                sx={{ ...aboutKoreanSx, color: '#ffffff', fontSize: dpx(12), lineHeight: 1.6, wordBreak: 'keep-all', textWrap: 'balance' }}
+              >
+                {line}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
+      )}
+
       {/* 왼쪽 아래 — master 이름표 + 이미지 + 설명 */}
       <Box
         sx={{
           position: 'absolute',
           left: dpx(25),
-          top: dpx(529),
-          width: dpx(MASTER.left + MASTER.width - 25),
+          top: dpx(masterTop - MASTER_LABEL_OFFSET),
+          width: dpx(MASTER.left + masterWidth - 25),
           transform: 'translateY(-50%)',
           display: 'flex',
           alignItems: 'center',
@@ -332,26 +422,39 @@ const ProjectDetailIntro = ({ project }) => {
         <Box aria-hidden sx={{ flex: 1, height: '1px', bgcolor: 'rgba(255, 255, 255, 0.5)' }} />
       </Box>
       <Box
-        component="img"
-        src={master.src}
-        alt={master.alt}
         sx={{
           position: 'absolute',
           left: dpx(MASTER.left),
-          top: dpx(MASTER.top),
-          width: dpx(MASTER.width),
-          aspectRatio: '3 / 2',
-          objectFit: 'cover',
-          display: 'block',
+          top: dpx(masterTop),
+          width: dpx(masterWidth),
+          display: 'flex',
+          gap: dpx(MASTER_GAP),
           ...enterSx('riseIn', TIMING.master + 0.1),
         }}
-      />
+      >
+        {masterImages.map((image) => (
+          <Box
+            key={image.src}
+            component="img"
+            src={image.src}
+            alt={image.alt}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              aspectRatio: masterAspect,
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        ))}
+      </Box>
+      {master.captions && (
       <Box
         sx={{
           position: 'absolute',
           left: dpx(MASTER.left),
-          top: dpx(672),
-          width: dpx(MASTER.width),
+          top: dpx(masterBottom + MASTER_CAPTION_GAP),
+          width: dpx(masterWidth),
           textAlign: 'right',
           ...enterSx('riseIn', TIMING.master + 0.2),
         }}
@@ -362,6 +465,7 @@ const ProjectDetailIntro = ({ project }) => {
           </Typography>
         ))}
       </Box>
+      )}
 
       {/* 오른쪽 01~04 표시와 Scroll 안내 — 모든 등장이 끝날 즈음 나타난다
           감싼 상자는 클릭을 막지 않고, 안의 링크만 눌린다 */}
