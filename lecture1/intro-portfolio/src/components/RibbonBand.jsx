@@ -1,22 +1,30 @@
+import { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
+import drJartThumb from '../assets/project-drjart-mobile.png';
+import aiInfluencerThumb from '../assets/project-ai-influencer-left.jpg';
+import illustrationThumb from '../assets/project-illustration.png';
+import appleslateKeyringThumb from '../assets/project-appleslate-keyring.jpg';
 
 // 카드가 둘러선 원기둥 (참고: dayonedream.com 히어로)
 // - 카메라를 가깝게 두어(perspective) 앞쪽 카드는 크게, 뒤쪽 카드는 작게 보이는 강한 원근감
 // - 카드 바깥면엔 이미지, 안쪽면은 연회색 → 뒤쪽에선 원기둥 안쪽 벽이 보인다
 // - 카드 하나를 여러 조각으로 나눠 휘어진 곡면처럼 보이게 한다
 
-// image: 나중에 이미지 경로를 넣으면 회색 그라데이션 대신 이미지가 보인다
+// 프로젝트 4장을 순서대로 반복해 열 장을 채운다 (애플슬레이트 키링은 일러스트 바로 오른쪽에 오도록)
+const PROJECT_IMAGES = [drJartThumb, aiInfluencerThumb, illustrationThumb, appleslateKeyringThumb];
+
+// image: null이면 회색 그라데이션(tone), 있으면 프로젝트 이미지가 보인다
 const PANELS = [
-  { image: null, tone: ['#1d1d1f', '#5a5a5e'] },
-  { image: null, tone: ['#2c2c2e', '#8a8a8e'] },
-  { image: null, tone: ['#141414', '#4a4a4a'] },
-  { image: null, tone: ['#3a3a3c', '#9c9ca0'] },
-  { image: null, tone: ['#202022', '#6e6e72'] },
-  { image: null, tone: ['#101010', '#565656'] },
-  { image: null, tone: ['#303032', '#7c7c80'] },
-  { image: null, tone: ['#1a1a1a', '#646464'] },
-  { image: null, tone: ['#262628', '#8e8e92'] },
-  { image: null, tone: ['#161618', '#5e5e62'] },
+  { image: PROJECT_IMAGES[0], tone: ['#1d1d1f', '#5a5a5e'] },
+  { image: PROJECT_IMAGES[1], tone: ['#2c2c2e', '#8a8a8e'] },
+  { image: PROJECT_IMAGES[2], tone: ['#141414', '#4a4a4a'] },
+  { image: PROJECT_IMAGES[3], tone: ['#3a3a3c', '#9c9ca0'] },
+  { image: PROJECT_IMAGES[0], tone: ['#202022', '#6e6e72'] },
+  { image: PROJECT_IMAGES[1], tone: ['#101010', '#565656'] },
+  { image: PROJECT_IMAGES[2], tone: ['#303032', '#7c7c80'] },
+  { image: PROJECT_IMAGES[3], tone: ['#1a1a1a', '#646464'] },
+  { image: PROJECT_IMAGES[0], tone: ['#262628', '#8e8e92'] },
+  { image: PROJECT_IMAGES[1], tone: ['#161618', '#5e5e62'] },
 ];
 
 const SLICES_PER_PANEL = 8; // 카드 하나를 곡면처럼 보이게 나누는 조각 수
@@ -25,7 +33,8 @@ const RADIUS = 21; // cqw
 const BAND_HEIGHT = 17; // cqw
 const PERSPECTIVE = 50; // cqw — 작을수록 카메라가 가까워 원근감이 강하다
 const TILT = 'rotateZ(-26deg) rotateX(-26deg)'; // 위에서 비스듬히 내려다보는 각도
-const SPIN_SECONDS = 60; // 한 바퀴 도는 시간
+const SPIN_SECONDS = 60; // 가만히 두면 한 바퀴 도는 시간
+const DRAG_SENSITIVITY = 0.35; // 드래그 1px당 도는 각도(deg)
 
 const PANEL_DEG = 360 / PANELS.length;
 const SLICE_DEG = (PANEL_DEG - GAP_DEG) / SLICES_PER_PANEL;
@@ -56,9 +65,67 @@ const faceSx = {
   backfaceVisibility: 'hidden',
 };
 
+// 드래그로 직접 돌릴 수 있는 원기둥 — 손을 떼면 다시 저절로 돈다
+// angleRef: 지금 회전각(도) — 리렌더 없이 매 프레임 spinRef의 DOM에 직접 써서 가볍게 움직인다
+const useDragSpin = () => {
+  const spinRef = useRef(null);
+  const angleRef = useRef(0);
+  const draggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const startAngleRef = useRef(0);
+
+  useEffect(() => {
+    let frame;
+    let last = performance.now();
+    const tick = (now) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      if (!draggingRef.current) {
+        angleRef.current += (360 / SPIN_SECONDS) * dt;
+      }
+      if (spinRef.current) {
+        spinRef.current.style.transform = `rotateY(${angleRef.current}deg)`;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const onPointerDown = (event) => {
+    draggingRef.current = true;
+    startXRef.current = event.clientX;
+    startAngleRef.current = angleRef.current;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const onPointerMove = (event) => {
+    if (!draggingRef.current) return;
+    const dx = event.clientX - startXRef.current;
+    angleRef.current = startAngleRef.current + dx * DRAG_SENSITIVITY;
+  };
+  const endDrag = () => {
+    draggingRef.current = false;
+  };
+
+  return { spinRef, dragHandlers: { onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag } };
+};
+
 const RibbonBand = ({ sx = {} }) => {
+  const { spinRef, dragHandlers } = useDragSpin();
+
   return (
-    <Box aria-hidden sx={{ perspective: `${PERSPECTIVE}cqw`, ...sx }}>
+    <Box
+      aria-hidden
+      {...dragHandlers}
+      sx={{
+        perspective: `${PERSPECTIVE}cqw`,
+        cursor: 'grab',
+        touchAction: 'pan-y',
+        userSelect: 'none',
+        '&:active': { cursor: 'grabbing' },
+        ...sx,
+      }}
+    >
       <Box
         sx={{
           position: 'relative',
@@ -77,11 +144,11 @@ const RibbonBand = ({ sx = {} }) => {
           }}
         >
           <Box
+            ref={spinRef}
             sx={{
               position: 'absolute',
               inset: 0,
               transformStyle: 'preserve-3d',
-              animation: `bandSpin ${SPIN_SECONDS}s linear infinite`,
             }}
           >
             {SLICES.map((item) => (
