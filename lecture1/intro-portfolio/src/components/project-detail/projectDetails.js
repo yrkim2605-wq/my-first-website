@@ -37,6 +37,7 @@ const makeSections = (prefix, readyCount = 1) => [
 
 export const PROJECT_DETAILS = {
   ai: {
+    key: 'ai', // 양옆 이전·다음 페이지를 고르는 이름 (pages/ProjectDetail)
     sections: makeSections('project-ai', 2),
     title: 'AI INFLUENCER PROJECT   X   SIWOOENT',
     description: 'AI 인플루언서를 기획하여 이미지 및 영상을 제작하여 시우이엔티 기업 인스타그램 운영 및 이커머스 판매',
@@ -75,6 +76,7 @@ export const PROJECT_DETAILS = {
   },
 
   illustration: {
+    key: 'illustration',
     sections: makeSections('project-illustration', 2),
     title: 'ILLUSTRATION\nARCHIVE',
     // 레이아웃 — 제목을 가장 크게, 왼쪽 글 묶음은 모두 같은 너비(columnWidth)로 오른쪽 끝을 맞춘다

@@ -4,12 +4,20 @@ import BackButton from '../components/about-me/BackButton';
 import ProjectDetailIntro from '../components/project-detail/ProjectDetailIntro';
 import ProjectDetailGallery from '../components/project-detail/ProjectDetailGallery';
 import SceneFade from '../components/about-me/SceneFade';
+import SiteEffects from '../components/SiteEffects';
+import EdgeNav, { PAGE_LINKS } from '../components/EdgeNav';
 import useSmoothScroll from '../hooks/useSmoothScroll';
 
 // 프로젝트 상세 페이지 — 메인 네 번째 섹션의 카드(썸네일·CLICK)를 누르면 열린다
 // project: projectDetails.js의 한 항목 (프로젝트마다 진입점에서 넘겨준다)
 
 const HOME_URL = import.meta.env.BASE_URL;
+
+// 양옆 이전·다음 페이지 (EdgeNav의 순서: MAIN → ABOUT ME → AI → ILLUSTRATION → MAIN)
+const EDGE_PAGES = {
+  ai: { prev: PAGE_LINKS.about, next: PAGE_LINKS.illustration },
+  illustration: { prev: PAGE_LINKS.ai, next: PAGE_LINKS.main },
+};
 
 const ProjectDetail = ({ project }) => {
   useSmoothScroll();
@@ -22,6 +30,8 @@ const ProjectDetail = ({ project }) => {
       </Box>
 
       <BackButton section="projects" />
+      <EdgeNav {...EDGE_PAGES[project.key]} />
+      <SiteEffects />
 
       {project.second ? (
         <>

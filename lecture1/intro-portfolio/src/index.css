@@ -259,3 +259,75 @@ button:focus-visible,
     translate: 0 0;
   }
 }
+
+/* ───────── 필름 노이즈 (src/components/SiteEffects.jsx) ─────────
+   화면보다 큰 노이즈 판을 깔고 짧게 툭툭 옮겨 입자가 지글거리는 것처럼 보이게 한다
+   (배경 위치 대신 transform으로 옮겨 다시 그리지 않고 가볍게 움직인다) */
+.filmGrain {
+  position: fixed;
+  inset: -50%;
+  z-index: 9000;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .filmGrain {
+    animation: grainShift 0.8s steps(1) infinite;
+  }
+}
+
+@keyframes grainShift {
+  0% { transform: translate(0, 0); }
+  12.5% { transform: translate(-3%, -5%); }
+  25% { transform: translate(-8%, 2%); }
+  37.5% { transform: translate(4%, -9%); }
+  50% { transform: translate(-6%, 7%); }
+  62.5% { transform: translate(7%, 3%); }
+  75% { transform: translate(2%, 8%); }
+  87.5% { transform: translate(-9%, -2%); }
+}
+
+/* ───────── 메인 로딩 인트로 (src/components/IntroLoader.jsx) ─────────
+   세로선이 그어진 뒤(0~0.45초) 작은 네모로 접히고(~0.8초), 1.05초부터 화면이 걷힌다
+   — 걷히기 시작하는 때는 decor.js의 INTRO_SECONDS와 맞춘다 */
+.introLoader {
+  position: fixed;
+  inset: 0;
+  z-index: 8900;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  animation: introOut 0.45s cubic-bezier(0.4, 0, 0.2, 1) 1.05s forwards;
+}
+
+.introMark {
+  display: block;
+  width: 1px;
+  height: 0;
+  background: #111111;
+  animation: introLine 0.8s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+}
+
+@keyframes introLine {
+  0% {
+    width: 1px;
+    height: 0;
+  }
+  55% {
+    width: 1px;
+    height: 28vh;
+  }
+  100% {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@keyframes introOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}

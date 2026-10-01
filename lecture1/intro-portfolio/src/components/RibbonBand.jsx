@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
+import { navigateWithFade } from '../utils/pageTransition';
 import drJartThumb from '../assets/project-drjart-mobile.png';
 import aiInfluencerThumb from '../assets/project-ai-influencer-left.jpg';
 import illustrationThumb from '../assets/project-illustration.png';
@@ -9,22 +10,30 @@ import appleslateKeyringThumb from '../assets/project-appleslate-keyring.jpg';
 // - 카메라를 가깝게 두어(perspective) 앞쪽 카드는 크게, 뒤쪽 카드는 작게 보이는 강한 원근감
 // - 카드 바깥면엔 이미지, 안쪽면은 연회색 → 뒤쪽에선 원기둥 안쪽 벽이 보인다
 // - 카드 하나를 여러 조각으로 나눠 휘어진 곡면처럼 보이게 한다
+// - 카드를 누르면 그 프로젝트로 이동한다 (끌어서 돌린 경우는 제외)
 
 // 프로젝트 4장을 순서대로 반복해 열 장을 채운다 (애플슬레이트 키링은 일러스트 바로 오른쪽에 오도록)
-const PROJECT_IMAGES = [drJartThumb, aiInfluencerThumb, illustrationThumb, appleslateKeyringThumb];
+// link: 아래 Projects 섹션과 같은 주소 — 외부 사이트는 새 탭, 포트폴리오 안의 페이지는 화면이 어두워지며 넘어간다
+//   애플슬레이트 키링은 일러스트 상세 페이지의 굿즈 작업이라 그 페이지로 보낸다
+const PROJECT_CARDS = [
+  { image: drJartThumb, link: 'https://yrkim2605-wq.github.io/dr-jart-website/' },
+  { image: aiInfluencerThumb, link: `${import.meta.env.BASE_URL}project-ai.html` },
+  { image: illustrationThumb, link: `${import.meta.env.BASE_URL}project-illustration.html` },
+  { image: appleslateKeyringThumb, link: `${import.meta.env.BASE_URL}project-illustration.html` },
+];
 
 // image: null이면 회색 그라데이션(tone), 있으면 프로젝트 이미지가 보인다
 const PANELS = [
-  { image: PROJECT_IMAGES[0], tone: ['#1d1d1f', '#5a5a5e'] },
-  { image: PROJECT_IMAGES[1], tone: ['#2c2c2e', '#8a8a8e'] },
-  { image: PROJECT_IMAGES[2], tone: ['#141414', '#4a4a4a'] },
-  { image: PROJECT_IMAGES[3], tone: ['#3a3a3c', '#9c9ca0'] },
-  { image: PROJECT_IMAGES[0], tone: ['#202022', '#6e6e72'] },
-  { image: PROJECT_IMAGES[1], tone: ['#101010', '#565656'] },
-  { image: PROJECT_IMAGES[2], tone: ['#303032', '#7c7c80'] },
-  { image: PROJECT_IMAGES[3], tone: ['#1a1a1a', '#646464'] },
-  { image: PROJECT_IMAGES[0], tone: ['#262628', '#8e8e92'] },
-  { image: PROJECT_IMAGES[1], tone: ['#161618', '#5e5e62'] },
+  { ...PROJECT_CARDS[0], tone: ['#1d1d1f', '#5a5a5e'] },
+  { ...PROJECT_CARDS[1], tone: ['#2c2c2e', '#8a8a8e'] },
+  { ...PROJECT_CARDS[2], tone: ['#141414', '#4a4a4a'] },
+  { ...PROJECT_CARDS[3], tone: ['#3a3a3c', '#9c9ca0'] },
+  { ...PROJECT_CARDS[0], tone: ['#202022', '#6e6e72'] },
+  { ...PROJECT_CARDS[1], tone: ['#101010', '#565656'] },
+  { ...PROJECT_CARDS[2], tone: ['#303032', '#7c7c80'] },
+  { ...PROJECT_CARDS[3], tone: ['#1a1a1a', '#646464'] },
+  { ...PROJECT_CARDS[0], tone: ['#262628', '#8e8e92'] },
+  { ...PROJECT_CARDS[1], tone: ['#161618', '#5e5e62'] },
 ];
 
 const SLICES_PER_PANEL = 8; // 카드 하나를 곡면처럼 보이게 나누는 조각 수
@@ -35,6 +44,17 @@ const PERSPECTIVE = 50; // cqw — 작을수록 카메라가 가까워 원근감
 const TILT = 'rotateZ(-26deg) rotateX(-26deg)'; // 위에서 비스듬히 내려다보는 각도
 const SPIN_SECONDS = 60; // 가만히 두면 한 바퀴 도는 시간
 const DRAG_SENSITIVITY = 0.35; // 드래그 1px당 도는 각도(deg)
+const CLICK_SLOP = 6; // px — 이보다 적게 움직이고 떼면 끌기가 아니라 카드 클릭으로 본다
+
+const openLink = (link) => {
+  if (/^https?:\/\//.test(link)) {
+    window.open(link, '_blank', 'noreferrer');
+    return;
+  }
+  navigateWithFade(() => {
+    window.location.href = link;
+  });
+};
 
 const PANEL_DEG = 360 / PANELS.length;
 const SLICE_DEG = (PANEL_DEG - GAP_DEG) / SLICES_PER_PANEL;
@@ -73,6 +93,7 @@ const useDragSpin = () => {
   const draggingRef = useRef(false);
   const startXRef = useRef(0);
   const startAngleRef = useRef(0);
+  const pressedLinkRef = useRef(null); // 누르기 시작한 카드의 주소 (카드 밖이면 null)
 
   useEffect(() => {
     let frame;
@@ -96,18 +117,27 @@ const useDragSpin = () => {
     draggingRef.current = true;
     startXRef.current = event.clientX;
     startAngleRef.current = angleRef.current;
+    // 포인터를 붙잡으면 손을 뗄 때의 대상이 바깥 상자로 바뀌므로, 누른 카드는 지금 기억해 둔다
+    pressedLinkRef.current = event.target.closest('[data-link]')?.dataset.link ?? null;
     event.currentTarget.setPointerCapture(event.pointerId);
   };
   const onPointerMove = (event) => {
     if (!draggingRef.current) return;
     const dx = event.clientX - startXRef.current;
+    if (Math.abs(dx) > CLICK_SLOP) pressedLinkRef.current = null; // 끌기 시작하면 클릭이 아니다
     angleRef.current = startAngleRef.current + dx * DRAG_SENSITIVITY;
   };
   const endDrag = () => {
     draggingRef.current = false;
+    pressedLinkRef.current = null;
+  };
+  const onPointerUp = () => {
+    const link = pressedLinkRef.current;
+    endDrag();
+    if (link) openLink(link);
   };
 
-  return { spinRef, dragHandlers: { onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag } };
+  return { spinRef, dragHandlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: endDrag } };
 };
 
 const RibbonBand = ({ sx = {} }) => {
@@ -122,7 +152,7 @@ const RibbonBand = ({ sx = {} }) => {
         cursor: 'grab',
         touchAction: 'pan-y',
         userSelect: 'none',
-        '&:active': { cursor: 'grabbing' },
+        '&:active, &:active *': { cursor: 'grabbing' },
         ...sx,
       }}
     >
@@ -167,7 +197,10 @@ const RibbonBand = ({ sx = {} }) => {
                 }}
               >
                 {/* 바깥면: 카드 이미지 */}
-                <Box sx={{ ...faceSx, ...outerBackground(item) }} />
+                <Box
+                  data-link={item.panel.link}
+                  sx={{ ...faceSx, ...outerBackground(item), cursor: 'pointer' }}
+                />
                 {/* 안쪽면: 연회색 벽 */}
                 <Box
                   sx={{

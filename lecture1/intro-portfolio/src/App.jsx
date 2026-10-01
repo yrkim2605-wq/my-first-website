@@ -7,6 +7,8 @@ import Projects from './components/Projects';
 import Contact from './components/Contact';
 import SharedDecor from './components/SharedDecor';
 import ScrollTopButton from './components/ScrollTopButton';
+import SiteEffects from './components/SiteEffects';
+import IntroLoader from './components/IntroLoader';
 import useSmoothScroll from './hooks/useSmoothScroll';
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
       <Projects />
       <Contact />
       <ScrollTopButton />
+      <SiteEffects />
+      <IntroLoader />
     </Box>
   );
 }
