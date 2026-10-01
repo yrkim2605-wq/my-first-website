@@ -8,6 +8,8 @@ const CircularText = ({
   color = '#111111',
   duration = 20,
   reverse = false,
+  fontWeight = 600,
+  fit = false, // true면 글자 간격을 늘리고 줄여 원 둘레를 꼭 맞게 한 바퀴 채운다
   sx = {},
 }) => {
   const pathId = `circular-text-path-${useId()}`;
@@ -35,11 +37,15 @@ const CircularText = ({
         <text
           fill={color}
           fontFamily='"Alumni Sans", sans-serif'
-          fontWeight={600}
+          fontWeight={fontWeight}
           fontSize={fontSize}
           letterSpacing={fontSize * -0.02}
         >
-          <textPath href={`#${pathId}`} startOffset="0%">
+          <textPath
+            href={`#${pathId}`}
+            startOffset="0%"
+            {...(fit && { textLength: 2 * Math.PI * r, lengthAdjust: 'spacing' })}
+          >
             {text}
           </textPath>
         </text>

@@ -5,13 +5,14 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import FitStage from './FitStage';
 import WaveText from './WaveText';
+import ClickCursor from './ClickCursor';
 import { navigateWithFade } from '../utils/pageTransition';
 import drJartThumb from '../assets/project-drjart.jpg';
 import aiInfluencerThumb from '../assets/project-ai-influencer.jpg';
 import illustrationThumb from '../assets/project-illustration.png';
 
 // image: 나중에 이미지 경로를 넣으면 회색 박스 대신 이미지가 보인다
-// link: CLICK·썸네일을 눌렀을 때 열릴 주소 (없으면 null)
+// link: 썸네일을 눌렀을 때 열릴 주소 (없으면 null)
 //   외부 사이트(http…)는 새 탭으로, 포트폴리오 안의 페이지는 같은 탭에서 화면이 어두워지며 넘어간다
 // backdrop: 카드가 맨 위에 있을 때 뒤에 깔리는 선 장식 ('rays' | 'petals' | 'arcs')
 // aspect: 카드 비율
@@ -176,10 +177,6 @@ const cardStyle = (i, progress) => {
   };
 };
 
-// CLICK의 세로 위치 — 첫 화면의 첫 카드 윗변 옆에 고정한다 (cqw)
-// 카드들이 자리 잡은 뒤에도 이 높이는 맨 위 카드 옆 범위 안에 들어온다
-const CLICK_TOP = CARD_START_TOP + 0.3;
-
 // 지금 맨 위에 자리 잡은 카드 번호 (카드가 절반 이상 올라오면 바뀐다)
 const activeIndex = (progress) => clamp(Math.floor(progress + 0.5) - 1, 0, STEPS - 1);
 
@@ -243,15 +240,19 @@ const Arcs = () => (
 
 const BACKDROPS = { rays: Rays, petals: Petals, arcs: Arcs };
 
-// link: 주소가 있으면 썸네일을 눌러도 CLICK과 같은 곳이 열린다
+// link: 주소가 있으면 썸네일을 눌러 그 프로젝트를 연다
+// 마우스를 올리면 커서가 CLICK 동그라미로 바뀐다 (ClickCursor — data-click-cursor가 붙은 요소에서)
 const ProjectCard = ({ project, index, link }) => (
   <Box
     component={link ? 'a' : 'div'}
     {...linkProps(link)}
     aria-label={link ? `${project.title.replace(/\s+/g, ' ')} 열기` : undefined}
+    data-click-cursor={link ? '' : undefined}
     sx={{
       display: 'block',
       cursor: link ? 'pointer' : 'default',
+      // 마우스가 있는 기기에선 기본 커서를 숨기고 CLICK 동그라미만 보이게 한다
+      ...(link && { '@media (hover: hover) and (pointer: fine)': { cursor: 'none' } }),
       position: 'relative',
       width: '100%',
       aspectRatio: project.aspect,
@@ -341,55 +342,6 @@ const ProjectInfo = ({ project, sizes }) => (
   </Stack>
 );
 
-// 상세 페이지의 BACK 버튼(about-me/BackButton)과 같은 유리판 알약 버튼 — 화살표는 카드 쪽(왼쪽)을 가리킨다
-// 무대 크기에 맞춰 커지고 작아지도록 BACK 버튼의 px 값을 dpx로 옮겼다
-const ClickHint = ({ link }) => (
-  <Box
-    component={link ? 'a' : 'div'}
-    {...linkProps(link)}
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: dpx(10),
-      py: dpx(8),
-      pl: dpx(12),
-      pr: dpx(16),
-      borderRadius: 999,
-      bgcolor: 'rgba(255, 255, 255, 0.12)',
-      border: '1px solid rgba(255, 255, 255, 0.4)',
-      backdropFilter: 'blur(8px)',
-      color: '#ffffff',
-      textDecoration: 'none',
-      cursor: 'pointer',
-      transition: 'background-color 0.25s ease, border-color 0.25s ease',
-      '&:hover, &:focus-visible': { bgcolor: 'rgba(255, 255, 255, 0.24)', borderColor: 'rgba(255, 255, 255, 0.7)' },
-      '& .clickArrow': { transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' },
-      '&:hover .clickArrow, &:focus-visible .clickArrow': { transform: `translateX(-${dpx(6)})` },
-    }}
-  >
-    <Box
-      component="svg"
-      className="clickArrow"
-      viewBox="0 0 34 24"
-      aria-hidden
-      sx={{ width: dpx(30), height: dpx(20) }}
-    >
-      <path d="M34 12 H2 M13 1 L2 12 L13 23" fill="none" stroke="currentColor" strokeWidth="1.2" />
-    </Box>
-    <Typography
-      sx={{
-        fontFamily: '"Alumni Sans", sans-serif',
-        fontWeight: 600,
-        fontSize: dpx(18),
-        letterSpacing: '0.02em',
-        lineHeight: 1,
-      }}
-    >
-      CLICK
-    </Typography>
-  </Box>
-);
-
 const Projects = () => {
   const sectionRef = useRef(null);
   const progress = useStackProgress(sectionRef);
@@ -465,27 +417,14 @@ const Projects = () => {
             }}
             style={cardStyle(i, progress)}
           >
-            {/* 맨 위 카드만 클릭된다 — 뒤로 포개진 카드의 윗부분을 잘못 눌러 열리지 않게 */}
-            <ProjectCard project={project} index={i} link={i === active ? project.link : null} />
-          </Box>
-        ))}
-
-        {/* CLICK — 맨 위 카드 오른쪽, 한 자리에 고정 (첫 카드는 첫 화면부터 보인다) */}
-        {PROJECTS.map((project, i) => (
-          <Box
-            key={project.title}
-            sx={{
-              position: 'absolute',
-              left: `${50 + CARD_WIDTH / 2 + 0.8}cqw`,
-              zIndex: STEPS + 1,
-              top: `${CLICK_TOP}cqw`,
-              ...fadeSx(i === active && (i === 0 || progress >= i + 0.5)),
-            }}
-          >
-            <ClickHint link={project.link} />
+            {/* 보이는 카드는 모두 눌러 자기 프로젝트를 열 수 있다 (포개진 카드는 드러난 윗부분만 눌린다) */}
+            <ProjectCard project={project} index={i} link={project.link} />
           </Box>
         ))}
       </FitStage>
+
+      {/* 썸네일 위에서 커서가 CLICK 동그라미로 바뀐다 */}
+      <ClickCursor />
 
       {/* Mobile: 세로 목록 */}
       <Stack spacing={6} sx={{ display: { xs: 'flex', md: 'none' }, px: 3, py: 8 }}>

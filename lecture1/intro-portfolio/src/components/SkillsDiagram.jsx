@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import Box from '@mui/material/Box';
+import { INK, POINT_LIME } from '../constants/colors';
 
 // 스킬 방사형 다이어그램 (참고: seunghyuk.com 메인 화면의 동작을 분석해 옮김)
 // - 글자·선 끝은 제자리에 있고, 가운데 사각형만 마우스 쪽으로 스프링처럼 따라가 선들이 흔들린다
@@ -625,6 +626,7 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize, onSquareC
       }
 
       // 네모 커서 — 선이나 사각형 위에선 조금 커지고, 안쪽 점은 움직이는 방향으로 쏠린다
+      // 안을 포인트 색(라임)으로 채워 프로젝트 섹션의 라임 커서와 짝을 이룬다 (테두리·점은 검게 — 흰 바탕에서도 또렷하게)
       if (mouse.on) {
         const active = hovered >= 0 || squareHover > 0.3;
         cursorSize += ((active ? 26 : 18) / 2 - cursorSize) * 0.2;
@@ -634,10 +636,12 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize, onSquareC
         cursorDot.x += (offX - cursorDot.x) * 0.35;
         cursorDot.y += (offY - cursorDot.y) * 0.35;
 
-        ctx.strokeStyle = '#111111';
+        ctx.fillStyle = POINT_LIME;
+        ctx.fillRect(cursor.x - cursorSize, cursor.y - cursorSize, cursorSize * 2, cursorSize * 2);
+        ctx.strokeStyle = INK;
         ctx.lineWidth = 1.5;
         ctx.strokeRect(cursor.x - cursorSize, cursor.y - cursorSize, cursorSize * 2, cursorSize * 2);
-        ctx.fillStyle = '#111111';
+        ctx.fillStyle = INK;
         ctx.beginPath();
         ctx.arc(cursor.x + cursorDot.x, cursor.y + cursorDot.y, CURSOR_DOT_RADIUS, 0, Math.PI * 2);
         ctx.fill();
