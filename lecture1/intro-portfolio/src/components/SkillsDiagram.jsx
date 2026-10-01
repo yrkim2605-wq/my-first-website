@@ -520,6 +520,33 @@ const SkillsDiagram = ({ skills, center, subColor, titleSize, subSize, onSquareC
           ctx.textBaseline = 'middle';
           ctx.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${labelIn})`;
           ctx.fillText(line.title, tx2, ty2);
+
+          // 자격증 배지 — 툴 이름 바로 위에 테두리만 있는 작은 알약 모양으로, 글자와 같이 움직인다
+          // (오른쪽·아래엔 하위 스킬 글자가 가까워 겹치므로 위쪽에 둔다)
+          if (line.certs) {
+            const certSize = subSize * 0.82;
+            const padX = certSize * 0.5;
+            const height = certSize * 1.4;
+            const gap = certSize * 0.35;
+            ctx.font = `600 ${certSize}px "Alumni Sans", sans-serif`;
+            if ('letterSpacing' in ctx) ctx.letterSpacing = `${certSize * 0.04}px`;
+            const widths = line.certs.map((cert) => ctx.measureText(cert).width + padX * 2);
+            const total = widths.reduce((sum, w) => sum + w, 0) + gap * (widths.length - 1);
+            // 툴 이름의 정렬 기준(왼쪽·가운데·오른쪽)에 맞춰 배지 묶음을 놓는다
+            let bx = ctx.textAlign === 'right' ? tx2 - total : ctx.textAlign === 'center' ? tx2 - total / 2 : tx2;
+            const by = ty2 - size * 0.55 - height * 0.5 - 4 * U;
+            ctx.textAlign = 'left';
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = `rgba(${shade}, ${shade}, ${shade}, ${labelIn * 0.7})`;
+            line.certs.forEach((cert, i) => {
+              ctx.beginPath();
+              if (ctx.roundRect) ctx.roundRect(bx, by - height / 2, widths[i], height, height / 2);
+              else ctx.rect(bx, by - height / 2, widths[i], height);
+              ctx.stroke();
+              ctx.fillText(cert, bx + padX, by + certSize * 0.04);
+              bx += widths[i] + gap;
+            });
+          }
         }
       });
 

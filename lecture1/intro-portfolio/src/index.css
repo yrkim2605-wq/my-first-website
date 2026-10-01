@@ -190,3 +190,72 @@ body {
   opacity: 1;
   pointer-events: auto;
 }
+
+/* 키보드(Tab)로 이동할 때만 포커스 테두리를 보여 준다 — 마우스 클릭엔 나타나지 않는다
+   currentColor를 써서 흰 배경·검정 배경 어디서든 글자색과 같은 색으로 또렷하게 보인다 */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* 드래그로 글자를 선택했을 때도 흑백 톤을 유지한다 */
+::selection {
+  background: #111111;
+  color: #ffffff;
+}
+
+/* 화면에는 보이지 않지만 스크린 리더·검색엔진은 읽는 글자 */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ───────── 히어로 첫 등장 연출 (src/components/Hero.jsx) ─────────
+   스크롤 연출이 transform을 쓰므로, 겹치지 않게 clip-path와 개별 속성(translate·scale·rotate)만 움직인다 */
+
+/* 큰 글자: 아래쪽부터 드러나며 올라온다 */
+@keyframes heroRevealUp {
+  from {
+    clip-path: inset(100% 0 0 0);
+    translate: 0 25%;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    translate: 0 0;
+  }
+}
+
+/* 리본·큐브·원형 글자: 작게 기울어진 채 나타나 제자리를 잡는다 */
+@keyframes heroPopIn {
+  from {
+    opacity: 0;
+    scale: 0.6;
+    rotate: -10deg;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
+  }
+}
+
+/* 헤더: 위에서 내려온다 */
+@keyframes heroDropIn {
+  from {
+    opacity: 0;
+    translate: 0 -100%;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}

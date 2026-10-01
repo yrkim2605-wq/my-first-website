@@ -7,7 +7,7 @@ import RibbonBand from './RibbonBand';
 import GlassCube from './GlassCube';
 import FitStage from './FitStage';
 import useScrollFrame from '../hooks/useScrollFrame';
-import { CIRCLE_TEXT_PROPS, isDesktop } from '../constants/decor';
+import { CIRCLE_TEXT_PROPS, heroIntroSx, isDesktop } from '../constants/decor';
 
 const bigDisplaySx = {
   position: 'absolute',
@@ -91,10 +91,13 @@ const Hero = () => {
       sx={{ mt: '30px', bgcolor: '#ffffff' }}
       stageSx={{ overflow: 'hidden', aspectRatio: { xs: '4 / 5', md: '1192 / 600' } }}
     >
+      {/* 페이지 제목 — 화면엔 IDEA·MADE 그래픽으로 보이고, 스크린 리더·검색엔진엔 이 글자로 읽힌다 */}
+      <h1 className="srOnly">IDEAMADE — 김유리(KIM YURI) 포트폴리오</h1>
+
       {/* IDEA — 검정 글자에 오른쪽으로 갈수록 굵어지는 흰 세로 줄무늬 */}
       <Typography
         ref={ideaRef}
-        component="h1"
+        aria-hidden
         sx={{
           ...bigDisplaySx,
           left: '-1.2cqw',
@@ -104,6 +107,7 @@ const Hero = () => {
           backgroundSize: '100% 100%',
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
+          ...heroIntroSx('heroRevealUp', 0.15),
         }}
       >
         IDEA
@@ -119,6 +123,7 @@ const Hero = () => {
           top: { xs: '58%', md: '41%' },
           color: 'transparent',
           WebkitTextStroke: '1px #111111',
+          ...heroIntroSx('heroRevealUp', 0.35),
         }}
       >
         MADE
@@ -137,7 +142,7 @@ const Hero = () => {
           zIndex: 2,
         }}
       >
-        <GlassCube sx={{ display: { xs: 'block', md: 'none' } }} />
+        <GlassCube sx={{ display: { xs: 'block', md: 'none' }, ...heroIntroSx('heroPopIn', 0.85, 1.2) }} />
       </Box>
 
       <Box
@@ -151,6 +156,7 @@ const Hero = () => {
           height: '40cqw',
           zIndex: 1,
           willChange: 'transform',
+          ...heroIntroSx('heroPopIn', 0.55, 1.5),
         }}
       >
         <RibbonBand sx={{ width: '100%', height: '100%' }} />
@@ -168,10 +174,10 @@ const Hero = () => {
           zIndex: 3,
         }}
       >
-        <CircularText
-          {...CIRCLE_TEXT_PROPS}
-          sx={{ display: { xs: 'block', md: 'none' }, width: '100%', height: '100%' }}
-        />
+        {/* 원형 글자는 자체 회전(spin) 애니메이션이 있어, 등장 연출은 감싸는 상자에 따로 건다 */}
+        <Box sx={{ display: { xs: 'block', md: 'none' }, width: '100%', height: '100%', ...heroIntroSx('heroPopIn', 1, 1.2) }}>
+          <CircularText {...CIRCLE_TEXT_PROPS} sx={{ width: '100%', height: '100%' }} />
+        </Box>
       </Box>
     </FitStage>
   );

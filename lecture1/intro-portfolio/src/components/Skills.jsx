@@ -7,6 +7,7 @@ import { navigateWithFade } from '../utils/pageTransition';
 
 // 좌표는 2000 × 1026 시안 기준 (viewBox 단위)
 // line: 선이 끝나는 지점, label: 글자 위치, anchor: 글자 정렬 기준
+// certs: 그 툴로 취득한 자격증 — 툴 이름 위에 작은 배지로 표시된다 (LV.1 = 1급, 영문 폰트에 한글이 없어 영문으로 쓴다)
 const CENTER = { x: 1017, y: 486 };
 
 const SKILLS = [
@@ -14,6 +15,7 @@ const SKILLS = [
     title: 'PHOTOSHOP',
     line: [962, 213],
     label: [925, 186],
+    certs: ['ACP', 'GTQ LV.1'],
     subs: [
       { title: 'RETOUCHING', line: [893, 249], label: [857, 234] },
       { title: 'IMAGE EDITING', line: [743, 351], label: [696, 337] },
@@ -24,6 +26,7 @@ const SKILLS = [
     line: [366, 384],
     label: [343, 373],
     anchor: 'end',
+    certs: ['ACP', 'GTQi LV.1'],
     subs: [{ title: 'LOGO', line: [417, 428], label: [361, 422] }],
   },
   {
@@ -91,6 +94,19 @@ const NOISE = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 const CAPTIONS = ['(03) SKILLS & TOOLS', 'MOVE YOUR CURSOR TO EXPLORE'];
 const TOOLS_TOTAL = SKILLS.length;
 const SUBS_TOTAL = SKILLS.flatMap((skill) => skill.subs).length;
+
+// 모바일 목록용 자격증 배지 — 데스크톱 다이어그램(캔버스)의 배지와 같은 모양
+const certBadgeSx = {
+  px: 1,
+  py: 0.25,
+  border: '1px solid rgba(17, 17, 17, 0.6)',
+  borderRadius: 999,
+  fontFamily: '"Alumni Sans", sans-serif',
+  fontWeight: 600,
+  fontSize: 13,
+  letterSpacing: '0.04em',
+  lineHeight: 1.2,
+};
 
 const captionSx = {
   fontFamily: '"Alumni Sans", sans-serif',
@@ -189,7 +205,16 @@ const Skills = () => {
           sx={{ width: 12, height: 12, bgcolor: '#000000', mb: 1 }}
         />
         {SKILLS.map((skill) => (
-          <Stack key={skill.title} spacing={0.25} sx={{ textAlign: 'center' }}>
+          <Stack key={skill.title} spacing={0.25} sx={{ alignItems: 'center', textAlign: 'center' }}>
+            {skill.certs && (
+              <Stack direction="row" spacing={0.75} sx={{ mb: 0.5 }}>
+                {skill.certs.map((cert) => (
+                  <Box key={cert} component="span" sx={certBadgeSx}>
+                    {cert}
+                  </Box>
+                ))}
+              </Stack>
+            )}
             <Typography
               sx={{
                 fontFamily: '"Alumni Sans", sans-serif',

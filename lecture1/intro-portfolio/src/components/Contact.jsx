@@ -8,7 +8,7 @@ import WaveText from './WaveText';
 
 const MAIL = 'melon0503@naver.com';
 const TEL = '010.7221.2605';
-const GITHUB_URL = 'https://github.com/';
+const GITHUB_URL = 'https://github.com/yrkim2605-wq';
 
 const footerTextSx = {
   fontFamily: '"Alumni Sans", sans-serif',
@@ -54,7 +54,8 @@ const Contact = () => {
       id="contact"
       ratio={[2000, 863]}
       sx={{ bgcolor: '#ffffff', color: '#111111' }}
-      stageSx={{ pt: { xs: '20vw', md: '6.55cqw' }, pb: { xs: 4, md: 0 } }}
+      // 모바일: 오른쪽 아래 TOP 버튼이 푸터 글자를 가리지 않게 아래 여백을 넉넉히 둔다
+      stageSx={{ pt: { xs: '20vw', md: '6.55cqw' }, pb: { xs: 12, md: 0 } }}
     >
       <Stack sx={{ alignItems: 'center', textAlign: 'center' }}>
         <Typography

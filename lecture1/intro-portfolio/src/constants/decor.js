@@ -10,3 +10,12 @@ export const CIRCLE_TEXT_PROPS = {
 
 // MUI md 브레이크포인트(900px) 이상인지
 export const isDesktop = () => window.matchMedia('(min-width: 900px)').matches;
+
+// 히어로 첫 등장 연출 — 사이트에 처음 들어왔을 때 한 번 재생된다 (키프레임은 index.css)
+// name: heroRevealUp(큰 글자) · heroPopIn(리본·큐브·원형 글자) · heroDropIn(헤더)
+// '동작 줄이기' 사용자에겐 재생하지 않는다
+export const heroIntroSx = (name, delay, duration = 1.3) => ({
+  '@media (prefers-reduced-motion: no-preference)': {
+    animation: `${name} ${duration}s cubic-bezier(0.77, 0, 0.18, 1) ${delay}s both`,
+  },
+});

@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { heroIntroSx } from '../constants/decor';
 
 const NAV_ITEMS = [
   { label: 'HOME', href: '#home' },
@@ -10,7 +11,8 @@ const NAV_ITEMS = [
 ];
 
 // linkPrefix: 다른 페이지(예: 자기소개)에서 쓸 때 메인 페이지 주소를 앞에 붙여 메인의 각 섹션으로 돌아가게 한다
-const Header = ({ linkPrefix = '' }) => {
+// intro: 메인 페이지에서 히어로 첫 등장 연출과 함께 위에서 내려온다
+const Header = ({ linkPrefix = '', intro = false }) => {
   return (
     <Box
       component="header"
@@ -23,7 +25,8 @@ const Header = ({ linkPrefix = '' }) => {
         transform: 'translateY(5px)',
         py: { xs: 1, md: 0.5 },
         lineHeight: 1,
-        px: { xs: 3, md: 3 },
+        px: { xs: 2, md: 3 },
+        ...(intro && heroIntroSx('heroDropIn', 1.1, 0.9)),
       }}
     >
       <Stack
@@ -46,9 +49,11 @@ const Header = ({ linkPrefix = '' }) => {
           IDEAMADE
         </Typography>
         <Stack
+          component="nav"
+          aria-label="주요 메뉴"
           direction="row"
-          spacing={{ xs: 3, md: 8 }}
-          sx={{ display: { xs: 'none', sm: 'flex' } }}
+          // 모바일에서도 메뉴를 숨기지 않고 간격·글자만 줄여 보여 준다
+          spacing={{ xs: 2, sm: 4, md: 8 }}
         >
           {NAV_ITEMS.map((item) => (
             <Typography
@@ -59,8 +64,8 @@ const Header = ({ linkPrefix = '' }) => {
                 position: 'relative',
                 fontFamily: '"Alumni Sans", sans-serif',
                 fontWeight: 600,
-                fontSize: 20,
-                letterSpacing: '-0.07em',
+                fontSize: { xs: 15, md: 20 },
+                letterSpacing: '0.02em',
                 lineHeight: 1,
                 color: '#ffffff',
                 textDecoration: 'none',

@@ -3,7 +3,7 @@ export const ABOUT_SECTIONS = [
   // isReady: 내용이 완성된 섹션만 점·화살표로 이동할 수 있다
   { id: 'about-01', label: '01', isReady: true },
   { id: 'about-02', label: '02', isReady: true },
-  { id: 'about-03', label: '03', isReady: false },
+  { id: 'about-03', label: '03', isReady: true },
   { id: 'about-04', label: '04', isReady: false },
 ];
 

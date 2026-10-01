@@ -3,7 +3,6 @@ import Box from '@mui/material/Box';
 import { dpx } from '../constants/typography';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
-import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
 import FitStage from './FitStage';
 import WaveText from './WaveText';
 import { navigateWithFade } from '../utils/pageTransition';
@@ -36,7 +35,7 @@ const PROJECTS = [
   },
   {
     title: 'ILLUSTRATION ARCHIVE',
-    body: 'CLIP STUDIO 를 활용해 다양한 캐릭터와 비주얼 스타일 제작',
+    body: 'CLIP STUDIO를 활용해 다양한 캐릭터와 비주얼 스타일 제작',
     image: illustrationThumb, // 거울 캐릭터 일러스트
     link: `${import.meta.env.BASE_URL}project-illustration.html`, // 프로젝트 상세 페이지
     backdrop: 'arcs',
@@ -342,33 +341,53 @@ const ProjectInfo = ({ project, sizes }) => (
   </Stack>
 );
 
+// 상세 페이지의 BACK 버튼(about-me/BackButton)과 같은 유리판 알약 버튼 — 화살표는 카드 쪽(왼쪽)을 가리킨다
+// 무대 크기에 맞춰 커지고 작아지도록 BACK 버튼의 px 값을 dpx로 옮겼다
 const ClickHint = ({ link }) => (
-  <Stack
+  <Box
     component={link ? 'a' : 'div'}
     {...linkProps(link)}
-    direction="row"
     sx={{
+      display: 'flex',
       alignItems: 'center',
-      gap: '0.8cqw',
+      gap: dpx(10),
+      py: dpx(8),
+      pl: dpx(12),
+      pr: dpx(16),
+      borderRadius: 999,
+      bgcolor: 'rgba(255, 255, 255, 0.12)',
+      border: '1px solid rgba(255, 255, 255, 0.4)',
+      backdropFilter: 'blur(8px)',
       color: '#ffffff',
       textDecoration: 'none',
       cursor: 'pointer',
-      '&:hover': { opacity: 0.7 },
+      transition: 'background-color 0.25s ease, border-color 0.25s ease',
+      '&:hover, &:focus-visible': { bgcolor: 'rgba(255, 255, 255, 0.24)', borderColor: 'rgba(255, 255, 255, 0.7)' },
+      '& .clickArrow': { transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' },
+      '&:hover .clickArrow, &:focus-visible .clickArrow': { transform: `translateX(-${dpx(6)})` },
     }}
   >
-    <ArrowBackIosNewRoundedIcon sx={{ fontSize: '1.1cqw' }} />
+    <Box
+      component="svg"
+      className="clickArrow"
+      viewBox="0 0 34 24"
+      aria-hidden
+      sx={{ width: dpx(30), height: dpx(20) }}
+    >
+      <path d="M34 12 H2 M13 1 L2 12 L13 23" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    </Box>
     <Typography
       sx={{
         fontFamily: '"Alumni Sans", sans-serif',
         fontWeight: 600,
-        fontSize: '1.4cqw',
-        letterSpacing: '-0.04em',
+        fontSize: dpx(18),
+        letterSpacing: '0.02em',
         lineHeight: 1,
       }}
     >
       CLICK
     </Typography>
-  </Stack>
+  </Box>
 );
 
 const Projects = () => {

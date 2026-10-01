@@ -5,7 +5,7 @@ import FitStage from '../FitStage';
 import SectionNav from './SectionNav';
 import useInView from '../../hooks/useInView';
 import { dpx } from '../../constants/typography';
-import { ABOUT_SECTIONS, aboutKoreanSx, aboutStageProps, aboutTextSx } from './aboutMeStyles';
+import { aboutKoreanSx, aboutStageProps, aboutTextSx } from './aboutMeStyles';
 import rainyPopo from '../../assets/rainy-popo.png';
 
 // 02 My Story (시안: 자기소개-1.png)
@@ -38,7 +38,7 @@ const AboutStory = () => {
   const last = TIMELINE[TIMELINE.length - 1].x;
 
   return (
-    <FitStage id={ABOUT_SECTIONS[1].id} ref={ref} {...aboutStageProps}>
+    <FitStage ref={ref} {...aboutStageProps}>
       {/* 왼쪽 번호 + 세로 구분선 */}
       <Box sx={{ position: 'absolute', left: dpx(62), top: dpx(108) }}>
         <Typography sx={{ ...aboutTextSx, fontWeight: 400, fontSize: dpx(52), letterSpacing: '-0.02em' }}>02</Typography>

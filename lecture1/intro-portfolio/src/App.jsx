@@ -14,7 +14,7 @@ function App() {
 
   return (
     <Box sx={{ bgcolor: '#ffffff' }}>
-      <Header />
+      <Header intro />
       <SharedDecor />
       <Hero />
       <About />

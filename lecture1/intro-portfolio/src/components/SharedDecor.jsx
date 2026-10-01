@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import GlassCube from './GlassCube';
 import CircularText from './CircularText';
 import useScrollFrame from '../hooks/useScrollFrame';
-import { CIRCLE_TEXT_PROPS, isDesktop } from '../constants/decor';
+import { CIRCLE_TEXT_PROPS, heroIntroSx, isDesktop } from '../constants/decor';
 
 // 히어로와 두 번째 섹션에 모두 나오는 큐브·원형 텍스트를 하나로 이어 준다 (참고: dayonedream.com)
 // 두 섹션엔 보이지 않는 "자리(data-anchor)"만 두고, 실제 요소는 화면에 고정된 이 레이어에 그린다.
@@ -51,11 +51,18 @@ const SharedDecor = () => {
         zIndex: 5,
       }}
     >
+      {/* 첫 등장 — 큰 글자·리본이 자리 잡은 뒤 큐브와 원형 글자가 차례로 나타난다
+          위치를 잡는 바깥 상자(transform: translate)가 아니라 안쪽 상자에 걸어야 한다
+          — scale·rotate는 transform보다 먼저 적용돼, 바깥에 걸면 이동 거리까지 줄고 돌아가 엉뚱한 곳에서 나타난다 */}
       <Box ref={cubeRef} sx={{ position: 'absolute', top: 0, left: 0, willChange: 'transform' }}>
-        <GlassCube size="var(--size, 0px)" />
+        <Box sx={{ width: '100%', height: '100%', ...heroIntroSx('heroPopIn', 0.85, 1.2) }}>
+          <GlassCube size="var(--size, 0px)" />
+        </Box>
       </Box>
       <Box ref={circleRef} sx={{ position: 'absolute', top: 0, left: 0, willChange: 'transform' }}>
-        <CircularText {...CIRCLE_TEXT_PROPS} sx={{ width: '100%', height: '100%' }} />
+        <Box sx={{ width: '100%', height: '100%', ...heroIntroSx('heroPopIn', 1, 1.2) }}>
+          <CircularText {...CIRCLE_TEXT_PROPS} sx={{ width: '100%', height: '100%' }} />
+        </Box>
       </Box>
     </Box>
   );
