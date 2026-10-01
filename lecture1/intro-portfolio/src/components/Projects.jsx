@@ -243,51 +243,8 @@ const Arcs = () => (
 
 const BACKDROPS = { rays: Rays, petals: Petals, arcs: Arcs };
 
-// 맨 위 카드에 두르는 모서리 꺾쇠 — 카메라 뷰파인더처럼 "지금 보는 작업"을 짚어 준다 (참고: seunghyuk.com)
-// 카드가 맨 위로 오면 바깥에서 안쪽으로 살짝 조여 들며 나타난다
-// (카드를 감싼 상자에 clip-path가 걸려 있어 카드 바깥엔 그릴 수 없으므로 안쪽 모서리에 둔다)
-const BRACKET_CORNERS = [
-  { top: 0, left: 0 },
-  { top: 0, right: 0 },
-  { bottom: 0, left: 0 },
-  { bottom: 0, right: 0 },
-];
-
-const FocusBrackets = ({ isFocused }) => (
-  <Box
-    aria-hidden
-    sx={{
-      position: 'absolute',
-      inset: isFocused ? '1cqw' : '1.8cqw',
-      opacity: isFocused ? 1 : 0,
-      // 흰 이미지 위에선 검게, 어두운 이미지 위에선 희게 — 어느 썸네일에서도 또렷하다
-      mixBlendMode: 'difference',
-      pointerEvents: 'none',
-      transition: 'inset 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease',
-    }}
-  >
-    {BRACKET_CORNERS.map((corner) => (
-      <Box
-        key={Object.keys(corner).join('-')}
-        sx={{
-          position: 'absolute',
-          ...corner,
-          width: '2cqw',
-          height: '2cqw',
-          borderColor: '#ffffff',
-          borderStyle: 'solid',
-          borderWidth: 0,
-          [`border${'top' in corner ? 'Top' : 'Bottom'}Width`]: '0.2cqw',
-          [`border${'left' in corner ? 'Left' : 'Right'}Width`]: '0.2cqw',
-        }}
-      />
-    ))}
-  </Box>
-);
-
 // link: 주소가 있으면 썸네일을 눌러도 CLICK과 같은 곳이 열린다
-// isFocused: 데스크톱에서 지금 맨 위에 있는 카드면 모서리 꺾쇠를 두른다
-const ProjectCard = ({ project, index, link, isFocused = false }) => (
+const ProjectCard = ({ project, index, link }) => (
   <Box
     component={link ? 'a' : 'div'}
     {...linkProps(link)}
@@ -307,7 +264,6 @@ const ProjectCard = ({ project, index, link, isFocused = false }) => (
       boxShadow: '0 -1cqw 3cqw rgba(0, 0, 0, 0.45)',
     }}
   >
-    <FocusBrackets isFocused={isFocused} />
     {!project.image && (
       <Stack
         sx={{
@@ -510,7 +466,7 @@ const Projects = () => {
             style={cardStyle(i, progress)}
           >
             {/* 맨 위 카드만 클릭된다 — 뒤로 포개진 카드의 윗부분을 잘못 눌러 열리지 않게 */}
-            <ProjectCard project={project} index={i} link={i === active ? project.link : null} isFocused={i === active} />
+            <ProjectCard project={project} index={i} link={i === active ? project.link : null} />
           </Box>
         ))}
 
