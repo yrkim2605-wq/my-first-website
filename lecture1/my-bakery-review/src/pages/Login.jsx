@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
 import WoodPanel from '../components/common/WoodPanel'
+import SectionHeading from '../components/common/SectionHeading'
 import mascotLogo from '../assets/logo-mascot-photo.webp'
 
 const Login = () => {
@@ -29,13 +29,8 @@ const Login = () => {
   return (
     <Container maxWidth="xs">
       <Box sx={{ py: { xs: 6, sm: 10 }, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Box component="img" src={mascotLogo} alt="" sx={{ width: 64, height: 76, objectFit: 'contain', mb: 2 }} />
-        <Typography variant="h1" sx={{ fontSize: '1.6rem', mb: 0.5 }}>
-          로그인
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-          빵덕후 레벨업에 오신 걸 환영해요
-        </Typography>
+        <Box component="img" src={mascotLogo} alt="" sx={{ width: 72, height: 84, objectFit: 'contain', mb: 1.5 }} />
+        <SectionHeading eyebrow="WELCOME BACK" title="로그인" description="빵덕후 레벨업에 오신 걸 환영해요" sx={{ mb: 4 }} />
 
         <WoodPanel variant="light" sx={{ p: 3, width: '100%' }}>
           <Box

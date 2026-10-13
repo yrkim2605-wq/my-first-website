@@ -11,28 +11,38 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import TextField from '@mui/material/TextField'
-import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ArrowBackIcon from '@mui/icons-material/ArrowBackIosNew'
 import BookmarkIcon from '@mui/icons-material/Bookmark'
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import EditIcon from '@mui/icons-material/EditOutlined'
-import Avatar from '@mui/material/Avatar'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERY_REVIEWS } from '../constants/bakeryReviews'
 import { MOCK_USER } from '../constants/userProfile'
-import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
 import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { resizeImageFile } from '../utils/resizeImageFile'
-import Reveal from '../components/common/Reveal'
+import AuthorInfo from '../components/common/AuthorInfo'
+import { getBakeryPhoto } from '../constants/bakeryPhotos'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined'
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto'
 import { RADIUS } from '../theme'
 
 const TODAY = new Date().toISOString().slice(0, 10)
+
+const STAR_SX = { '& .MuiRating-iconFilled': { color: 'mustard.main' } }
+
+const TAG_CHIP_SX = { bgcolor: 'rgba(143,166,126,0.18)', color: 'secondary.contrastText', fontWeight: 600 }
+
+const REVIEW_CARD_SX = {
+  p: { xs: 2, sm: 2.5 },
+  borderRadius: RADIUS.lg,
+  border: '1px solid rgba(59,42,34,0.1)',
+  bgcolor: 'background.paper',
+}
 
 const SAMPLE_REVIEWS = [
   {
@@ -81,6 +91,7 @@ const BakeryDetail = () => {
   const visited = isRealBakery && visitedIds.includes(bakery.id)
   const district = DISTRICTS.find((d) => d.id === bakery.districtId)
   const bookmarked = Boolean(bookmarkedIds[bakery.id])
+  const hasUploadedPhoto = Boolean(photosByBakeryId[bakery.id])
   const reviews = [
     ...draftReviews.filter((r) => r.bakeryId === bakery.id),
     ...BAKERY_REVIEWS.filter((r) => r.bakeryId === bakery.id),
@@ -148,229 +159,163 @@ const BakeryDetail = () => {
           전체 빵집으로
         </Typography>
 
-        {isRealBakery && (
-          <Reveal>
-            <Box
-              sx={{
-                width: '100%',
-                height: { xs: 200, sm: 280 },
-                borderRadius: RADIUS.lg,
-                overflow: 'hidden',
-                mb: 3,
-                bgcolor: 'butter.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {photosByBakeryId[bakery.id] ? (
-                <Box
-                  component="img"
-                  src={photosByBakeryId[bakery.id]}
-                  alt={bakery.name}
-                  className="soft-fade-in"
-                  sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <Typography variant="body2" sx={{ color: 'butter.contrastText', fontWeight: 600, textAlign: 'center', px: 2 }}>
-                  아직 등록된 사진이 없어요. 리뷰 작성할 때 사진을 올려보세요!
-                </Typography>
-              )}
-            </Box>
-          </Reveal>
+        <Box
+          sx={{
+            width: '100%',
+            height: { xs: 240, sm: 340 },
+            // 위쪽이 둥근 아치 모양
+            borderRadius: '999px 999px 18px 18px',
+            overflow: 'hidden',
+            bgcolor: 'butter.main',
+            mb: hasUploadedPhoto || !isRealBakery ? 4 : 1.5,
+          }}
+        >
+          <Box
+            component="img"
+            src={getBakeryPhoto(bakery.id, photosByBakeryId, bakery.photoSlot)}
+            alt={bakery.name}
+            className="soft-fade-in"
+            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </Box>
+        {isRealBakery && !hasUploadedPhoto && (
+          <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', textAlign: 'center', mb: 4 }}>
+            대표 사진은 예시예요. 리뷰를 쓸 때 사진을 올려주시면 이 자리에 보여요.
+          </Typography>
         )}
 
-        <Reveal delay={0.05}>
-        <Box sx={{ mb: 5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', mb: 1 }}>
-            <Typography
-              variant="h1"
-              sx={{ fontSize: { xs: '2rem', sm: '2.6rem' }, display: 'flex', alignItems: 'center', gap: 1.25 }}
-            >
-              {bakery.iconImage ? (
-                <Box
-                  component="img"
-                  src={bakery.iconImage}
-                  alt=""
-                  sx={{ width: '1.5em', height: '1.5em', objectFit: 'contain', flexShrink: 0 }}
-                />
-              ) : (
-                bakery.emoji
-              )}
-              {bakery.name}
+        <Box sx={{ mb: 6 }}>
+          {district && (
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.12em', color: 'terracotta.main', mb: 1 }}>
+              {district.name}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip label={district?.name} variant="outlined" />
-              {isRealBakery && (
-                <Button
-                  onClick={() => toggleVisited(bakery.id)}
-                  variant={visited ? 'contained' : 'outlined'}
-                  color="primary"
-                  startIcon={visited ? <VerifiedIcon /> : <VerifiedOutlinedIcon />}
-                  size="small"
-                >
-                  {visited ? '방문 인증 완료' : '다녀왔어요'}
-                </Button>
-              )}
-              <Button
-                onClick={toggleBookmark}
-                variant={bookmarked ? 'contained' : 'outlined'}
-                color="secondary"
-                startIcon={bookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                size="small"
-              >
-                {bookmarked ? '찜 완료' : '찜하기'}
-              </Button>
-            </Box>
-          </Box>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            {bakery.address}
+          )}
+          <Typography variant="h1" sx={{ fontSize: { xs: '1.9rem', sm: '2.5rem' }, color: 'primary.main', mb: 1.5 }}>
+            {bakery.name}
           </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {bakery.description}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Rating value={bakery.rating} precision={0.5} readOnly size="small" />
-              <Typography variant="body2" color="text.secondary">
-                {bakery.rating}
+          <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>{bakery.address}</Typography>
+          {bakery.description && <Typography sx={{ mb: 2 }}>{bakery.description}</Typography>}
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap', fontSize: '0.9rem' }}>
+            {bakery.rating > 0 ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Rating value={bakery.rating} precision={0.5} readOnly size="small" sx={STAR_SX} />
+                <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 700 }}>
+                  {bakery.rating.toFixed(1)}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 600, color: 'terracotta.main' }}>
+                아직 별점이 없어요
               </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'primary.main' }}>
-              <FavoriteIcon fontSize="small" />
-              <Typography variant="body2">{bakery.heartCount}</Typography>
-            </Box>
+            )}
+            {bakery.heartCount > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
+                <FavoriteBorderIcon sx={{ fontSize: '1rem' }} />
+                {bakery.heartCount}
+              </Box>
+            )}
             {bakery.signatureMenu && (
-              <Typography variant="body2" color="text.secondary">
-                대표메뉴 · {bakery.signatureMenu}
+              <Typography component="span" sx={{ fontSize: 'inherit', color: 'text.secondary' }}>
+                대표 메뉴 · {bakery.signatureMenu}
               </Typography>
             )}
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-            {bakery.tags.map((tag) => (
-              <Chip key={tag} label={tag} size="small" variant="outlined" />
-            ))}
-            {bakery.placeUrl && (
-              <Chip
-                component="a"
-                href={bakery.placeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                label="카카오맵에서 보기"
-                size="small"
-                variant="outlined"
+
+          {(bakery.tags.length > 0 || bakery.placeUrl) && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap', mb: 3 }}>
+              {bakery.tags.map((tag) => (
+                <Chip key={tag} label={tag} size="small" sx={TAG_CHIP_SX} />
+              ))}
+              {bakery.placeUrl && (
+                <Chip
+                  component="a"
+                  href={bakery.placeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  label="카카오맵에서 보기 ↗"
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  clickable
+                />
+              )}
+            </Box>
+          )}
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            {isRealBakery && (
+              <Button
+                onClick={() => toggleVisited(bakery.id)}
+                variant={visited ? 'contained' : 'outlined'}
                 color="primary"
-                clickable
-              />
+                startIcon={visited ? <VerifiedIcon /> : <VerifiedOutlinedIcon />}
+                sx={{ borderRadius: RADIUS.pill }}
+              >
+                {visited ? '방문 인증 완료' : '다녀왔어요'}
+              </Button>
             )}
+            <Button
+              onClick={toggleBookmark}
+              variant={bookmarked ? 'contained' : 'outlined'}
+              color="secondary"
+              startIcon={bookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+              sx={{ borderRadius: RADIUS.pill, ...(bookmarked ? {} : { color: 'secondary.dark', borderColor: 'secondary.main' }) }}
+            >
+              {bookmarked ? '찜 완료' : '찜하기'}
+            </Button>
           </Box>
         </Box>
-        </Reveal>
 
-        <Reveal delay={0.1}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-          <Typography variant="h2">
-            방문자 리뷰 ({reviews.length})
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap', mb: 2.5 }}>
+          <Typography variant="h2" sx={{ color: 'primary.main', fontSize: { xs: '1.4rem', sm: '1.6rem' } }}>
+            방문자 리뷰 {reviews.length > 0 && `(${reviews.length})`}
           </Typography>
-          <Button variant="contained" startIcon={<EditIcon />} onClick={handleOpenDialog}>
+          <Button variant="contained" startIcon={<EditIcon />} onClick={handleOpenDialog} sx={{ borderRadius: RADIUS.pill, px: 2.5 }}>
             리뷰 작성
           </Button>
         </Box>
-        </Reveal>
 
         {reviews.length === 0 ? (
           isRealBakery ? (
             <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                아직 등록된 진짜 리뷰가 없어요. 이런 모양으로 표시될 예정이에요 (아래는 샘플입니다):
+              <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary', mb: 2 }}>
+                아직 리뷰가 없어요. 첫 리뷰를 남기면 아래처럼 보여요.
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {SAMPLE_REVIEWS.map((review) => (
-                  <Reveal key={review.id}>
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      p: 2.5,
-                      borderRadius: RADIUS.lg,
-                      border: '1px dashed rgba(46,42,37,0.25)',
-                      bgcolor: 'rgba(46,42,37,0.03)',
-                    }}
-                  >
-                    <Chip
-                      label="샘플"
-                      size="small"
-                      color="secondary"
-                      sx={{ position: 'absolute', top: 10, right: 10, fontWeight: 700 }}
-                    />
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Avatar variant="rounded" sx={{ width: 34, height: 32, borderRadius: '8px', fontSize: '1rem' }}>
-                          {review.avatarEmoji}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                            {review.author}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {review.createdAt}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Rating value={review.rating} precision={0.5} readOnly size="small" />
-                    </Box>
-                    <Typography variant="body2">{review.content}</Typography>
-                  </Box>
-                  </Reveal>
-                ))}
-              </Box>
+              {SAMPLE_REVIEWS.map((review) => (
+                <Box
+                  key={review.id}
+                  sx={{ ...REVIEW_CARD_SX, position: 'relative', borderStyle: 'dashed', bgcolor: 'transparent' }}
+                >
+                  <Chip
+                    label="샘플"
+                    size="small"
+                    sx={{ position: 'absolute', top: 12, right: 12, fontWeight: 700, bgcolor: 'butter.main', color: 'butter.contrastText' }}
+                  />
+                  <AuthorInfo author={review.author} level={null} caption={review.createdAt} sx={{ mb: 1.5 }} />
+                  <Typography sx={{ fontSize: '0.9rem' }}>{review.content}</Typography>
+                </Box>
+              ))}
             </Box>
           ) : (
-            <Typography variant="body2" color="text.secondary">
-              아직 등록된 리뷰가 없어요. 이 빵집을 방문한 첫 리뷰어가 되어보세요.
+            <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary' }}>
+              아직 리뷰가 없어요. 이 빵집을 다녀온 첫 리뷰어가 되어보세요.
             </Typography>
           )
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {reviews.map((review, index) => (
-              <Reveal key={review.id} delay={Math.min(index * 0.05, 0.3)}>
-              <Box
-                sx={{
-                  p: 2.5,
-                  borderRadius: RADIUS.lg,
-                  border: '1px solid',
-                  borderColor: 'rgba(46,42,37,0.08)',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar
-                      variant="rounded"
-                      src={getAuthorLevel(review.author).iconImage}
-                      sx={{ width: 34, height: 32, borderRadius: '8px', fontSize: '1rem' }}
-                    >
-                      {review.avatarEmoji}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                        {review.author}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {review.createdAt}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Rating value={review.rating} precision={0.5} readOnly size="small" />
+            {reviews.map((review) => (
+              <Box key={review.id} sx={REVIEW_CARD_SX}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+                  <AuthorInfo author={review.author} caption={review.createdAt} />
+                  <Rating value={review.rating} precision={0.5} readOnly size="small" sx={STAR_SX} />
                 </Box>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  {review.content}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'primary.main' }}>
-                  <FavoriteIcon fontSize="small" />
-                  <Typography variant="caption">{review.heartCount}</Typography>
+                <Typography sx={{ fontSize: '0.95rem', lineHeight: 1.7, mb: 1.25 }}>{review.content}</Typography>
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.8rem' }}>
+                  <FavoriteBorderIcon sx={{ fontSize: '1rem' }} />
+                  {review.heartCount}
                 </Box>
               </Box>
-              </Reveal>
             ))}
           </Box>
         )}

@@ -1,54 +1,34 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import LinearProgress from '@mui/material/LinearProgress'
+import { RADIUS } from '../../theme'
 
-const XpProgressBar = ({
-  levelEmoji,
-  levelIconImage,
-  levelName,
-  nextLevelName,
-  percent,
-  visitsNeeded,
-  heartsNeeded,
-  isMaxLevel,
-}) => {
+// 다음 레벨까지의 진행 막대 (마이페이지 프로필 카드 안에서 써요)
+const XpProgressBar = ({ levelName, nextLevelName, percent, visitsNeeded, heartsNeeded, isMaxLevel }) => {
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-        <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 0.75, fontWeight: 700 }}>
-          {levelIconImage ? (
-            <Box
-              component="img"
-              src={levelIconImage}
-              alt=""
-              sx={{ width: 32, height: 28, objectFit: 'cover', borderRadius: '8px' }}
-            />
-          ) : (
-            <span>{levelEmoji}</span>
-          )}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+        <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>
           {levelName}
-          {!isMaxLevel && ` → ${nextLevelName}`}
+          {!isMaxLevel && (
+            <Box component="span" sx={{ color: 'butter.contrastText', fontWeight: 500 }}>
+              {' '}→ {nextLevelName}
+            </Box>
+          )}
         </Typography>
-        <Typography
-          variant="body2"
-          sx={{ color: 'primary.main', fontWeight: 700 }}
-        >
-          {percent}%
-        </Typography>
+        <Typography sx={{ color: 'primary.main', fontWeight: 800 }}>{percent}%</Typography>
       </Box>
-      <LinearProgress
-        variant="determinate"
-        value={percent}
-        sx={{
-          '& .MuiLinearProgress-bar': {
-            backgroundImage: 'linear-gradient(90deg, #5C4433 0%, #E3B873 65%, #F6DFA8 100%)',
-          },
-        }}
-      />
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-        {isMaxLevel
-          ? '최고 레벨 달성!'
-          : `다음 레벨까지 방문 ${visitsNeeded}곳, 하트 ${heartsNeeded}개 필요`}
+      <Box
+        role="progressbar"
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="다음 레벨까지 진행률"
+        sx={{ height: 10, borderRadius: RADIUS.pill, bgcolor: 'background.paper', overflow: 'hidden' }}
+      >
+        <Box sx={{ width: `${percent}%`, height: '100%', borderRadius: RADIUS.pill, bgcolor: 'primary.main' }} />
+      </Box>
+      <Typography sx={{ display: 'block', mt: 0.75, fontSize: '0.8rem' }}>
+        {isMaxLevel ? '최고 레벨 달성!' : `다음 레벨까지 방문 ${visitsNeeded}곳, 하트 ${heartsNeeded}개 필요`}
       </Typography>
     </Box>
   )

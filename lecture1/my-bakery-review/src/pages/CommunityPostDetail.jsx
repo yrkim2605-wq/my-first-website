@@ -3,8 +3,6 @@ import { useParams, Link, Navigate } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Chip from '@mui/material/Chip'
-import Avatar from '@mui/material/Avatar'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import FavoriteIcon from '@mui/icons-material/Favorite'
@@ -21,57 +19,14 @@ import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_COMMENTS } from '../constants/communityComments'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../constants/bakeryPhotos'
 import { MOCK_USER } from '../constants/userProfile'
-import { getAuthorLevel } from '../utils/authorLevel'
-import { getPostAvatarEmoji, getPostPhotoBakeryId } from '../utils/communityPostMeta'
+import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
 import Reveal from '../components/common/Reveal'
+import AuthorInfo from '../components/common/AuthorInfo'
 import { RADIUS } from '../theme'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
-const CommentAuthor = ({ author, avatarEmoji, createdAt }) => {
-  const level = getAuthorLevel(author)
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Avatar
-        variant="rounded"
-        src={level?.iconImage}
-        sx={{ width: 28, height: 26, borderRadius: '7px', fontSize: '0.9rem' }}
-      >
-        {avatarEmoji}
-      </Avatar>
-      <Box sx={{ minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
-            {author}
-          </Typography>
-          {level && (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.25,
-                px: 0.6,
-                py: 0.1,
-                borderRadius: 999,
-                bgcolor: 'butter.main',
-                color: 'butter.contrastText',
-                fontSize: '0.6rem',
-                fontWeight: 800,
-                lineHeight: 1.4,
-              }}
-            >
-              <span>{level.emoji}</span>
-              {level.name}
-            </Box>
-          )}
-        </Box>
-        <Typography variant="caption" color="text.secondary">
-          {createdAt}
-        </Typography>
-      </Box>
-    </Box>
-  )
-}
+const CommentAuthor = ({ author, createdAt }) => <AuthorInfo author={author} caption={createdAt} avatarSize={30} />
 
 const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
   const displayedLike = likeCount + (vote === 'like' ? 1 : 0)
@@ -154,8 +109,6 @@ const CommunityPostDetail = () => {
   }
 
   const category = COMMUNITY_CATEGORIES.find((c) => c.id === post.categoryId)
-  const authorLevel = getAuthorLevel(post.author)
-  const avatarEmoji = getPostAvatarEmoji(post)
   const photoSrc = BAKERY_PHOTO_BY_ID[getPostPhotoBakeryId(post)] || DEFAULT_BAKERY_PHOTO
   const displayedHeartCount = post.heartCount + (liked ? 1 : 0)
   const totalCommentCount = comments.reduce((sum, c) => sum + 1 + c.replies.length, 0)
@@ -271,8 +224,9 @@ const CommunityPostDetail = () => {
         <Box
           sx={{
             width: '100%',
-            height: { xs: 220, sm: 320 },
-            borderRadius: RADIUS.lg,
+            height: { xs: 240, sm: 340 },
+            // 위쪽이 둥근 아치 모양
+            borderRadius: '999px 999px 18px 18px',
             overflow: 'hidden',
             mb: 3,
           }}
@@ -288,51 +242,15 @@ const CommunityPostDetail = () => {
         </Reveal>
 
         <Reveal delay={0.05}>
-        <Chip label={category?.label} size="small" variant="outlined" sx={{ mb: 1.5 }} />
+        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'terracotta.main', mb: 1 }}>
+          {category?.label}
+        </Typography>
 
         <Typography variant="h1" sx={{ fontSize: { xs: '1.6rem', sm: '2.1rem' }, mb: 2 }}>
           {post.title}
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <Avatar
-            variant="rounded"
-            src={authorLevel?.iconImage}
-            sx={{ width: 36, height: 34, borderRadius: '8px', fontSize: '1rem' }}
-          >
-            {avatarEmoji}
-          </Avatar>
-          <Box sx={{ minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                {post.author}
-              </Typography>
-              {authorLevel && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.25,
-                    px: 0.75,
-                    py: 0.15,
-                    borderRadius: 999,
-                    bgcolor: 'butter.main',
-                    color: 'butter.contrastText',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    lineHeight: 1.4,
-                  }}
-                >
-                  <span>{authorLevel.emoji}</span>
-                  {authorLevel.name}
-                </Box>
-              )}
-            </Box>
-            <Typography variant="caption" color="text.secondary">
-              {post.createdAt}
-            </Typography>
-          </Box>
-        </Box>
+        <AuthorInfo author={post.author} caption={post.createdAt} avatarSize={40} sx={{ mb: 3 }} />
 
         <Typography variant="body1" sx={{ mb: 4, whiteSpace: 'pre-line' }}>
           {post.content}
@@ -423,7 +341,7 @@ const CommunityPostDetail = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 1 }}>
-                  <CommentAuthor author={comment.author} avatarEmoji={comment.avatarEmoji} createdAt={comment.createdAt} />
+                  <CommentAuthor author={comment.author} createdAt={comment.createdAt} />
                 </Box>
 
                 {editingId === comment.id ? (
@@ -519,7 +437,7 @@ const CommunityPostDetail = () => {
                     >
                       <SubdirectoryArrowRightIcon sx={{ fontSize: '1rem', color: 'text.secondary', mt: 0.5 }} />
                       <Box sx={{ flexGrow: 1 }}>
-                        <CommentAuthor author={reply.author} avatarEmoji={reply.avatarEmoji} createdAt={reply.createdAt} />
+                        <CommentAuthor author={reply.author} createdAt={reply.createdAt} />
 
                         {editingId === reply.id ? (
                           <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mt: 1 }}>

@@ -1,51 +1,62 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Avatar from '@mui/material/Avatar'
+import RankingValue from './RankingValue'
+import { DISPLAY_FONT, RADIUS } from '../../theme'
 
-const RankingListItem = ({ rank, emoji, avatarImage, primaryText, secondaryText, levelBadge, valueText, valueEmoji }) => {
+// 4위부터 보여주는 랭킹 목록의 한 줄
+const RankingListItem = ({ rank, emoji, avatarImage, primaryText, secondaryText, levelBadge, valueText, valueKind }) => {
   return (
     <Box
+      component="li"
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1.5,
-        py: 1,
-        px: 1.5,
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        transition: 'background-color 0.15s ease',
-        '&:hover': { bgcolor: 'rgba(46,42,37,0.03)' },
+        gap: 1.75,
+        py: 1.5,
+        px: { xs: 1.5, sm: 2.5 },
+        borderBottom: '1px solid rgba(59,42,34,0.08)',
+        '&:last-of-type': { borderBottom: 'none' },
       }}
     >
       <Typography
-        sx={{ fontSize: '1rem', fontWeight: 700, width: 28, textAlign: 'center', color: 'text.secondary' }}
+        sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '1.05rem', width: 24, textAlign: 'center', color: 'terracotta.main' }}
       >
-        #{rank}
+        {rank}
       </Typography>
-      {avatarImage ? (
-        <Avatar variant="rounded" src={avatarImage} sx={{ width: 34, height: 32, borderRadius: '8px', flexShrink: 0 }}>
-          {emoji}
-        </Avatar>
-      ) : (
-        <Typography sx={{ fontSize: '1.4rem' }}>{emoji}</Typography>
-      )}
+      <Box
+        sx={{
+          width: 38,
+          height: 38,
+          borderRadius: RADIUS.round,
+          bgcolor: 'butter.main',
+          display: 'grid',
+          placeItems: 'center',
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
+        {avatarImage ? (
+          <Box component="img" src={avatarImage} alt="" sx={{ width: '86%', height: '86%', objectFit: 'contain' }} />
+        ) : (
+          <Typography sx={{ fontSize: '1.2rem' }}>{emoji}</Typography>
+        )}
+      </Box>
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-          <Typography variant="body1" sx={{ fontWeight: 700 }} noWrap>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+          <Typography sx={{ fontWeight: 700 }} noWrap>
             {primaryText}
           </Typography>
           {levelBadge && (
             <Box
               sx={{
                 px: 0.75,
-                py: 0.15,
-                borderRadius: 999,
+                py: 0.1,
+                borderRadius: RADIUS.pill,
                 bgcolor: 'butter.main',
                 color: 'butter.contrastText',
-                fontSize: '0.65rem',
-                fontWeight: 800,
-                flexShrink: 0,
-                lineHeight: 1.4,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                lineHeight: 1.5,
               }}
             >
               {levelBadge}
@@ -53,27 +64,12 @@ const RankingListItem = ({ rank, emoji, avatarImage, primaryText, secondaryText,
           )}
         </Box>
         {secondaryText && (
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }} noWrap>
             {secondaryText}
           </Typography>
         )}
       </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          color: 'primary.main',
-          flexShrink: 0,
-          bgcolor: 'rgba(51,36,25,0.06)',
-          px: 1.25,
-          py: 0.5,
-          borderRadius: 999,
-        }}
-      >
-        <Typography sx={{ fontSize: '0.95rem' }}>{valueEmoji}</Typography>
-        <Typography sx={{ fontWeight: 800 }}>{valueText}</Typography>
-      </Box>
+      <RankingValue kind={valueKind} value={valueText} sx={{ color: 'primary.main', flexShrink: 0 }} />
     </Box>
   )
 }

@@ -1,78 +1,60 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Tooltip from '@mui/material/Tooltip'
-import LockIcon from '@mui/icons-material/Lock'
-import WoodPanel from './WoodPanel'
-import { HOVER_LIFT_TRANSITION } from '../../constants/motion'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 
+// 배지 한 칸: 위쪽이 둥근 아치 모양. 받은 배지는 버터색, 아직 못 받은 배지는 점선 테두리 + 흑백
 const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
   return (
     <Tooltip title={description} arrow>
-      <WoodPanel
-        variant="light"
+      <Box
+        tabIndex={0}
+        aria-label={`${name}${earned ? '' : ' (아직 못 받았어요)'}: ${description}`}
         sx={{
-          textAlign: 'center',
           position: 'relative',
-          transition: HOVER_LIFT_TRANSITION,
+          textAlign: 'center',
+          px: 1.5,
+          pt: 3,
+          pb: 2,
+          borderRadius: '999px 999px 16px 16px',
           ...(earned
-            ? {
-                background: 'linear-gradient(160deg, #FFF6E6 0%, #F3D9A8 100%)',
-                border: '1px solid #E3B873',
-                boxShadow: '0 4px 14px rgba(227,184,115,0.4)',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 10px 20px rgba(227,184,115,0.5)',
-                },
-              }
-            : {
-                bgcolor: '#EDEAE3',
-                border: '1px solid rgba(46,42,37,0.08)',
-                opacity: 0.6,
-              }),
+            ? { bgcolor: 'butter.main', border: '1px solid transparent' }
+            : { bgcolor: 'transparent', border: '1px dashed rgba(59,42,34,0.25)' }),
         }}
       >
         {!earned && (
-          <LockIcon
-            fontSize="small"
-            sx={{ position: 'absolute', top: 10, right: 10, color: 'text.secondary' }}
-          />
+          <LockOutlinedIcon sx={{ position: 'absolute', top: 12, right: 14, fontSize: '1rem', color: 'text.secondary' }} />
         )}
-        {iconImage ? (
-          <Box
-            component="img"
-            src={iconImage}
-            alt=""
-            sx={{
-              width: 48,
-              height: 48,
-              mx: 'auto',
-              objectFit: 'contain',
-              filter: earned ? 'none' : 'grayscale(1)',
-            }}
-          />
-        ) : (
-          <Typography
-            sx={{
-              fontSize: '2rem',
-              lineHeight: 1,
-              filter: earned ? 'none' : 'grayscale(1)',
-            }}
-          >
-            {emoji}
-          </Typography>
-        )}
-        <Typography
-          variant="caption"
+        <Box
           sx={{
+            width: 64,
+            height: 64,
+            mx: 'auto',
+            borderRadius: '50%',
+            bgcolor: 'background.paper',
+            display: 'grid',
+            placeItems: 'center',
+            mb: 1,
+            filter: earned ? 'none' : 'grayscale(1)',
+            opacity: earned ? 1 : 0.55,
+          }}
+        >
+          {iconImage ? (
+            <Box component="img" src={iconImage} alt="" sx={{ width: 44, height: 44, objectFit: 'contain' }} />
+          ) : (
+            <Typography sx={{ fontSize: '1.8rem', lineHeight: 1 }}>{emoji}</Typography>
+          )}
+        </Box>
+        <Typography
+          sx={{
+            fontSize: '0.8rem',
             fontWeight: 700,
-            display: 'block',
-            mt: 0.5,
             color: earned ? 'butter.contrastText' : 'text.secondary',
           }}
         >
           {name}
         </Typography>
-      </WoodPanel>
+      </Box>
     </Tooltip>
   )
 }

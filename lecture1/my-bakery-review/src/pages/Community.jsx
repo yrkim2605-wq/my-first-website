@@ -7,10 +7,12 @@ import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import CommunityPostListItem from '../components/common/CommunityPostListItem'
 import StatusMessage from '../components/common/StatusMessage'
+import SectionHeading from '../components/common/SectionHeading'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_POSTS } from '../constants/communityPosts'
 import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
 import { getAuthorLevel } from '../utils/authorLevel'
+import { PAGE_TABS_SX } from '../constants/tabStyles'
 
 const SORT_OPTIONS = [
   { id: 'heart', label: '좋아요순' },
@@ -43,26 +45,12 @@ const Community = () => {
   return (
     <Container maxWidth="md">
       <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 8, sm: 10 } }}>
-        <Typography
-          sx={{
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            color: 'primary.main',
-            mb: 1,
-          }}
-        >
-          COMMUNITY
-        </Typography>
-        <Typography
-          variant="h1"
-          sx={{ fontSize: { xs: '1.75rem', sm: '2.1rem' }, fontWeight: 700, letterSpacing: '-0.02em', mb: 1 }}
-        >
-          커뮤니티
-        </Typography>
-        <Typography sx={{ color: 'text.secondary', fontSize: '0.95rem', mb: { xs: 3, sm: 4 } }}>
-          부산 빵집에서 있었던 일, 새로 나온 메뉴, 오픈런 후기를 나눠요.
-        </Typography>
+        <SectionHeading
+          eyebrow="COMMUNITY"
+          title="빵덕후 커뮤니티"
+          description="부산 빵집에서 있었던 일, 새로 나온 메뉴, 오픈런 후기를 나눠요."
+          sx={{ mb: { xs: 3, sm: 4 } }}
+        />
 
         <Box
           sx={{
@@ -70,7 +58,6 @@ const Community = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 2,
-            borderBottom: '1px solid rgba(46,42,37,0.12)',
           }}
         >
           <Tabs
@@ -78,20 +65,7 @@ const Community = () => {
             onChange={handleSelectCategory}
             variant="scrollable"
             scrollButtons={false}
-            sx={{
-              minHeight: 44,
-              '& .MuiTab-root': {
-                minHeight: 44,
-                minWidth: 0,
-                px: 0,
-                mr: 3,
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                color: 'text.secondary',
-              },
-              '& .Mui-selected': { color: 'text.primary' },
-              '& .MuiTabs-indicator': { height: 2, bgcolor: 'text.primary' },
-            }}
+            sx={PAGE_TABS_SX}
           >
             {CATEGORY_TABS.map((category) => (
               <Tab key={category.id} value={category.id} label={category.label} disableRipple />

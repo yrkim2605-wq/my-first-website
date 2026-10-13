@@ -4,15 +4,8 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import { Link } from 'react-router-dom'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
-import { RADIUS } from '../../theme'
-
-// 닉네임마다 항상 같은 색이 나오도록, 글자 코드 합으로 차분한 바탕색을 골라요.
-const AVATAR_BG_COLORS = ['#E6DDD0', '#DCE5DD', '#EADBD3', '#E2DFD6', '#D9E1E3']
-
-const getAvatarColor = (name = '') => {
-  const sum = [...name].reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
-  return AVATAR_BG_COLORS[sum % AVATAR_BG_COLORS.length]
-}
+import AuthorInfo from './AuthorInfo'
+import { DISPLAY_FONT } from '../../theme'
 
 const META_SX = { display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }
 
@@ -48,7 +41,7 @@ const CommunityPostListItem = ({
     >
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <Typography
-          sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'primary.main', mb: 0.75 }}
+          sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'terracotta.main', mb: 0.75 }}
         >
           {categoryLabel}
         </Typography>
@@ -56,10 +49,10 @@ const CommunityPostListItem = ({
           className="post-title"
           component="h2"
           sx={{
-            fontSize: { xs: '1.05rem', sm: '1.15rem' },
-            fontWeight: 700,
+            fontFamily: DISPLAY_FONT,
+            fontSize: { xs: '1.05rem', sm: '1.2rem' },
+            fontWeight: 900,
             lineHeight: 1.4,
-            letterSpacing: '-0.01em',
             mb: 0.75,
             transition: 'color 0.15s ease',
           }}
@@ -92,57 +85,7 @@ const CommunityPostListItem = ({
             fontSize: '0.8rem',
           }}
         >
-          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
-            {/* 레벨 캐릭터 아바타: 이미지가 없으면 닉네임 첫 글자로 대신해요 */}
-            <Box
-              aria-hidden="true"
-              sx={{
-                width: 26,
-                height: 26,
-                flexShrink: 0,
-                borderRadius: RADIUS.round,
-                overflow: 'hidden',
-                bgcolor: getAvatarColor(author),
-                color: 'text.primary',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                display: 'grid',
-                placeItems: 'center',
-              }}
-            >
-              {authorLevel?.iconImage ? (
-                <Box
-                  component="img"
-                  src={authorLevel.iconImage}
-                  alt=""
-                  sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                author.slice(0, 1)
-              )}
-            </Box>
-            <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 600 }}>
-              {author}
-            </Typography>
-            {authorLevel && (
-              <Box
-                component="span"
-                sx={{
-                  px: 0.75,
-                  py: 0.1,
-                  borderRadius: RADIUS.pill,
-                  bgcolor: 'butter.main',
-                  color: 'butter.contrastText',
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  lineHeight: 1.5,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {authorLevel.name}
-              </Box>
-            )}
-          </Box>
+          <AuthorInfo author={author} level={authorLevel} avatarSize={26} />
           {/* 모바일에서는 한 줄에 다 들어가도록 날짜를 숨겨요 (글 상세에서 볼 수 있어요) */}
           <Typography
             component="span"
@@ -171,7 +114,8 @@ const CommunityPostListItem = ({
           height: { xs: 80, sm: 132 },
           flexShrink: 0,
           objectFit: 'cover',
-          borderRadius: RADIUS.md,
+          // 위쪽이 둥근 아치 모양 썸네일
+          borderRadius: '999px 999px 12px 12px',
           alignSelf: 'center',
         }}
       />
