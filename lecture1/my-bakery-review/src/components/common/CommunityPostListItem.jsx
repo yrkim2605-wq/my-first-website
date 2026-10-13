@@ -5,7 +5,8 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined
 import { Link } from 'react-router-dom'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
 import AuthorInfo from './AuthorInfo'
-import { DISPLAY_FONT } from '../../theme'
+import { PARCHMENT_SX } from '../../constants/rpgStyles'
+import { DISPLAY_FONT, RADIUS } from '../../theme'
 
 const META_SX = { display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }
 
@@ -30,21 +31,40 @@ const CommunityPostListItem = ({
       to={`/community/${id}`}
       sx={{
         display: 'flex',
+        position: 'relative',
         gap: { xs: 2, sm: 3 },
-        py: { xs: 2.5, sm: 3 },
+        p: { xs: 2, sm: 2.5 },
+        mt: 2,
         textDecoration: 'none',
         color: 'inherit',
-        borderBottom: '1px solid rgba(46,42,37,0.1)',
+        ...PARCHMENT_SX,
+        borderRadius: RADIUS.lg,
+        transition: 'transform 0.2s ease, border-color 0.2s ease',
+        // 압정
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: -6,
+          left: 22,
+          width: 13,
+          height: 13,
+          borderRadius: '50%',
+          backgroundColor: '#d9735e',
+          border: '2px solid #3e2713',
+          boxShadow: '0 2px 0 rgba(33,20,10,0.4)',
+        },
+        '@media (hover: hover)': { '&:hover': { transform: 'translateY(-2px)', borderColor: 'gold.main' } },
         '&:hover .post-title': { color: 'primary.main' },
         '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 4 },
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <Typography
-          sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'terracotta.main', mb: 0.75 }}
+        <Box
+          component="span"
+          sx={{ alignSelf: 'flex-start', px: 1, py: 0.1, mb: 0.75, borderRadius: RADIUS.pill, bgcolor: 'rgba(143,166,126,0.25)', color: 'secondary.contrastText', fontSize: '0.75rem', fontWeight: 800 }}
         >
           {categoryLabel}
-        </Typography>
+        </Box>
         <Typography
           className="post-title"
           component="h2"

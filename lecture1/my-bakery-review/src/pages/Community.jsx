@@ -8,6 +8,7 @@ import Tab from '@mui/material/Tab'
 import CommunityPostListItem from '../components/common/CommunityPostListItem'
 import StatusMessage from '../components/common/StatusMessage'
 import SectionHeading from '../components/common/SectionHeading'
+import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_POSTS } from '../constants/communityPosts'
 import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
@@ -46,11 +47,17 @@ const Community = () => {
     <Container maxWidth="md">
       <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 8, sm: 10 } }}>
         <SectionHeading
-          eyebrow="COMMUNITY"
-          title="빵덕후 커뮤니티"
+          variant="sign"
+          eyebrow="ADVENTURERS' SQUARE"
+          title="모험가 광장"
           description="부산 빵집에서 있었던 일, 새로 나온 메뉴, 오픈런 후기를 나눠요."
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
+
+        {/* 정직한 안내: 게시판 글은 예시이고, 글쓰기 기능은 아직 없어요 */}
+        <LocalProfileNotice sx={{ mb: 3 }}>
+          게시판의 글은 모두 <b>예시 데이터</b>예요. 아직 글쓰기 기능은 없고, 글 상세의 댓글도 이 화면에서만 보여요(저장되지 않아요).
+        </LocalProfileNotice>
 
         <Box
           sx={{

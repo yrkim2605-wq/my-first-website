@@ -18,7 +18,9 @@ import { COMMUNITY_POSTS } from '../constants/communityPosts'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_COMMENTS } from '../constants/communityComments'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../constants/bakeryPhotos'
-import { MOCK_USER } from '../constants/userProfile'
+import { useProfile } from '../hooks/useProfile'
+import LocalProfileNotice from '../components/common/LocalProfileNotice'
+import { PARCHMENT_SX } from '../constants/rpgStyles'
 import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
 import Reveal from '../components/common/Reveal'
 import AuthorInfo from '../components/common/AuthorInfo'
@@ -95,6 +97,9 @@ const CommunityPostDetail = () => {
 
   // 다른 글로 이동하면 Layout이 페이지를 새로 그려서, 아래 상태들은 글마다 처음 값으로 시작해요.
   const nextCommentId = useRef(0)
+  // 댓글 작성자 이름: 로그인한 임시 프로필의 닉네임 (로그인하지 않았으면 '방문자')
+  const { profile } = useProfile()
+  const myNickname = profile?.nickname ?? '방문자'
   const [liked, setLiked] = useState(false)
   const [comments, setComments] = useState(() => COMMUNITY_COMMENTS[post?.id] || [])
   const [commentDraft, setCommentDraft] = useState('')
@@ -118,8 +123,8 @@ const CommunityPostDetail = () => {
     nextCommentId.current += 1
     const newComment = {
       id: `draft-${nextCommentId.current}`,
-      author: MOCK_USER.nickname,
-      avatarEmoji: MOCK_USER.avatarEmoji,
+      author: myNickname,
+      avatarEmoji: '🙂',
       content: commentDraft.trim(),
       createdAt: TODAY,
       likeCount: 0,
@@ -135,8 +140,8 @@ const CommunityPostDetail = () => {
     nextCommentId.current += 1
     const newReply = {
       id: `draft-reply-${nextCommentId.current}`,
-      author: MOCK_USER.nickname,
-      avatarEmoji: MOCK_USER.avatarEmoji,
+      author: myNickname,
+      avatarEmoji: '🙂',
       content: replyDraft.trim(),
       createdAt: TODAY,
       likeCount: 0,
@@ -228,6 +233,8 @@ const CommunityPostDetail = () => {
             // 위쪽이 둥근 아치 모양
             borderRadius: '999px 999px 18px 18px',
             overflow: 'hidden',
+            border: '3px solid #c9a56a',
+            boxShadow: '0 3px 0 rgba(107,68,35,0.25)',
             mb: 3,
           }}
         >
@@ -242,6 +249,7 @@ const CommunityPostDetail = () => {
         </Reveal>
 
         <Reveal delay={0.05}>
+        <Box sx={{ ...PARCHMENT_SX, borderRadius: '20px', p: { xs: 2.5, sm: 3.5 }, mb: 3 }}>
         <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'terracotta.main', mb: 1 }}>
           {category?.label}
         </Typography>
@@ -250,11 +258,12 @@ const CommunityPostDetail = () => {
           {post.title}
         </Typography>
 
-        <AuthorInfo author={post.author} caption={post.createdAt} avatarSize={52} sx={{ mb: 3 }} />
+        <AuthorInfo author={post.author} caption={post.createdAt} avatarSize={52} sx={{ mb: 2.5 }} />
 
-        <Typography variant="body1" sx={{ mb: 4, whiteSpace: 'pre-line' }}>
+        <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
           {post.content}
         </Typography>
+        </Box>
         </Reveal>
 
         <Box
@@ -298,9 +307,13 @@ const CommunityPostDetail = () => {
           </Box>
         </Box>
 
-        <Typography variant="h2" sx={{ mb: 2 }}>
+        <Typography variant="h2" sx={{ mb: 1.5 }}>
           댓글 ({totalCommentCount})
         </Typography>
+        <LocalProfileNotice sx={{ mb: 2 }}>
+          댓글은 <b>이 화면에서만 보이고 저장되지 않아요</b>. 새로고침하면 사라지고, 다른 사람에게도 보이지 않아요.
+          {!profile && ' 로그인하지 않아서 ‘방문자’ 이름으로 남겨져요.'}
+        </LocalProfileNotice>
 
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 4 }}>
           <TextField
@@ -397,7 +410,7 @@ const CommunityPostDetail = () => {
                       >
                         답글 달기
                       </Button>
-                      {comment.author === MOCK_USER.nickname && (
+                      {comment.author === myNickname && (
                         <>
                           <Button
                             size="small"
@@ -482,7 +495,7 @@ const CommunityPostDetail = () => {
                                 vote={votes[reply.id]}
                                 onVote={handleVote}
                               />
-                              {reply.author === MOCK_USER.nickname && (
+                              {reply.author === myNickname && (
                                 <>
                                   <Button
                                     size="small"
