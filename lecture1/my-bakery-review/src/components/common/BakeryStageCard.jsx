@@ -116,6 +116,32 @@ const BakeryStageCard = ({
           QUEST
         </Box>
       )}
+      {discovered && (
+        <Box
+          component="span"
+          sx={{
+            position: 'absolute',
+            top: 14,
+            right: 16,
+            zIndex: 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.3,
+            px: 1,
+            py: 0.2,
+            borderRadius: RADIUS.pill,
+            bgcolor: 'gold.main',
+            color: 'wood.dark',
+            border: '2px solid #6b4423',
+            boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
+            fontSize: '0.7rem',
+            fontWeight: 800,
+          }}
+        >
+          <StarRoundedIcon sx={{ fontSize: '0.85rem' }} />
+          발견 완료
+        </Box>
+      )}
       <Box
         sx={{
           position: 'relative',
@@ -149,31 +175,6 @@ const BakeryStageCard = ({
             transition: 'transform 0.4s ease',
           }}
         />
-        {discovered && (
-          <Box
-            component="span"
-            sx={{
-              position: 'absolute',
-              top: 10,
-              right: 10,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.3,
-              px: 1,
-              py: 0.2,
-              borderRadius: RADIUS.pill,
-              bgcolor: 'gold.main',
-              color: 'wood.dark',
-              border: '2px solid #6b4423',
-              boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
-              fontSize: '0.7rem',
-              fontWeight: 800,
-            }}
-          >
-            <StarRoundedIcon sx={{ fontSize: '0.85rem' }} />
-            발견 완료
-          </Box>
-        )}
         {isNew && (
           <Chip
             label="NEW"

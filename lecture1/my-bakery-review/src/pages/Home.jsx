@@ -167,7 +167,7 @@ const Home = () => {
       {/* 오늘 인기 빵집 */}
       <Box sx={{ py: SECTION_PY }}>
         <SectionHeading
-          variant="sign"
+          variant="board"
           eyebrow="TODAY'S QUEST"
           title="오늘의 추천 퀘스트"
           description="마음에 드는 퀘스트를 골라 빵집 탐험을 떠나보세요."
@@ -198,7 +198,7 @@ const Home = () => {
           <FlatFlower petal={palette.terracotta.main} center={palette.background.paper} size={44} sx={{ position: 'absolute', top: 118, left: { xs: 40, md: 150 } }} />
           <FlatFlower petal={palette.primary.main} center={palette.mustard.main} size={56} sx={{ position: 'absolute', top: 44, right: { xs: -12, md: 90 } }} />
           <SectionHeading
-            variant="sign"
+            variant="journal"
             eyebrow="ADVENTURER'S LOG"
             title="모험가의 기록"
             description="한 줄의 기록이 누군가의 다음 모험이 돼요."

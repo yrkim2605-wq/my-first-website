@@ -208,3 +208,40 @@ body::before {
 .pop-in {
   animation: popIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* ── 히어로 장식 움직임: 구름이 천천히 흐르고 깃발이 살랑여요 (움직임 줄이기 설정이면 멈춰요) ── */
+@keyframes driftSlow {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(22px);
+  }
+}
+
+@keyframes flagWave {
+  0%,
+  100% {
+    transform: skewY(0deg);
+  }
+  50% {
+    transform: skewY(-7deg) scaleX(0.95);
+  }
+}
+
+.drift-slow {
+  animation: driftSlow 14s ease-in-out infinite;
+}
+
+.flag-wave {
+  transform-origin: left center;
+  animation: flagWave 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drift-slow,
+  .flag-wave {
+    animation: none;
+  }
+}
