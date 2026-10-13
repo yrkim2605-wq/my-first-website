@@ -13,6 +13,10 @@ const Ranking = lazy(() => import('./pages/Ranking'))
 const BakeryDetail = lazy(() => import('./pages/BakeryDetail'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
+// 계정 모드(VITE_DATA_BACKEND=supabase)에서는 이메일 로그인 · 가입 화면을 써요
+const AccountLogin = lazy(() => import('./pages/AccountLogin'))
+const AccountSignup = lazy(() => import('./pages/AccountSignup'))
+import { IS_ACCOUNT_MODE } from './lib/backend'
 import { BusanBakeriesProvider } from './context/BusanBakeriesContext'
 import { VisitedBakeriesProvider } from './context/VisitedBakeriesContext'
 import { RealBakeryPhotosProvider } from './context/RealBakeryPhotosContext'
@@ -26,7 +30,7 @@ function App() {
   return (
     <BusanBakeriesProvider>
       <VisitedBakeriesProvider>
-        {/* 임시 로컬 프로필과 리뷰 저장소 (이 브라우저에만 저장돼요) */}
+        {/* 프로필과 리뷰 저장소: 로컬 모드는 이 브라우저에만, 계정 모드는 Supabase 계정으로 로그인해요 */}
         <ProfileProvider>
           <ReviewsProvider>
             <RealBakeryPhotosProvider>
@@ -40,8 +44,8 @@ function App() {
                       <Route path="/mypage" element={<MyPage />} />
                       <Route path="/ranking" element={<Ranking />} />
                       <Route path="/bakery/:id" element={<BakeryDetail />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/login" element={IS_ACCOUNT_MODE ? <AccountLogin /> : <Login />} />
+                      <Route path="/signup" element={IS_ACCOUNT_MODE ? <AccountSignup /> : <Signup />} />
                     </Route>
                   </Routes>
                 </HashRouter>

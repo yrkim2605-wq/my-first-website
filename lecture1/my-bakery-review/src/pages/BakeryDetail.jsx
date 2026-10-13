@@ -63,7 +63,7 @@ const formatDate = (isoString) => isoString.slice(0, 10)
 const BakeryDetail = () => {
   const { id } = useParams()
   const { bakeries: realBakeries, loading: realBakeriesLoading } = useBusanBakeries()
-  const { visitedIds, toggleVisited } = useVisitedBakeries()
+  const { visitedIds, toggleVisited, available: visitsAvailable } = useVisitedBakeries()
   const { photosByBakeryId } = useRealBakeryPhotos()
   const { profile } = useProfile()
   const { reviews: allReviews, removeReview } = useReviews()
@@ -369,6 +369,8 @@ const BakeryDetail = () => {
             {isRealBakery && (
               <Button
                 onClick={() => toggleVisited(bakery.id)}
+                disabled={!visitsAvailable}
+                title={visitsAvailable ? undefined : '계정 모드에서는 방문 체크의 계정 저장이 아직 연결되지 않았어요'}
                 variant={visited ? 'contained' : 'outlined'}
                 color="primary"
                 startIcon={visited ? <VerifiedIcon /> : <VerifiedOutlinedIcon />}

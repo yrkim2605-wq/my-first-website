@@ -7,6 +7,7 @@ import StatusMessage from '../common/StatusMessage'
 import { useProfile } from '../../hooks/useProfile'
 import { useReviews } from '../../hooks/useReviews'
 import { profileRepository } from '../../storage/profileRepository'
+import { IS_ACCOUNT_MODE } from '../../lib/backend'
 import { buildLocalRanking } from '../../utils/localRanking'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT } from '../../theme'
@@ -19,6 +20,7 @@ const LocalRankingBoard = () => {
   const [profiles, setProfiles] = useState([])
 
   useEffect(() => {
+    if (IS_ACCOUNT_MODE) return undefined // 계정 모드: 로컬 프로필 목록을 쓰지 않아요
     const load = () => profileRepository.list().then(setProfiles)
     load()
     return profileRepository.subscribe(load)

@@ -103,6 +103,11 @@ for (const table of tables) {
 const cap = await call('GET', '/rest/v1/game_settings?select=value&key=eq.daily_exp_cap')
 if (cap.status === 200 && Array.isArray(cap.json) && cap.json[0]) report('ok', '하루 EXP 상한 설정', String(cap.json[0].value))
 else report('fail', '하루 EXP 상한(game_settings.daily_exp_cap)을 읽지 못했어요', '0001_schema.sql이 끝까지 실행됐는지 확인해 주세요')
+// 사진 버킷(0003): 공개 주소로 없는 파일을 요청해서 "버킷 없음"과 "파일 없음"을 구분해요
+const bucket = await call('GET', '/storage/v1/object/public/photos/__check__/none.jpg')
+if (/bucket not found/i.test(String(bucket.json?.message ?? ''))) report('fail', "사진 버킷 'photos'가 없어요", '0003_storage.sql을 적용해 주세요')
+else if (bucket.status === 404 || bucket.status === 400) report('ok', "사진 버킷 'photos' 존재(공개)")
+else report('warn', '사진 버킷 상태를 확인하지 못했어요', `HTTP ${bucket.status}`)
 for (const view of ['leaderboard', 'post_feed']) {
   const res = await call('GET', `/rest/v1/${view}?select=*&limit=1`)
   if (res.status === 200) report('ok', `뷰 ${view} 읽기`)
@@ -118,7 +123,9 @@ const mustBlock = [
 ]
 for (const [name, method, route, body] of mustBlock) {
   const res = await call(method, route, body)
-  if (res.status >= 400) report('ok', `${name} 차단됨`, `HTTP ${res.status}`)
+  // 404 = 표(테이블)가 없다는 뜻이라 "막혔다"고 판단할 수 없어요 (SQL 적용 전)
+  if (res.status === 404) report('fail', `${name} 판정 불가`, '테이블이 아직 없어서 확인할 수 없어요 → SQL 적용 후 다시 실행')
+  else if (res.status >= 400) report('ok', `${name} 차단됨`, `HTTP ${res.status}`)
   else report('fail', `${name}이 막히지 않았어요 (HTTP ${res.status})`, '0002_rls.sql이 적용됐는지, RLS가 켜져 있는지 확인해 주세요')
 }
 

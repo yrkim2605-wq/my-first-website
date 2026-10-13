@@ -118,7 +118,7 @@ const Ranking = () => {
         />
 
         {/* 순위표는 예시 데이터라는 점을 분명히 알려요. "내 기록"만 실제로 계산한 값이에요. */}
-        <LocalProfileNotice sx={{ mb: 2 }}>
+        <LocalProfileNotice always sx={{ mb: 2 }}>
           <b>‘내 기록’과 ‘이 브라우저의 모험가 순위’는 저장된 일지로 계산한 실제 값</b>이에요. 서버가 없어서 다른 기기 · 다른 사람의 기록은 들어 있지 않아요. 맨 아래 탭 순위표는 <b>예시 데이터</b>예요.
         </LocalProfileNotice>
         <MyRecordCard />

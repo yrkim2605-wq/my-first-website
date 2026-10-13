@@ -57,7 +57,7 @@ const Community = () => {
         />
 
         {/* 정직한 안내: 게시판 글은 예시이고, 글쓰기 기능은 아직 없어요 */}
-        <LocalProfileNotice sx={{ mb: 3 }}>
+        <LocalProfileNotice always sx={{ mb: 3 }}>
           게시판의 글은 모두 <b>예시 데이터</b>예요. 아직 글쓰기 기능은 없고, 글 상세의 댓글도 이 화면에서만 보여요(저장되지 않아요).
         </LocalProfileNotice>
 

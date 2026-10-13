@@ -322,7 +322,7 @@ const CommunityPostDetail = () => {
         <Typography variant="h2" sx={{ mb: 1.5 }}>
           댓글 ({totalCommentCount})
         </Typography>
-        <LocalProfileNotice sx={{ mb: 2 }}>
+        <LocalProfileNotice always sx={{ mb: 2 }}>
           댓글은 <b>이 화면에서만 보이고 저장되지 않아요</b>. 새로고침하면 사라지고, 다른 사람에게도 보이지 않아요.
           {!profile && ' 로그인하지 않아서 ‘방문자’ 이름으로 남겨져요.'}
         </LocalProfileNotice>
