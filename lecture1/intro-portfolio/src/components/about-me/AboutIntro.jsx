@@ -290,7 +290,7 @@ const AboutIntro = () => {
           Web · Visual · UI/UX
         </Typography>
         <Typography sx={{ ...aboutTextSx, mt: u(name.bodyGap), fontSize: u(name.body), lineHeight: 1.4, letterSpacing: '0.01em' }}>
-          Ideas begin with curiosity.
+          Ideas begin with curiosity,
           <br />
           and become experiences
           <br />

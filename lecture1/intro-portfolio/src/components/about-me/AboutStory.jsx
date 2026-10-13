@@ -19,10 +19,10 @@ const HEADING_LINES = ['FROM', 'NUTRITION', 'TO DESIGN'];
 
 const TIMELINE_Y = 521;
 const TIMELINE = [
-  { x: 314, title: ['Food &', 'Nutrition'], detail: ['경남대', '식품영양학과 전공'], period: '2020~2024' },
+  { x: 314, title: ['Food &', 'Nutrition'], detail: ['경남대', '식품영양학과 전공'], period: '2020 – 2024' },
   { x: 530, title: ['Olive Young'], detail: ['올리브영 근무'], period: '2024' },
   { x: 688, title: ['Nutritionist'], detail: ['영양사 근무'], period: '2025' },
-  { x: 847, title: ['Web UI/UX'], detail: ['새로운 시작'], period: '2026 - Present' },
+  { x: 847, title: ['Web UI/UX'], detail: ['새로운 시작'], period: '2026 – Present' },
 ];
 
 const TIMELINE_LINE_MS = 1100; // 선이 끝까지 그어지는 시간
@@ -93,13 +93,13 @@ const AboutStory = () => {
           <Typography
             sx={{ ...aboutTextSx, mt: u(isMobile ? 20 : 32), fontWeight: 400, fontSize: u(14), lineHeight: 1.5, color: '#a3a3a3' }}
           >
-            Different fields
+            Different fields,
             <br />
             same curiosity.
             <br />
             A deeper understanding
             <br />
-            of people. For a better design.
+            of people, for better design.
           </Typography>
         </Box>
 

@@ -32,7 +32,7 @@ const PROJECTS = [
   },
   {
     title: 'AI INFLUENCER PROJECT  X  SIWOOENT',
-    body: 'AI 인플루언서를 기획하여 이미지 및 영상을 제작하여 시우이엔티 기업 인스타그램 운영 및 이커머스 판매',
+    body: 'AI 인플루언서를 기획하고 이미지·영상을 제작해, 시우이엔티의 인스타그램 운영과 이커머스 판매로 이어간 프로젝트',
     image: aiInfluencerThumb, // AI 인플루언서 '이서연' 정면·옆모습
     link: `${import.meta.env.BASE_URL}project-ai.html`, // 프로젝트 상세 페이지
     backdrop: 'petals',

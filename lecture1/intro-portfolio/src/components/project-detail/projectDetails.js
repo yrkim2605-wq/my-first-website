@@ -40,11 +40,11 @@ export const PROJECT_DETAILS = {
     key: 'ai', // 양옆 이전·다음 페이지를 고르는 이름 (pages/ProjectDetail)
     sections: makeSections('project-ai', 2),
     title: 'AI INFLUENCER PROJECT   X   SIWOOENT',
-    description: 'AI 인플루언서를 기획하여 이미지 및 영상을 제작하여 시우이엔티 기업 인스타그램 운영 및 이커머스 판매',
+    description: 'AI 인플루언서를 기획하고 이미지·영상을 제작해, 시우이엔티의 인스타그램 운영과 이커머스 판매로 이어간 프로젝트',
     rows: [
-      { label: 'ROLE', lines: ['AI Image  .  Video Generation', 'Content Creater'] },
-      { label: 'TOOL', lines: ['Chat GPT  /  Seedance  /  Comfy UI', 'ElevenLabs  /  Capcut'] },
-      { label: 'PERIOD', lines: ['26.08.17 - 26.10.11'] },
+      { label: 'ROLE', lines: ['AI Image  ·  Video Generation', 'Content Creator'] },
+      { label: 'TOOL', lines: ['ChatGPT  /  Seedance  /  ComfyUI', 'ElevenLabs  /  CapCut'] },
+      { label: 'PERIOD', lines: ['2026.08.17 – 2026.10.11'] },
     ],
     persona: 'AI Persona',
     sheet: {
@@ -89,7 +89,7 @@ export const PROJECT_DETAILS = {
       "일상의 소소한 순간을 캐릭터 '어뮤지'를 통해 레트로한 질감과 타이포, 그래픽 요소를 살린 감각적인 일러스트로 기록한 개인 프로젝트",
     rows: [
       { label: 'TOOL', lines: ['CLIP STUDIO  /  Illustrator'] },
-      { label: 'PERIOD', lines: ['2022.12.25 ~ present'] },
+      { label: 'PERIOD', lines: ['2022.12.25 – Present'] },
     ],
     // 줄이 2개뿐이라 위로 붙이고, 아래 빈자리에 어뮤지 소개를 넣는다
     rowCenters: [300, 328],
@@ -142,9 +142,9 @@ export const PROJECT_DETAILS = {
       lampX: 970,
       showLink: false,
       description:
-        '일상을 기록하던 어뮤지가 스티커와 키링 같은 실제로 만질 수 있는 굿즈로 태어나 일상 곳곳에 자리를 잡았습니다.',
+        '하루하루를 기록하던 어뮤지가 스티커와 키링처럼 손에 잡히는 굿즈로 태어나, 일상 곳곳에 자리 잡았습니다.',
       rows: [
-        { label: 'PLATFORM', lines: ['NAVERPLACE'] },
+        { label: 'PLATFORM', lines: ['NAVER PLACE'] },
         { label: 'MARKETING', lines: ['INSTAGRAM'] },
       ],
       // 설명글이 01보다 한 줄 짧아서, 01과 같은 간격이 되도록 그만큼 위로 당긴다

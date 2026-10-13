@@ -5,7 +5,7 @@ import useInView from '../hooks/useInView';
 // 숫자가 자릿수마다 슬롯머신처럼 0 → 9를 한 바퀴 넘게 굴러 제 숫자에 멈춰 선다
 // · 화면에 들어오면 한 번 굴러가고, 가장 가까운 [data-roll-trigger] 상자에 마우스를 올리거나 탭하면 다시 굴러간다
 // · 숫자가 아닌 글자(~, -, 공백 등)는 그대로 보인다
-// value: 보여줄 글자 (예: '01', '2020~2024'), delay: 첫 등장 지연(ms)
+// value: 보여줄 글자 (예: '2024', '2020 – 2024'), delay: 첫 등장 지연(ms)
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'; // 빠르게 돌다가 끝에서 천천히 멈춘다
 const DURATION_MS = 1100;
