@@ -120,16 +120,49 @@ await as(B).q(`update public.reviews set photo_path = null where user_id=$1`, [B
 check('사진을 지우면 사진 EXP도 회수(50)', (await mineExp(B)).exp === 50, JSON.stringify(await mineExp(B)))
 await as(B).q(`delete from public.reviews where user_id=$1`, [B])
 
-// ── 하루 EXP 상한(5개) · 하루 작성 상한(20개) ──
+// ── 하루 EXP 상한(기본 100 EXP) · 하루 작성 상한(20개) ──
 const results = []
 for (let i = 1; i <= 21; i += 1) results.push(await ins(A, `k${i}`))
 const flags = (await as(A).q(`select exp_review from public.reviews where user_id=$1 order by created_at, bakery_id`, [A])).rows
 check('하루 20개까지 작성, 21번째는 거부', results.slice(0, 20).every((r) => r.error === null) && results[20].error?.message.includes('DAILY_REVIEW_LIMIT'))
-check('그중 EXP 대상은 5개뿐', flags.filter((f) => f.exp_review).length === 5, `실제 ${flags.filter((f) => f.exp_review).length}`)
-// 5개: 30*5 + 첫 리뷰 20 + 빵집 3곳 30 + 지역 3곳 50 = 250
-check('EXP 5개 = 150 + 퀘스트 100 = 250, 레벨 3(0부터)', JSON.stringify([(await mineExp(A)).exp, (await mineExp(A)).level_index]) === '[250,2]', JSON.stringify(await mineExp(A)))
+check('리뷰 EXP는 하루 100까지 → 30 × 3개만 지급(90)', flags.filter((f) => f.exp_review).length === 3, `실제 ${flags.filter((f) => f.exp_review).length}`)
+// 3개: 30*3 + 첫 리뷰 20 + 빵집 3곳 30 + 지역 3곳 50 = 190 (퀘스트 보너스는 하루 상한 밖)
+check('EXP = 90 + 퀘스트 100 = 190, 레벨 번호 2', JSON.stringify([(await mineExp(A)).exp, (await mineExp(A)).level_index]) === '[190,2]', JSON.stringify(await mineExp(A)))
 check('도감은 EXP 상한과 별개로 20곳', (await as(A).q(`select discovered_count::int d from public.user_progress where user_id=$1`, [A])).rows[0].d === 20)
 await as(A).q(`delete from public.reviews where user_id=$1`, [A])
+
+// ── 상한 안에서 사진 EXP가 모자랄 때 · 상한을 바꾸면 반영 · 삭제하면 다시 받을 수 있음 ──
+const photoIns = (u, bakery) => as(u).q(`insert into public.reviews (bakery_id, rating, content, photo_path) values ($1, 4, '사진', $2 || '/p.jpg')`, [bakery, u])
+const expFlags = async (u) => (await as(u).q(`select bakery_id, exp_review, exp_photo from public.reviews where user_id=$1 order by created_at`, [u])).rows
+await ins(B, 'k11'); await ins(B, 'k12')      // 30 + 30 = 60 사용 → 남은 40
+await photoIns(B, 'k13')                      // 30 + 사진 10 = 40 → 딱 맞음
+let fb = await expFlags(B)
+check('남은 EXP가 40이면 사진 리뷰는 리뷰+사진 EXP 모두 지급', fb[2].exp_review && fb[2].exp_photo, JSON.stringify(fb))
+await photoIns(B, 'k14')
+fb = await expFlags(B)
+check('하루 100을 채우면 다음 리뷰는 저장만 되고 EXP 없음', fb[3].exp_review === false && fb[3].exp_photo === false, JSON.stringify(fb[3]))
+await as(B).q(`delete from public.reviews where user_id=$1`, [B])
+await ins(B, 'k11'); await ins(B, 'k12'); await ins(B, 'k15')   // 90 사용 → 남은 10
+await photoIns(B, 'k16')
+fb = await expFlags(B)
+check('남은 EXP 10이면 EXP 없음(상한 초과 방지)', fb[3].exp_review === false, JSON.stringify(fb[3]))
+await as(B).q(`delete from public.reviews where user_id=$1 and bakery_id='k15'`, [B])
+await ins(B, 'k17'); await ins(B, 'k18')                       // k15 삭제로 30 반환 → 다시 받을 수 있음
+await as(B).q(`delete from public.reviews where user_id=$1`, [B])
+await ins(B, 'k11'); await ins(B, 'k12'); await photoIns(B, 'k13')   // 30 + 30 + 40
+await as(B).q(`delete from public.reviews where user_id=$1 and bakery_id='k11'`, [B])
+await photoIns(B, 'k11')                                       // 사진 리뷰(40) 삭제 후 재작성: 삭제로 EXP가 돌아가므로 순증가 없음
+const rewritten = await expFlags(B)
+const reviewPhotoExp = rewritten.filter((f) => f.exp_review).length * 30 + rewritten.filter((f) => f.exp_photo).length * 10
+check('같은 빵집을 지우고 다시 써도 리뷰·사진 EXP 합계가 하루 100을 넘지 않아요', reviewPhotoExp <= 100, JSON.stringify(rewritten))
+await as(B).q(`delete from public.reviews where user_id=$1`, [B])
+await admin(`update public.game_settings set value = 200 where key = 'daily_exp_cap'`)
+await ins(B, 'k11'); await ins(B, 'k12'); await ins(B, 'k13'); await ins(B, 'k14'); await ins(B, 'k15'); await ins(B, 'k16'); await ins(B, 'k17')
+check('상한 설정을 200으로 바꾸면 하루 6개(180)까지 지급', (await expFlags(B)).filter((f) => f.exp_review).length === 6)
+await admin(`update public.game_settings set value = 100 where key = 'daily_exp_cap'`)
+check('클라이언트는 게임 설정을 바꿀 수 없어요', (await as(A).q(`update public.game_settings set value = 9999 where key = 'daily_exp_cap' returning key`)).error !== null)
+check('게임 설정은 누구나 읽을 수 있어요', (await as(null).q(`select value from public.game_settings where key = 'daily_exp_cap'`)).rows[0]?.value === 100)
+await as(B).q(`delete from public.reviews where user_id=$1`, [B])
 
 // ── 랭킹 ──
 await ins(A, 'k1'); await ins(A, 'k2'); await ins(B, 'k3')
@@ -186,6 +219,8 @@ check('규칙 일치: 리뷰 30 / 사진 10', num(/review:\s*(\d+)/, rules) === 
 const bonus = [...rules.matchAll(/bonusExp:\s*(\d+)/g)].map((m) => Number(m[1]))
 const targets = [...rules.matchAll(/target:\s*(\d+)/g)].map((m) => Number(m[1]))
 check('규칙 일치: 퀘스트 보너스 20/30/50, 목표 1/3/3', JSON.stringify(bonus) === '[20,30,50]' && JSON.stringify(targets) === '[1,3,3]', `${bonus} ${targets}`)
+const settingsRows = Object.fromEntries((await admin('select key, value from public.game_settings')).map((r) => [r.key, r.value]))
+check('설정 기본값 = 앱 규칙(리뷰 30 / 사진 10)', settingsRows.review_exp === num(/review:\s*(\d+)/, rules) && settingsRows.photo_exp === num(/reviewPhoto:\s*(\d+)/, rules), JSON.stringify(settingsRows))
 const minExps = [...levels.matchAll(/minExp:\s*(\d+)/g)].map((m) => Number(m[1]))
 check('규칙 일치: 레벨 기준 0/60/180/400/800', JSON.stringify(minExps) === '[0,60,180,400,800]', String(minExps))
 

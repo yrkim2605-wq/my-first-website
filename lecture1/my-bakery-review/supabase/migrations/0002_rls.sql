@@ -17,7 +17,7 @@ grant usage on schema public to anon, authenticated;
 
 -- 읽기: 로그인하지 않아도 공개 데이터는 볼 수 있어요 (이메일 등 개인 정보는 이 테이블들에 없어요)
 grant select on public.profiles, public.bakeries, public.reviews,
-                public.posts, public.comments, public.post_likes to anon, authenticated;
+                public.posts, public.comments, public.post_likes, public.game_settings to anon, authenticated;
 -- 다녀왔어요 체크는 본인만 읽어요
 grant select on public.bakery_visits to authenticated;
 
@@ -40,6 +40,7 @@ grant delete                                              on public.bakery_visit
 -- 정책과 트리거가 부르는 함수
 grant execute on function public.is_email_verified()          to anon, authenticated;
 grant execute on function public.is_nickname_available(text)  to anon, authenticated;
+grant execute on function public.game_setting(text)           to anon, authenticated;
 grant execute on function public.game_exp(int, int, int, int) to anon, authenticated;
 grant execute on function public.game_level_index(int)        to anon, authenticated;
 
@@ -52,12 +53,14 @@ alter table public.posts         enable row level security;
 alter table public.comments      enable row level security;
 alter table public.post_likes    enable row level security;
 alter table public.bakery_visits enable row level security;
+alter table public.game_settings enable row level security;
 
 -- 읽기 (공개)
 create policy profiles_read   on public.profiles   for select using (true);
 create policy bakeries_read   on public.bakeries   for select using (true);
 create policy reviews_read    on public.reviews    for select using (true);
 create policy posts_read      on public.posts      for select using (true);
+create policy game_settings_read on public.game_settings for select using (true);   -- 쓰기 정책 없음 → 클라이언트는 못 바꿔요
 create policy comments_read   on public.comments   for select using (true);
 create policy post_likes_read on public.post_likes for select using (true);
 -- 읽기 (본인만)

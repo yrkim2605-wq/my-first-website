@@ -21,15 +21,33 @@ as $$
   );
 $$;
 
--- 게임 규칙 (src/constants/gameRules.js · levels.js와 같은 숫자여야 해요 → supabase/tests에서 비교해요)
---   리뷰 +30, 사진 +10, 퀘스트: 첫 리뷰 +20 / 서로 다른 빵집 3곳 +30 / 서로 다른 지역 3곳 +50
+-- 게임 설정값: 숫자를 바꾸고 싶을 때 SQL Editor에서 update 한 줄이면 돼요 (앱 배포 불필요, 클라이언트는 쓰기 불가).
+--   예) update public.game_settings set value = 150 where key = 'daily_exp_cap';
+-- 주의: 리뷰/사진 EXP를 바꾸면 src/constants/gameRules.js도 같이 바꿔야 해요 (supabase/tests가 두 값이 같은지 비교해요).
+create table public.game_settings (
+  key   text primary key,
+  value int not null check (value >= 0)
+);
+insert into public.game_settings (key, value) values
+  ('review_exp', 30),      -- 리뷰 1개
+  ('photo_exp', 10),       -- 작성할 때 사진이 있는 리뷰의 추가 EXP
+  ('daily_exp_cap', 100);  -- 하루(한국 시간)에 "리뷰·사진"으로 받을 수 있는 EXP 상한. 퀘스트 보너스는 1회성이라 상한 밖이에요.
+
+create or replace function public.game_setting(p_key text)
+returns int
+language sql stable
+as $$
+  select value from public.game_settings where key = p_key;
+$$;
+
+-- 퀘스트 보너스: 첫 리뷰 +20 / 서로 다른 빵집 3곳 +30 / 서로 다른 지역 3곳 +50 (gameRules.js와 같은 숫자)
 create or replace function public.game_exp(
   p_reviews int, p_photos int, p_bakeries int, p_districts int
 ) returns int
-language sql immutable
+language sql stable
 as $$
-  select p_reviews * 30
-       + p_photos * 10
+  select p_reviews * public.game_setting('review_exp')
+       + p_photos * public.game_setting('photo_exp')
        + case when p_reviews   >= 1 then 20 else 0 end
        + case when p_bakeries  >= 3 then 30 else 0 end
        + case when p_districts >= 3 then 50 else 0 end;
@@ -106,7 +124,7 @@ create table public.reviews (
   content    text not null check (char_length(btrim(content)) between 1 and 500),
   photo_path text check (photo_path is null or photo_path like user_id::text || '/%'),
   -- 아래 두 칸은 서버(트리거)만 정해요. 클라이언트는 쓰기 권한이 없어요.
-  exp_review boolean not null default false,            -- 이 리뷰가 EXP를 받는지 (하루 상한 안에서 작성됨)
+  exp_review boolean not null default false,            -- 이 리뷰가 EXP를 받는지 (하루 EXP 상한 안에서 작성됨)
   exp_photo  boolean not null default false,            -- 작성할 때 사진이 있어서 사진 EXP 대상인지
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -120,9 +138,13 @@ returns trigger
 language plpgsql
 as $$
 declare
-  v_today date := (now() at time zone 'Asia/Seoul')::date;
-  v_total int;
-  v_exp   int;
+  v_today     date := (now() at time zone 'Asia/Seoul')::date;
+  v_review_exp int := public.game_setting('review_exp');
+  v_photo_exp  int := public.game_setting('photo_exp');
+  v_cap        int := public.game_setting('daily_exp_cap');
+  v_total     int;
+  v_used      int;   -- 오늘 이미 받은 리뷰·사진 EXP
+  v_left      int;   -- 오늘 더 받을 수 있는 EXP
 begin
   new.user_id := auth.uid();
   if new.user_id is null then
@@ -132,18 +154,22 @@ begin
     raise exception 'EMAIL_NOT_VERIFIED' using errcode = '42501';
   end if;
 
-  select count(*), count(*) filter (where r.exp_review)
-    into v_total, v_exp
+  select count(*),
+         count(*) filter (where r.exp_review) * v_review_exp
+           + count(*) filter (where r.exp_photo and r.photo_path is not null) * v_photo_exp
+    into v_total, v_used
     from public.reviews r
    where r.user_id = new.user_id
      and (r.created_at at time zone 'Asia/Seoul')::date = v_today;
 
-  -- 하루 작성 상한 20개(스팸 방지), 그중 EXP는 하루 5개까지 (한국 시간 기준)
+  -- 하루 작성 상한 20개(스팸 방지). 별개로 EXP는 하루 daily_exp_cap(기본 100)까지만 지급 (한국 시간 기준).
+  -- 남은 EXP가 리뷰 EXP보다 적으면 저장은 되지만 EXP가 없고, 사진 EXP까지는 모자라면 리뷰 EXP만 받아요.
   if v_total >= 20 then
     raise exception 'DAILY_REVIEW_LIMIT' using errcode = 'P0001';
   end if;
-  new.exp_review := v_exp < 5;
-  new.exp_photo  := new.exp_review and new.photo_path is not null;
+  v_left := greatest(v_cap - v_used, 0);
+  new.exp_review := v_left >= v_review_exp;
+  new.exp_photo  := new.exp_review and new.photo_path is not null and v_left >= v_review_exp + v_photo_exp;
   new.created_at := now();
   new.updated_at := now();
   return new;
