@@ -12,9 +12,9 @@ const RANK_COLORS = {
 }
 
 const SIZES = {
-  1: { width: 210, minHeight: 280, avatar: 76, name: '1.2rem', medal: 40 },
-  2: { width: 170, minHeight: 236, avatar: 60, name: '1.02rem', medal: 34 },
-  3: { width: 170, minHeight: 236, avatar: 60, name: '1.02rem', medal: 34 },
+  1: { width: 210, minHeight: 280, avatar: 104, name: '1.2rem', medal: 40 },
+  2: { width: 170, minHeight: 236, avatar: 84, name: '1.02rem', medal: 34 },
+  3: { width: 170, minHeight: 236, avatar: 84, name: '1.02rem', medal: 34 },
 }
 
 // 모바일에서는 1·2·3등 순서로 세로로 쌓고, 넓은 화면에서는 2·1·3 시상대 모양으로 놓아요.
@@ -70,16 +70,17 @@ const PodiumCard = ({ item }) => {
         sx={{
           width: size.avatar,
           height: size.avatar,
-          borderRadius: RADIUS.round,
-          bgcolor: 'background.paper',
+          // 메달이 있으면 동그랗게 자르지 않아요 (리본 · 왕관이 잘리지 않게)
+          borderRadius: item.avatarImage ? 0 : RADIUS.round,
+          bgcolor: item.avatarImage ? 'transparent' : 'background.paper',
           display: 'grid',
           placeItems: 'center',
-          overflow: 'hidden',
+          overflow: item.avatarImage ? 'visible' : 'hidden',
           mb: 1.25,
         }}
       >
         {item.avatarImage ? (
-          <Box component="img" src={item.avatarImage} alt="" sx={{ width: '86%', height: '86%', objectFit: 'contain' }} />
+          <Box component="img" src={item.avatarImage} alt="" sx={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${item.avatarScale ?? 1})` }} />
         ) : (
           <Typography sx={{ fontSize: '2rem' }}>{item.emoji}</Typography>
         )}

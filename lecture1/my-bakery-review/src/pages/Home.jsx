@@ -55,6 +55,7 @@ const POPULAR_REVIEWS = [...BAKERY_REVIEWS]
     ...review,
     bakery: BAKERIES.find((b) => b.id === review.bakeryId),
     avatarImage: getAuthorLevel(review.author).iconImage,
+    avatarScale: getAuthorLevel(review.author).iconScale,
   }))
 
 const Home = () => {

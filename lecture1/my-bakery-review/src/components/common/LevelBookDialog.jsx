@@ -42,7 +42,7 @@ const LevelBookDialog = ({ open, onClose, currentLevelId }) => {
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                <Avatar variant="rounded" src={level.iconImage} sx={{ width: 40, height: 38, borderRadius: '10px' }}>
+                <Avatar variant="square" src={level.iconImage} sx={{ width: 54, height: 54, bgcolor: 'transparent', overflow: 'visible', '& img': { objectFit: 'contain', transform: `scale(${level.iconScale ?? 1})` } }}>
                   {level.emoji}
                 </Avatar>
                 <Box sx={{ minWidth: 0 }}>

@@ -104,19 +104,20 @@ const MyPage = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
             <Box
               sx={{
-                width: 76,
-                height: 76,
-                borderRadius: RADIUS.round,
+                width: 104,
+                height: 104,
+                // 메달이 있으면 동그랗게 자르지 않아요 (리본 · 왕관이 잘리지 않게)
+                borderRadius: progress.currentLevel.iconImage ? 0 : RADIUS.round,
                 flexShrink: 0,
-                bgcolor: 'background.paper',
+                bgcolor: progress.currentLevel.iconImage ? 'transparent' : 'background.paper',
                 display: 'grid',
                 placeItems: 'center',
-                overflow: 'hidden',
+                overflow: progress.currentLevel.iconImage ? 'visible' : 'hidden',
                 fontSize: '2.2rem',
               }}
             >
               {progress.currentLevel.iconImage ? (
-                <Box component="img" src={progress.currentLevel.iconImage} alt="" sx={{ width: '86%', height: '86%', objectFit: 'contain' }} />
+                <Box component="img" src={progress.currentLevel.iconImage} alt="" sx={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${progress.currentLevel.iconScale ?? 1})` }} />
               ) : (
                 MOCK_USER.avatarEmoji
               )}

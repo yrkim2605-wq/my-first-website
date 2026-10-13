@@ -1,8 +1,9 @@
-import rookieIcon from '../assets/levels/rank-badge-rookie.webp'
-import explorerIcon from '../assets/levels/rank-badge-explorer.webp'
-import expertIcon from '../assets/levels/rank-badge-expert.webp'
-import masterIcon from '../assets/levels/rank-badge-master.webp'
-import otakuIcon from '../assets/levels/rank-badge-otaku.webp'
+// 레벨 프로필 이미지: Lv.1~Lv.5 메달 (빵린이 → 빵덕후 순서)
+import rookieIcon from '../assets/levels/level-medal-1.webp'
+import explorerIcon from '../assets/levels/level-medal-2.webp'
+import expertIcon from '../assets/levels/level-medal-3.webp'
+import masterIcon from '../assets/levels/level-medal-4.webp'
+import otakuIcon from '../assets/levels/level-medal-5.webp'
 
 export const LEVELS = [
   {
@@ -46,6 +47,8 @@ export const LEVELS = [
     name: '빵덕후',
     emoji: '🏆',
     iconImage: otakuIcon,
+    // 왕관 · 월계관 때문에 같은 칸에서 메달 본체가 작아 보여서, 화면에서 조금 더 크게 그려요
+    iconScale: 1.08,
     minVisits: 50,
     minHearts: 500,
     perk: '연간 무료 시식 패스 + 명예의 전당 등재',

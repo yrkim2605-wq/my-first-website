@@ -5,7 +5,7 @@ import { RADIUS } from '../../theme'
 
 // 작성자 표시: 레벨 캐릭터 아바타 · 닉네임 · 레벨 태그 (+ 아래 줄에 날짜 같은 보조 정보)
 // 커뮤니티 목록 · 글 상세 · 댓글 · 빵집 리뷰에서 똑같이 보이도록 한곳에서 그려요.
-const AuthorInfo = ({ author, level = getAuthorLevel(author), caption, avatarSize = 32, sx }) => {
+const AuthorInfo = ({ author, level = getAuthorLevel(author), caption, avatarSize = 42, sx }) => {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, ...sx }}>
       <Box
@@ -14,17 +14,18 @@ const AuthorInfo = ({ author, level = getAuthorLevel(author), caption, avatarSiz
           width: avatarSize,
           height: avatarSize,
           flexShrink: 0,
-          borderRadius: RADIUS.round,
-          bgcolor: 'butter.main',
+          // 메달이 있으면 동그랗게 자르지 않아요 (리본 · 왕관이 잘리지 않게)
+          borderRadius: level?.iconImage ? 0 : RADIUS.round,
+          bgcolor: level?.iconImage ? 'transparent' : 'butter.main',
           display: 'grid',
           placeItems: 'center',
-          overflow: 'hidden',
+          overflow: level?.iconImage ? 'visible' : 'hidden',
           fontSize: '0.75rem',
           fontWeight: 700,
         }}
       >
         {level?.iconImage ? (
-          <Box component="img" src={level.iconImage} alt="" sx={{ width: '88%', height: '88%', objectFit: 'contain' }} />
+          <Box component="img" src={level.iconImage} alt="" sx={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${level.iconScale ?? 1})` }} />
         ) : (
           author.slice(0, 1)
         )}

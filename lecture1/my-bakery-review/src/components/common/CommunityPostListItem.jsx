@@ -85,7 +85,7 @@ const CommunityPostListItem = ({
             fontSize: '0.8rem',
           }}
         >
-          <AuthorInfo author={author} level={authorLevel} avatarSize={26} />
+          <AuthorInfo author={author} level={authorLevel} avatarSize={34} />
           {/* 모바일에서는 한 줄에 다 들어가도록 날짜를 숨겨요 (글 상세에서 볼 수 있어요) */}
           <Typography
             component="span"

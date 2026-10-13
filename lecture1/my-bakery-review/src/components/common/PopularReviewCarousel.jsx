@@ -95,6 +95,7 @@ const PopularReviewCarousel = ({ reviews }) => {
                   bakeryIconImage={review.bakery?.iconImage}
                   avatarEmoji={review.avatarEmoji}
                   avatarImage={review.avatarImage}
+                  avatarScale={review.avatarScale}
                   author={review.author}
                   rating={review.rating}
                   content={review.content}

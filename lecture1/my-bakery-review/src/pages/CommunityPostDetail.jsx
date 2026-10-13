@@ -26,7 +26,7 @@ import { RADIUS } from '../theme'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
-const CommentAuthor = ({ author, createdAt }) => <AuthorInfo author={author} caption={createdAt} avatarSize={30} />
+const CommentAuthor = ({ author, createdAt }) => <AuthorInfo author={author} caption={createdAt} avatarSize={40} />
 
 const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
   const displayedLike = likeCount + (vote === 'like' ? 1 : 0)
@@ -250,7 +250,7 @@ const CommunityPostDetail = () => {
           {post.title}
         </Typography>
 
-        <AuthorInfo author={post.author} caption={post.createdAt} avatarSize={40} sx={{ mb: 3 }} />
+        <AuthorInfo author={post.author} caption={post.createdAt} avatarSize={52} sx={{ mb: 3 }} />
 
         <Typography variant="body1" sx={{ mb: 4, whiteSpace: 'pre-line' }}>
           {post.content}

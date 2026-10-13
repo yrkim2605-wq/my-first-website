@@ -33,18 +33,19 @@ const HeaderLevelBadge = () => {
     >
       <Box
         sx={{
-          width: 30,
-          height: 30,
-          borderRadius: RADIUS.round,
-          bgcolor: 'background.paper',
+          width: 38,
+          height: 38,
+          // 메달이 있으면 동그랗게 자르지 않아요 (리본 · 왕관이 잘리지 않게)
+          borderRadius: currentLevel.iconImage ? 0 : RADIUS.round,
+          bgcolor: currentLevel.iconImage ? 'transparent' : 'background.paper',
           display: 'grid',
           placeItems: 'center',
-          overflow: 'hidden',
+          overflow: currentLevel.iconImage ? 'visible' : 'hidden',
           flexShrink: 0,
         }}
       >
         {currentLevel.iconImage ? (
-          <Box component="img" src={currentLevel.iconImage} alt="" sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <Box component="img" src={currentLevel.iconImage} alt="" sx={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${currentLevel.iconScale ?? 1})` }} />
         ) : (
           <Typography component="span" sx={{ fontSize: '1rem' }}>{currentLevel.emoji}</Typography>
         )}

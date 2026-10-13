@@ -20,6 +20,7 @@ const PopularReviewCard = ({
   bakeryIconImage,
   avatarEmoji,
   avatarImage,
+  avatarScale,
   author,
   rating,
   content,
@@ -71,7 +72,7 @@ const PopularReviewCard = ({
       <Box sx={{ p: PADDING_BY_SIZE[size], flexGrow: 1, display: 'flex', flexDirection: 'column', transition: 'padding 0.35s ease' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Avatar variant="rounded" src={avatarImage} sx={{ width: 28, height: 26, borderRadius: '7px', fontSize: '1rem' }}>
+            <Avatar variant="square" src={avatarImage} sx={{ width: 40, height: 40, fontSize: '1rem', bgcolor: avatarImage ? 'transparent' : 'butter.main', overflow: 'visible', '& img': { objectFit: 'contain', transform: `scale(${avatarScale ?? 1})` } }}>
               {avatarEmoji}
             </Avatar>
             <Typography variant="body2" sx={{ fontWeight: 700, fontSize: AUTHOR_FONT_BY_SIZE[size] }}>

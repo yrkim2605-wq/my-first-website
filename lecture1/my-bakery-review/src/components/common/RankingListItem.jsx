@@ -4,7 +4,7 @@ import RankingValue from './RankingValue'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
 // 4위부터 보여주는 랭킹 목록의 한 줄
-const RankingListItem = ({ rank, emoji, avatarImage, primaryText, secondaryText, levelBadge, valueText, valueKind }) => {
+const RankingListItem = ({ rank, emoji, avatarImage, avatarScale, primaryText, secondaryText, levelBadge, valueText, valueKind }) => {
   return (
     <Box
       component="li"
@@ -25,18 +25,19 @@ const RankingListItem = ({ rank, emoji, avatarImage, primaryText, secondaryText,
       </Typography>
       <Box
         sx={{
-          width: 38,
-          height: 38,
-          borderRadius: RADIUS.round,
-          bgcolor: 'butter.main',
+          width: 50,
+          height: 50,
+          // 메달이 있으면 동그랗게 자르지 않아요 (리본 · 왕관이 잘리지 않게)
+          borderRadius: avatarImage ? 0 : RADIUS.round,
+          bgcolor: avatarImage ? 'transparent' : 'butter.main',
           display: 'grid',
           placeItems: 'center',
-          overflow: 'hidden',
+          overflow: avatarImage ? 'visible' : 'hidden',
           flexShrink: 0,
         }}
       >
         {avatarImage ? (
-          <Box component="img" src={avatarImage} alt="" sx={{ width: '86%', height: '86%', objectFit: 'contain' }} />
+          <Box component="img" src={avatarImage} alt="" sx={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${avatarScale ?? 1})` }} />
         ) : (
           <Typography sx={{ fontSize: '1.2rem' }}>{emoji}</Typography>
         )}
