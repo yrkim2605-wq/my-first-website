@@ -86,6 +86,16 @@ const BakeryCollection = ({ discovery }) => {
     ...bakeries.filter(inDistrict).map((bakery) => ({ bakery, discovered: isDiscovered(bakery.id) })),
   ].sort((a, b) => Number(b.discovered) - Number(a.discovered))
   const shown = entries.slice(0, visibleCount)
+
+  // 지역 칩에 "발견/전체"를 보여줘요 (칸으로 보이는 빵집 기준이라 발견이 늘면 전체도 함께 늘어요)
+  const countsByDistrict = {}
+  ;[...extraDiscovered.map((bakery) => ({ bakery, discovered: true })), ...bakeries.map((bakery) => ({ bakery, discovered: isDiscovered(bakery.id) }))].forEach(
+    ({ bakery, discovered }) => {
+      const counts = (countsByDistrict[bakery.districtId] ??= { found: 0, total: 0 })
+      counts.total += 1
+      if (discovered) counts.found += 1
+    },
+  )
   const ratio = totalCount > 0 ? Math.round((discoveredInListCount / totalCount) * 100) : 0
 
   return (
@@ -115,7 +125,8 @@ const BakeryCollection = ({ discovery }) => {
             {[{ id: 'all', name: '전체' }, ...DISTRICTS].map((district) => (
               <Chip
                 key={district.id}
-                label={district.name}
+                label={district.id === 'all' ? '전체' : `${district.name} ${countsByDistrict[district.id]?.found ?? 0}/${countsByDistrict[district.id]?.total ?? 0}`}
+                sx={{ height: 40, borderRadius: RADIUS.pill }}
                 variant={districtId === district.id ? 'filled' : 'outlined'}
                 color={districtId === district.id ? 'primary' : 'default'}
                 onClick={() => {

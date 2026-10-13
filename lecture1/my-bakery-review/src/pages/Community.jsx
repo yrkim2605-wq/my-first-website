@@ -16,6 +16,7 @@ import { getAuthorLevel } from '../utils/authorLevel'
 import { PAGE_TABS_SX } from '../constants/tabStyles'
 
 const SORT_OPTIONS = [
+  { id: 'latest', label: '최신순' },
   { id: 'heart', label: '좋아요순' },
   { id: 'comment', label: '댓글순' },
 ]
@@ -37,9 +38,10 @@ const Community = () => {
       ? COMMUNITY_POSTS
       : COMMUNITY_POSTS.filter((post) => post.categoryId === selectedCategoryId)
 
-  const sortedPosts = [...filteredPosts].sort((a, b) =>
-    sortBy === 'heart' ? b.heartCount - a.heartCount : b.commentCount - a.commentCount,
-  )
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    if (sortBy === 'latest') return b.createdAt.localeCompare(a.createdAt) || b.id - a.id
+    return sortBy === 'heart' ? b.heartCount - a.heartCount : b.commentCount - a.commentCount
+  })
 
   const isKnownCategory = CATEGORY_TABS.some((c) => c.id === selectedCategoryId)
 
@@ -85,14 +87,14 @@ const Community = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            pt: 2.5,
-            pb: 0.5,
+            pt: 1,
+            pb: 0,
           }}
         >
           <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
             글 {sortedPosts.length}개
           </Typography>
-          <Box role="group" aria-label="정렬" sx={{ display: 'flex', gap: 1.5 }}>
+          <Box role="group" aria-label="정렬" sx={{ display: 'flex', gap: 0.5, mr: -1.25 }}>
             {SORT_OPTIONS.map((option) => (
               <Box
                 key={option.id}
@@ -103,7 +105,8 @@ const Community = () => {
                 sx={{
                   border: 'none',
                   background: 'none',
-                  p: 0,
+                  minHeight: 44,
+                  px: 1.25,
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                   fontSize: '0.85rem',

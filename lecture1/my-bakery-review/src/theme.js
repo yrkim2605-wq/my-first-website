@@ -115,6 +115,7 @@ const theme = createTheme({
           fontWeight: 600,
           textTransform: 'none',
           boxShadow: 'none',
+          minHeight: 40,
           transition: 'transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, background-color 0.15s ease',
           '&:hover': {
             boxShadow: '0 8px 18px rgba(51,36,25,0.18)',

@@ -42,11 +42,11 @@ export const BADGES = [
     rule: { type: 'keyword', keyword: '오픈런', target: 5 },
   },
   {
-    id: 'bread-100',
-    name: '빵 100개 학살자',
+    id: 'legend-conqueror',
+    name: '전설의 빵집 정복자',
     emoji: '💥',
     iconImage: bread100Icon,
-    description: '빵집 도감에서 빵집 50곳 발견',
+    description: '빵집 도감에서 빵집 50곳 발견 (한 번 발견하면 유지돼요)',
     rule: { type: 'discovered', target: 50 },
   },
 ]

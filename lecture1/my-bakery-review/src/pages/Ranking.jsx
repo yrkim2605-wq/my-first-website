@@ -8,6 +8,9 @@ import RankingPodium from '../components/common/RankingPodium'
 import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import MyRecordCard from '../components/ranking/MyRecordCard'
+import LocalRankingBoard from '../components/ranking/LocalRankingBoard'
+import Typography from '@mui/material/Typography'
+import { DISPLAY_FONT } from '../theme'
 import { PARCHMENT_SX } from '../constants/rpgStyles'
 import { MONTHLY_REVIEWERS, TOP_VISITORS, TOP_BAKERIES, TOP_LIKED_REVIEWS, RANKING_TABS } from '../constants/ranking'
 import { DISTRICTS } from '../constants/districts'
@@ -110,15 +113,25 @@ const Ranking = () => {
           variant="sign"
           eyebrow="HALL OF FAME"
           title="이번 달 명예의 전당"
-          description="모험가들의 순위 예시를 구경해 보세요."
+          description="내 기록과 이 브라우저의 실제 순위, 그리고 예시 순위표를 볼 수 있어요."
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
 
         {/* 순위표는 예시 데이터라는 점을 분명히 알려요. "내 기록"만 실제로 계산한 값이에요. */}
         <LocalProfileNotice sx={{ mb: 2 }}>
-          아래 순위표는 <b>예시 데이터</b>예요. 서버가 없어서 다른 모험가들의 기록은 이 브라우저에 없어요. <b>‘내 기록’만 실제로 계산한 값</b>이에요.
+          <b>‘내 기록’과 ‘이 브라우저의 모험가 순위’는 저장된 일지로 계산한 실제 값</b>이에요. 서버가 없어서 다른 기기 · 다른 사람의 기록은 들어 있지 않아요. 맨 아래 탭 순위표는 <b>예시 데이터</b>예요.
         </LocalProfileNotice>
         <MyRecordCard />
+        <LocalRankingBoard />
+
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
+          <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '1.3rem', sm: '1.5rem' }, color: 'primary.main' }}>
+            모험가 예시 순위표
+          </Typography>
+          <Box component="span" sx={{ px: 1, py: 0.1, borderRadius: 999, border: '1px dashed', borderColor: 'text.secondary', color: 'text.secondary', fontSize: '0.75rem', fontWeight: 800 }}>
+            예시 데이터
+          </Box>
+        </Box>
 
         <Tabs
           value={activeTab}

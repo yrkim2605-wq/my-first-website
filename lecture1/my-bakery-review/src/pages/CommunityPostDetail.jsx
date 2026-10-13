@@ -43,6 +43,8 @@ const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
           display: 'flex',
           alignItems: 'center',
           gap: 0.4,
+          minHeight: 40,
+          px: 0.75,
           border: 'none',
           background: 'none',
           cursor: 'pointer',
@@ -69,6 +71,8 @@ const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
           display: 'flex',
           alignItems: 'center',
           gap: 0.4,
+          minHeight: 40,
+          px: 0.75,
           border: 'none',
           background: 'none',
           cursor: 'pointer',
@@ -217,7 +221,8 @@ const CommunityPostDetail = () => {
             textDecoration: 'none',
             fontSize: '0.9rem',
             fontWeight: 600,
-            mb: 4,
+            minHeight: 44,
+            mb: 2.5,
             '&:hover': { color: 'primary.main' },
           }}
         >
@@ -252,6 +257,11 @@ const CommunityPostDetail = () => {
         <Box sx={{ ...PARCHMENT_SX, borderRadius: '20px', p: { xs: 2.5, sm: 3.5 }, mb: 3 }}>
         <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'terracotta.main', mb: 1 }}>
           {category?.label}
+          {post.isSample && (
+            <Box component="span" sx={{ ml: 1, px: 1, py: 0.1, borderRadius: RADIUS.pill, border: '1px dashed', borderColor: 'text.secondary', color: 'text.secondary', fontSize: '0.75rem', fontWeight: 800 }}>
+              예시
+            </Box>
+          )}
         </Typography>
 
         <Typography variant="h1" sx={{ fontSize: { xs: '1.6rem', sm: '2.1rem' }, mb: 2 }}>
@@ -285,6 +295,8 @@ const CommunityPostDetail = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 0.5,
+              minHeight: 44,
+              px: 1,
               border: 'none',
               background: 'none',
               cursor: 'pointer',

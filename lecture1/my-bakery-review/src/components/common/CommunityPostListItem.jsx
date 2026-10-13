@@ -22,6 +22,7 @@ const CommunityPostListItem = ({
   commentCount,
   createdAt,
   photoBakeryId,
+  isSample = false,
 }) => {
   const photoSrc = BAKERY_PHOTO_BY_ID[photoBakeryId] || DEFAULT_BAKERY_PHOTO
 
@@ -59,11 +60,21 @@ const CommunityPostListItem = ({
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <Box
-          component="span"
-          sx={{ alignSelf: 'flex-start', px: 1, py: 0.1, mb: 0.75, borderRadius: RADIUS.pill, bgcolor: 'rgba(143,166,126,0.25)', color: 'secondary.contrastText', fontSize: '0.75rem', fontWeight: 800 }}
-        >
-          {categoryLabel}
+        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignSelf: 'flex-start', mb: 0.75 }}>
+          <Box
+            component="span"
+            sx={{ px: 1, py: 0.1, borderRadius: RADIUS.pill, bgcolor: 'rgba(143,166,126,0.25)', color: 'secondary.contrastText', fontSize: '0.75rem', fontWeight: 800 }}
+          >
+            {categoryLabel}
+          </Box>
+          {isSample && (
+            <Box
+              component="span"
+              sx={{ px: 1, py: 0.1, borderRadius: RADIUS.pill, border: '1px dashed', borderColor: 'text.secondary', color: 'text.secondary', fontSize: '0.75rem', fontWeight: 800 }}
+            >
+              예시
+            </Box>
+          )}
         </Box>
         <Typography
           className="post-title"

@@ -1,4 +1,5 @@
-export const COMMUNITY_POSTS = [
+// 코드에 들어 있는 예시 글이에요. 실제 사용자가 쓴 글과 구분하려고 isSample을 붙여요.
+const SAMPLE_POSTS = [
   {
     id: 1,
     categoryId: 'today-visit',
@@ -99,3 +100,5 @@ export const COMMUNITY_POSTS = [
     emoji: '⛩️',
   },
 ]
+
+export const COMMUNITY_POSTS = SAMPLE_POSTS.map((post) => ({ ...post, isSample: true }))
