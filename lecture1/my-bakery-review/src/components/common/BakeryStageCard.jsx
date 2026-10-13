@@ -163,7 +163,8 @@ const BakeryStageCard = ({
             variant="h3"
             className="bakery-name"
             sx={{
-              fontSize: variant === 'featured' ? '1.2rem' : '1.05rem',
+              fontSize: variant === 'featured' ? '1.2rem' : '1.12rem',
+              lineHeight: 1.35,
               transition: 'color 0.15s ease',
               display: '-webkit-box',
               WebkitLineClamp: 2,
@@ -190,7 +191,7 @@ const BakeryStageCard = ({
         </Typography>
 
         {hasReviews ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minHeight: 24, fontSize: '0.8125rem', color: 'text.secondary' }}>
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
               <Rating
                 value={rating}
@@ -213,7 +214,8 @@ const BakeryStageCard = ({
             </Box>
           </Box>
         ) : (
-          <Typography sx={{ fontSize: '0.8125rem', color: 'primary.main', fontWeight: 600 }}>
+          // 평점 줄과 같은 높이로 맞춰서, 카드마다 아래쪽 정보 위치가 같아요
+          <Typography sx={{ display: 'flex', alignItems: 'center', minHeight: 24, fontSize: '0.8125rem', color: 'primary.main', fontWeight: 600 }} noWrap>
             아직 리뷰가 없어요 · 첫 리뷰를 남겨주세요
           </Typography>
         )}

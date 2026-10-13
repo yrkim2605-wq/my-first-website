@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box'
 import BakeryStageCard from './BakeryStageCard'
 
-const CARD_WIDTH = 260
+const CARD_WIDTH = 280
 const EDGE_FADE = '10%'
 const EDGE_MASK = `linear-gradient(to right, transparent 0, black ${EDGE_FADE}, black calc(100% - ${EDGE_FADE}), transparent 100%)`
 

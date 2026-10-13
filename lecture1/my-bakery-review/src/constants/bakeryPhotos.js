@@ -5,9 +5,6 @@ import breadAndCo from '../assets/bakery-photos/bakery-photo-04.webp'
 import pastryCase from '../assets/bakery-photos/bakery-photo-05.webp'
 import fruitMousseCakes from '../assets/bakery-photos/bakery-photo-06.webp'
 import strawberryRollCake from '../assets/bakery-photos/bakery-photo-07.webp'
-import eggTart from '../assets/decorative/deco-egg-tart.webp'
-import strawberryChoux from '../assets/decorative/deco-strawberry-choux.webp'
-import strawberryCake from '../assets/decorative/deco-strawberry-cake.webp'
 
 export const BAKERY_PHOTO_BY_ID = {
   1: pastryCase,
@@ -27,18 +24,15 @@ export const BAKERY_PHOTO_BY_ID = {
 
 export const DEFAULT_BAKERY_PHOTO = breadHouse
 
-// 카카오에서 불러온 실제 빵집은 사진이 없어서, 아래 사진들을 나눠 써요.
+// 카카오에서 불러온 실제 빵집은 사진이 없어서, 아래 실제 사진들을 나눠 써요. (일러스트는 쓰지 않아요)
 // photoSlot(빵집 목록 순서)이 있으면 그 순서대로 돌려 써서 이웃한 카드에 같은 사진이 나오지 않고,
 // 없으면 id로 골라요. 어느 쪽이든 같은 빵집은 항상 같은 사진이에요.
 const PHOTO_POOL = [
   pastryCase,
-  eggTart,
   coffeesAre,
-  strawberryChoux,
   meetBakery,
   fruitMousseCakes,
   breadAndCo,
-  strawberryCake,
   strawberryRollCake,
   breadHouse,
 ]

@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
+import CloseIcon from '@mui/icons-material/Close'
 import Rating from '@mui/material/Rating'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Link } from 'react-router-dom'
@@ -12,7 +14,8 @@ import { DISPLAY_FONT, RADIUS } from '../../theme'
 // 지도 Hero의 빵집 미리보기 카드 (마커 정보를 보여주는 유일한 카드예요)
 // 처음에는 대표 빵집, 마커를 누르면 그 빵집을 보여주고, [상세 보기]로 상세페이지에 가요.
 // variant="overlay": 넓은 화면에서 지도 위에 뜨는 세로형 / variant="compact": 모바일에서 지도 아래 가로형
-const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', sx }) => {
+// onClose: 넣으면 오른쪽 위에 닫기(✕) 버튼이 생겨요 (넓은 화면 지도 위 카드에서만 써요)
+const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose, sx }) => {
   const { photosByBakeryId } = useRealBakeryPhotos()
   const district = DISTRICTS.find((d) => d.id === bakery.districtId)
   const isCompact = variant === 'compact'
@@ -31,9 +34,31 @@ const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', sx }) =
         borderRadius: RADIUS.lg,
         border: '1px solid rgba(59,42,34,0.08)',
         boxShadow: '0 10px 28px rgba(59,42,34,0.16)',
+        position: 'relative',
         ...sx,
       }}
     >
+      {onClose && (
+        <IconButton
+          onClick={onClose}
+          aria-label="빵집 정보 카드 닫기"
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            zIndex: 1,
+            width: 32,
+            height: 32,
+            bgcolor: 'background.paper',
+            color: 'text.secondary',
+            boxShadow: '0 2px 6px rgba(59,42,34,0.15)',
+            '&:hover': { bgcolor: 'butter.main', color: 'primary.main' },
+          }}
+        >
+          <CloseIcon sx={{ fontSize: '1.05rem' }} />
+        </IconButton>
+      )}
       <Box
         component="img"
         src={getBakeryPhoto(bakery.id, photosByBakeryId, bakery.photoSlot)}

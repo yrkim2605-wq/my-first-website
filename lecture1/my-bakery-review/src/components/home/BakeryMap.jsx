@@ -7,6 +7,7 @@ import { useTheme } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 import TouchAppOutlinedIcon from '@mui/icons-material/TouchAppOutlined'
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import { loadKakaoSdk } from '../../api/kakaoLocal'
 import { MAP_REGIONS, DEFAULT_MAP_REGION_ID } from '../../constants/mapRegions'
 import BakeryMapPreviewCard from './BakeryMapPreviewCard'
@@ -51,6 +52,9 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
   const [mapReady, setMapReady] = useState(false)
   const [sdkError, setSdkError] = useState(null)
   const [touchUnlocked, setTouchUnlocked] = useState(!IS_TOUCH)
+  // 넓은 화면의 미리보기 카드를 닫았는지 (닫으면 작은 '빵집 정보 보기' 버튼으로 접혀요)
+  const [cardClosed, setCardClosed] = useState(false)
+  const cardBoxRef = useRef(null)
 
   const selectedBakery = bakeries.find((b) => b.id === selectedId)
   const featuredBakery = bakeries.find((b) => Number.isFinite(b.lat) && Number.isFinite(b.lng))
@@ -160,6 +164,7 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
         el.addEventListener('click', (event) => {
           event.stopPropagation()
           onSelectBakery(bakery.id)
+          setCardClosed(false) // 닫아 둔 카드도 마커를 누르면 다시 열려요
         })
         // yAnchor 1: 마커 꼬리 끝이 빵집의 실제 좌표를 가리켜요
         const overlay = new kakao.maps.CustomOverlay({
@@ -189,6 +194,22 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
       overlay.setZIndex(isSelected ? 10 : 1)
     })
   }, [displayedId, mapReady, bakeries])
+
+  // 3-1) 선택한 마커가 넓은 화면의 미리보기 카드 아래에 가려지면, 카드 오른쪽으로 보이도록 지도를 밀어요
+  useEffect(() => {
+    if (!mapReady || !selectedId || cardClosed) return
+    const map = mapRef.current
+    const card = cardBoxRef.current
+    const target = markersRef.current.get(selectedId)
+    if (!card || !target || card.offsetParent === null) return // 모바일(카드가 지도 아래)이면 할 일 없음
+    const point = map.getProjection().containerPointFromCoords(target.overlay.getPosition())
+    const mapRect = containerRef.current.getBoundingClientRect()
+    const cardRect = card.getBoundingClientRect()
+    const cardRight = cardRect.right - mapRect.left
+    const cardBottom = cardRect.bottom - mapRect.top
+    const hidden = point.x < cardRight + 24 && point.y < cardBottom + 48
+    if (hidden) map.panBy(-(cardRight + 64 - point.x), 0)
+  }, [selectedId, cardClosed, mapReady])
 
   // 4) 지역 버튼을 누르면 그 지역으로 부드럽게 이동해요
   // 확대와 이동을 동시에 하면 카카오맵이 이동을 무시해서, 먼저 이동하고 이동이 끝나면 확대해요.
@@ -443,12 +464,45 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
 
         {/* 넓은 화면: 지도 왼쪽 위의 작은 미리보기 카드 */}
         {displayedBakery && !showError && (
-          <BakeryMapPreviewCard
-            bakery={displayedBakery}
-            isSelected={Boolean(selectedBakery)}
-            variant="overlay"
-              sx={{ display: { xs: 'none', sm: 'flex' }, position: 'absolute', zIndex: 5, top: 16, left: 16, width: 240 }}
-          />
+          <Box ref={cardBoxRef} sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', zIndex: 5, top: 16, left: 16 }}>
+            {cardClosed ? (
+              <Box
+                component="button"
+                type="button"
+                onClick={() => setCardClosed(false)}
+                aria-label="빵집 정보 카드 열기"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1.75,
+                  py: 1,
+                  border: 'none',
+                  borderRadius: RADIUS.pill,
+                  bgcolor: 'background.paper',
+                  color: 'primary.main',
+                  fontFamily: 'inherit',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 18px rgba(59,42,34,0.18)',
+                  '&:hover': { bgcolor: 'butter.main' },
+                  '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+                }}
+              >
+                <StorefrontOutlinedIcon fontSize="small" />
+                빵집 정보 보기
+              </Box>
+            ) : (
+              <BakeryMapPreviewCard
+                bakery={displayedBakery}
+                isSelected={Boolean(selectedBakery)}
+                variant="overlay"
+                onClose={() => setCardClosed(true)}
+                sx={{ width: 240 }}
+              />
+            )}
+          </Box>
         )}
       </Box>
 

@@ -9,6 +9,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PopularReviewCard from './PopularReviewCard'
 
 const SLIDE_INTERVAL = 3500
+const REVIEW_EDGE_MASK = 'linear-gradient(to right, transparent 0, black 7%, black 93%, transparent 100%)'
 const OFFSETS = [-2, -1, 0, 1, 2]
 
 const NAV_BUTTON_SX = {
@@ -27,13 +28,13 @@ const SLOT_SX_BY_OFFSET = {
   },
   1: {
     width: { sm: 280, md: 310 },
-    opacity: 0.55,
+    opacity: 0.85, // 바로 옆 카드: 사진과 글을 알아볼 수 있게
     zIndex: 1,
     display: { xs: 'none', sm: 'block' },
   },
   2: {
     width: { sm: 280, md: 310 },
-    opacity: 0.55,
+    opacity: 0.7, // 바깥쪽 카드
     zIndex: 1,
     display: { xs: 'none', md: 'block' },
   },
@@ -72,9 +73,13 @@ const PopularReviewCarousel = ({ reviews }) => {
             minWidth: 0,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: { xs: 'center', sm: 'space-between' },
+            // 카드가 상자보다 넓어도 가운데 카드를 기준으로 양쪽이 똑같이 넘치도록 가운데 정렬
+            justifyContent: 'center',
             gap: { xs: 0, sm: 1, md: 1.5 },
             overflow: 'hidden',
+            // 넘친 양끝 카드가 뚝 잘리지 않고 부드럽게 흐려지게 (모바일은 카드 한 장이라 적용 안 함)
+            maskImage: { sm: REVIEW_EDGE_MASK },
+            WebkitMaskImage: { sm: REVIEW_EDGE_MASK },
           }}
         >
           {OFFSETS.map((offset) => {
