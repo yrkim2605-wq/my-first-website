@@ -11,6 +11,7 @@ import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import { loadKakaoSdk } from '../../api/kakaoLocal'
 import { MAP_REGIONS, DEFAULT_MAP_REGION_ID } from '../../constants/mapRegions'
 import BakeryMapPreviewCard from './BakeryMapPreviewCard'
+import { useGameState } from '../../hooks/useGameState'
 import { RADIUS } from '../../theme'
 
 // 터치 화면에서는 처음에 지도를 잠가 두고, 탭해서 풀어야 끌 수 있어요 (페이지 스크롤과 부딪히지 않게)
@@ -41,6 +42,9 @@ const getRegion = (id) => MAP_REGIONS.find((r) => r.id === id) ?? MAP_REGIONS[0]
 // selectedId / onSelectBakery: 선택한 빵집은 홈 화면이 들고 있어요 (오늘 인기 빵집 카드와 같이 쓰려고)
 const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loading, error, onRetry }) => {
   const { palette } = useTheme()
+  // 내가 모험 일지를 남긴 빵집(발견 완료)은 마커가 금색이에요
+  const { stats: myStats } = useGameState()
+  const discoveredIds = myStats.discoveredBakeryIds
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const kakaoRef = useRef(null)
@@ -186,14 +190,15 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
     }
   }, [mapReady, bakeries, onSelectBakery])
 
-  // 3) 카드에 보이는 빵집의 마커를 강조해요
+  // 3) 카드에 보이는 빵집의 마커를 강조하고, 발견한 빵집은 금색으로 표시해요
   useEffect(() => {
     markersRef.current.forEach(({ overlay, el }, id) => {
       const isSelected = id === displayedId
       el.classList.toggle('is-selected', isSelected)
+      el.classList.toggle('is-discovered', discoveredIds.has(String(id)))
       overlay.setZIndex(isSelected ? 10 : 1)
     })
-  }, [displayedId, mapReady, bakeries])
+  }, [displayedId, mapReady, bakeries, discoveredIds])
 
   // 3-1) 선택한 마커가 넓은 화면의 미리보기 카드 아래에 가려지면, 카드 오른쪽으로 보이도록 지도를 밀어요
   useEffect(() => {
@@ -333,6 +338,13 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
               borderRight: '6px solid transparent',
               borderTop: `9px solid ${palette.primary.main}`,
             },
+            // 발견 완료: 금색 핀
+            '.bakery-marker.is-discovered .bakery-marker__badge': {
+              background: palette.gold.main,
+              color: palette.wood.dark,
+              borderColor: palette.wood.main,
+            },
+            '.bakery-marker.is-discovered .bakery-marker__badge::after': { borderTopColor: palette.gold.main },
             '.bakery-marker:hover .bakery-marker__badge, .bakery-marker:focus-visible .bakery-marker__badge': {
               transform: 'scale(1.12)',
             },

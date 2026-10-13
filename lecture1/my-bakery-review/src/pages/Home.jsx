@@ -28,6 +28,7 @@ import { BAKERY_REVIEWS, REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryRe
 import { FILTER_CHIP_SX } from '../constants/chipStyles'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
+import { useGameState } from '../hooks/useGameState'
 
 // "전체 빵집"은 처음에 이만큼만 보여주고, "빵집 더 보기"로 같은 수만큼 이어서 보여줘요.
 const BAKERY_PAGE_SIZE = 12
@@ -69,6 +70,10 @@ const Home = () => {
     reload: reloadBakeries,
   } = useBusanBakeries()
 
+  // 내가 모험 일지를 남긴 빵집 = 발견 완료 (카드에 도장이 찍혀요)
+  const { stats: myStats } = useGameState()
+  const discoveredIds = myStats.discoveredBakeryIds
+
   const { palette } = theme
   const sageColor = palette.secondary.main
   const wineColor = palette.primary.main
@@ -87,8 +92,9 @@ const Home = () => {
         districtLabel: DISTRICTS.find((d) => d.id === bakery.districtId)?.name,
         reviewCount: REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0,
         isNew: newBakeryIds.has(bakery.id),
+        discovered: discoveredIds.has(String(bakery.id)),
       })),
-    [popularBakeries, newBakeryIds],
+    [popularBakeries, newBakeryIds, discoveredIds],
   )
 
   const marqueeBakeries = useMemo(
@@ -101,8 +107,9 @@ const Home = () => {
           districtLabel: DISTRICTS.find((d) => d.id === bakery.districtId)?.name,
           reviewCount: REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0,
           isNew: newBakeryIds.has(bakery.id),
+          discovered: discoveredIds.has(String(bakery.id)),
         })),
-    [realBakeries, newBakeryIds],
+    [realBakeries, newBakeryIds, discoveredIds],
   )
 
   const filteredBakeries = realBakeries.filter((b) => {
@@ -373,6 +380,7 @@ const Home = () => {
                   districtLabel={DISTRICTS.find((d) => d.id === bakery.districtId)?.name}
                   reviewCount={REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0}
                   isNew={newBakeryIds.has(bakery.id)}
+                  discovered={discoveredIds.has(String(bakery.id))}
                 />
               ))}
           </Box>

@@ -35,6 +35,7 @@ const BakeryStageCard = ({
   height,
   photoSlot,
   highlighted = false, // 홈 지도에서 고른 빵집이면 선택 표시
+  discovered = false, // 내가 모험 일지를 남긴 빵집이면 "발견 완료" 도장 (빵집 도감)
   discovery = false, // 탐험 도감의 "발견 카드" 모양: 양피지 카드 + 금색 NEW 리본 (새로 등록된 빵집용)
   quest = false, // 퀘스트 보드 모양: 양피지 카드 + QUEST 라벨 + [빵집 탐험하기] 표시 (보상 · 경험치 같은 건 보여주지 않아요)
 }) => {
@@ -148,6 +149,31 @@ const BakeryStageCard = ({
             transition: 'transform 0.4s ease',
           }}
         />
+        {discovered && (
+          <Box
+            component="span"
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.3,
+              px: 1,
+              py: 0.2,
+              borderRadius: RADIUS.pill,
+              bgcolor: 'gold.main',
+              color: 'wood.dark',
+              border: '2px solid #6b4423',
+              boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
+              fontSize: '0.7rem',
+              fontWeight: 800,
+            }}
+          >
+            <StarRoundedIcon sx={{ fontSize: '0.85rem' }} />
+            발견 완료
+          </Box>
+        )}
         {isNew && (
           <Chip
             label="NEW"

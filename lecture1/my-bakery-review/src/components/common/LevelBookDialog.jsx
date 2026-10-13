@@ -8,13 +8,14 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import { LEVELS } from '../../constants/levels'
+import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { RADIUS } from '../../theme'
 
 const formatLevelCondition = (level) => (level.minExp === 0 ? '시작 레벨' : `누적 EXP ${level.minExp} 이상`)
 
 const LevelBookDialog = ({ open, onClose, currentLevelId }) => {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" slotProps={{ paper: { sx: { ...PARCHMENT_SX, borderRadius: '22px' } } }}>
       <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
         <MenuBookIcon sx={{ color: 'primary.main' }} />
         레벨북
@@ -31,8 +32,9 @@ const LevelBookDialog = ({ open, onClose, currentLevelId }) => {
                 gap: 1.5,
                 p: 1.5,
                 borderRadius: RADIUS.md,
-                border: '1px solid rgba(46,42,37,0.08)',
-                bgcolor: level.id === currentLevelId ? 'rgba(32,90,65,0.06)' : 'background.paper',
+                border: '2px solid',
+                borderColor: level.id === currentLevelId ? 'gold.main' : 'rgba(201,165,106,0.6)',
+                bgcolor: level.id === currentLevelId ? 'rgba(226,176,74,0.22)' : 'rgba(255,255,255,0.5)',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>

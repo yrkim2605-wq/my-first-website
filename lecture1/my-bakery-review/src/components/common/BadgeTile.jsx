@@ -4,7 +4,8 @@ import Tooltip from '@mui/material/Tooltip'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 
 // 배지 한 칸: 위쪽이 둥근 아치 모양. 받은 배지는 버터색, 아직 못 받은 배지는 점선 테두리 + 흑백
-const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
+// progressText: 아직 못 받은 배지의 진행도 (예: "2/10")
+const BadgeTile = ({ emoji, iconImage, name, description, earned, progressText }) => {
   return (
     <Tooltip title={description} arrow>
       <Box
@@ -18,8 +19,8 @@ const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
           pb: 2,
           borderRadius: '999px 999px 16px 16px',
           ...(earned
-            ? { bgcolor: 'butter.main', border: '1px solid transparent' }
-            : { bgcolor: 'transparent', border: '1px dashed rgba(59,42,34,0.25)' }),
+            ? { bgcolor: 'butter.main', border: '2px solid', borderColor: 'gold.main', boxShadow: '0 2px 0 rgba(107,68,35,0.25)' }
+            : { bgcolor: 'rgba(255,255,255,0.35)', border: '2px dashed rgba(201,165,106,0.9)' }),
         }}
       >
         {!earned && (
@@ -54,6 +55,9 @@ const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
         >
           {name}
         </Typography>
+        {progressText && (
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'text.secondary', mt: 0.25 }}>{progressText}</Typography>
+        )}
       </Box>
     </Tooltip>
   )

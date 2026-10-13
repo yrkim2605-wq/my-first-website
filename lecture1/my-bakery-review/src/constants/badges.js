@@ -4,40 +4,49 @@ import strawberrySeasonIcon from '../assets/badges/badge-strawberry-season.webp'
 import bread100Icon from '../assets/badges/badge-bread-100.webp'
 import earlyBirdIcon from '../assets/badges/badge-early-bird.webp'
 
+// 배지는 저장된 모험 일지로 확인할 수 있는 조건만 써요 (utils/badgeRules.js가 판정해요).
+// rule.type
+//   'keyword'    : 일지 내용에 keyword가 들어간 일지가 target개 이상
+//   'discovered' : 빵집 도감에서 발견한 빵집이 target곳 이상
 export const BADGES = [
   {
     id: 'salt-bread-mania',
     name: '소금빵 마니아',
     emoji: '🧂',
     iconImage: saltBreadManiaIcon,
-    description: '소금빵 리뷰 10개 작성',
+    description: '일지에 "소금빵"을 언급한 일지 10개',
+    rule: { type: 'keyword', keyword: '소금빵', target: 10 },
   },
   {
     id: 'croissant-hunter',
     name: '크루아상 헌터',
     emoji: '🥐',
     iconImage: croissantHunterIcon,
-    description: '크루아상 맛집 5곳 방문',
+    description: '일지에 "크루아상"을 언급한 일지 5개',
+    rule: { type: 'keyword', keyword: '크루아상', target: 5 },
   },
   {
     id: 'strawberry-season',
     name: '딸기 시즌 정복자',
     emoji: '🍓',
     iconImage: strawberrySeasonIcon,
-    description: '딸기 시즌 한정 메뉴 리뷰 3개',
+    description: '일지에 "딸기"를 언급한 일지 3개',
+    rule: { type: 'keyword', keyword: '딸기', target: 3 },
   },
   {
     id: 'early-bird',
     name: '새벽 오픈런 마니아',
     emoji: '🌅',
     iconImage: earlyBirdIcon,
-    description: '오픈런 성공 후기 5회 작성',
+    description: '일지에 "오픈런"을 언급한 일지 5개',
+    rule: { type: 'keyword', keyword: '오픈런', target: 5 },
   },
   {
     id: 'bread-100',
     name: '빵 100개 학살자',
     emoji: '💥',
     iconImage: bread100Icon,
-    description: '누적 방문 빵집 100곳 달성',
+    description: '빵집 도감에서 빵집 50곳 발견',
+    rule: { type: 'discovered', target: 50 },
   },
 ]
