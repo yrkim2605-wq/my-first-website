@@ -36,7 +36,7 @@ const ScrollToTopButton = () => {
           transition: 'background-color 0.4s ease, color 0.4s ease, transform 0.15s ease',
           '&:hover': {
             bgcolor: 'primary.main',
-            color: '#F0EDE6',
+            color: 'primary.contrastText',
             transform: 'translateY(-2px)',
           },
           '&:active': {

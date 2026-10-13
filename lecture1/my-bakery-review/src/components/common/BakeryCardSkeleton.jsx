@@ -16,7 +16,12 @@ const BakeryCardSkeleton = () => {
         boxShadow: '0 1px 3px rgba(46,42,37,0.05)',
       }}
     >
-      <Skeleton variant="rectangular" animation="wave" height={148} />
+      <Skeleton
+        variant="rectangular"
+        animation="wave"
+        height={190}
+        sx={{ mx: 1.5, mt: 1.5, borderRadius: '999px 999px 14px 14px' }}
+      />
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Skeleton animation="wave" width="55%" height={28} />

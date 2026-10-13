@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTheme } from '@mui/material/styles'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
+import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import InputAdornment from '@mui/material/InputAdornment'
 import SearchIcon from '@mui/icons-material/Search'
@@ -15,56 +17,24 @@ import ScrollFillText from '../components/common/ScrollFillText'
 import InfiniteBakeryMarquee from '../components/common/InfiniteBakeryMarquee'
 import HeroCarousel from '../components/common/HeroCarousel'
 import Reveal from '../components/common/Reveal'
-import RevealText from '../components/common/RevealText'
-import SectionDecor from '../components/common/SectionDecor'
+import SectionHeading from '../components/common/SectionHeading'
+import ScallopEdge from '../components/common/decor/ScallopEdge'
+import FlatFlower from '../components/common/decor/FlatFlower'
 import StatusMessage from '../components/common/StatusMessage'
 import BakeryCardSkeleton from '../components/common/BakeryCardSkeleton'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERY_REVIEWS, REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryReviews'
 import { FILTER_CHIP_SX } from '../constants/chipStyles'
-import { CAROUSEL_CARD_INSET } from '../constants/carousel'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import heroImage1 from '../assets/hero/bakery-1.webp'
 import heroImage2 from '../assets/hero/bakery-2.webp'
-import iconFire from '../assets/section-icons/icon-fire.webp'
-import iconStar from '../assets/section-icons/icon-star.webp'
-import iconCroissant from '../assets/section-icons/icon-croissant.webp'
-import iconDefaultBakery from '../assets/section-icons/icon-default-bakery.webp'
-import decoEggTart from '../assets/decorative/deco-egg-tart.webp'
-import decoStrawberryChoux from '../assets/decorative/deco-strawberry-choux.webp'
-import decoStrawberryCake from '../assets/decorative/deco-strawberry-cake.webp'
 
 const HERO_IMAGES = [heroImage1, heroImage2]
 
-const WEEKLY_REVIEW_DECOR = [{ src: decoEggTart, size: 68, top: -104, left: 64, rotate: 8 }]
-const NEW_BAKERY_DECOR = [{ src: decoStrawberryChoux, size: 72, top: -104, right: 100, rotate: -7 }]
-const ALL_BAKERY_DECOR = [{ src: decoStrawberryCake, size: 122, top: 140, left: 64, rotate: 7 }]
-
-const SECTION_TITLE_SX = {
-  color: 'primary.main',
-  fontWeight: 700,
-  letterSpacing: '-0.01em',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 1,
-}
-
-const SECTION_ICON_SX = {
-  width: '1.5em',
-  height: '1.5em',
-  objectFit: 'contain',
-  flexShrink: 0,
-}
-
-// icon-croissant.png / icon-default-bakery.png have a lot of transparent padding
-// baked into the source art, so they need a bigger box to read at the same visual size.
-const SECTION_ICON_PADDED_SX = {
-  ...SECTION_ICON_SX,
-  width: '2.1em',
-  height: '2.1em',
-}
+// "전체 빵집"은 처음에 이만큼만 보여주고, "빵집 더 보기"로 같은 수만큼 이어서 보여줘요.
+const BAKERY_PAGE_SIZE = 12
 
 const FULL_BLEED_SX = {
   width: '100vw',
@@ -73,11 +43,10 @@ const FULL_BLEED_SX = {
   right: '50%',
   marginLeft: '-50vw',
   marginRight: '-50vw',
-  px: { xs: 3, sm: 6, md: 10, lg: 16 },
 }
 
-const POPULAR_SECTION_PX = { xs: 3, sm: 6, md: 6, lg: 8 }
-
+const SECTION_PY = { xs: 7, md: 10 }
+const SECTION_PX = { xs: 3, sm: 6, md: 6, lg: 8 }
 
 const POPULAR_REVIEWS = [...BAKERY_REVIEWS]
   .sort((a, b) => b.heartCount - a.heartCount)
@@ -89,14 +58,20 @@ const POPULAR_REVIEWS = [...BAKERY_REVIEWS]
   }))
 
 const Home = () => {
+  const theme = useTheme()
   const [selectedDistrictId, setSelectedDistrictId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [visibleCount, setVisibleCount] = useState(BAKERY_PAGE_SIZE)
   const {
     bakeries: realBakeries,
     loading: bakeriesLoading,
     error: bakeriesError,
     reload: reloadBakeries,
   } = useBusanBakeries()
+
+  const { palette } = theme
+  const sageColor = palette.secondary.main
+  const wineColor = palette.primary.main
 
   const selectedDistrict = DISTRICTS.find((d) => d.id === selectedDistrictId)
   const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -139,10 +114,23 @@ const Home = () => {
       b.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery))
     return matchesDistrict && matchesQuery
   })
+  const visibleBakeries = filteredBakeries.slice(0, visibleCount)
+
+  // 지역이나 검색어가 바뀌면 다시 첫 12곳부터 보여줘요.
+  const handleSelectDistrict = (districtId) => {
+    setSelectedDistrictId(districtId)
+    setVisibleCount(BAKERY_PAGE_SIZE)
+  }
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value)
+    setVisibleCount(BAKERY_PAGE_SIZE)
+  }
 
   const handleResetFilters = () => {
     setSearchQuery('')
     setSelectedDistrictId(null)
+    setVisibleCount(BAKERY_PAGE_SIZE)
   }
 
   const bakeriesErrorMessage = (
@@ -154,49 +142,32 @@ const Home = () => {
     />
   )
 
-  const renderBakeryCard = (bakery, { index = 0, variant = 'default' } = {}) => {
-    const district = DISTRICTS.find((d) => d.id === bakery.districtId)
-    const delay = Math.min(index * 0.05, 0.3)
-    const card = (
-      <BakeryStageCard
-        {...bakery}
-        districtLabel={district?.name}
-        reviewCount={REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0}
-        isNew={newBakeryIds.has(bakery.id)}
-        variant={variant}
-      />
-    )
-    return (
-      <Reveal key={bakery.id} delay={delay}>
-        {card}
-      </Reveal>
-    )
-  }
-
   return (
     <>
       <HeroCarousel images={HERO_IMAGES}>
         <Reveal distance={28} sx={{ width: '100%' }}>
-          <Container maxWidth="md">
+          <Container maxWidth="lg">
             <Typography
               sx={{
-                color: 'rgba(255,251,244,0.75)',
+                color: 'rgba(251,246,234,0.8)',
                 textAlign: 'center',
-                fontSize: { xs: '0.9rem', sm: '1rem' },
-                fontWeight: 500,
-                mb: { xs: 3, sm: 4 },
+                fontSize: { xs: '0.8rem', sm: '0.85rem' },
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                mb: { xs: 2.5, sm: 3 },
               }}
             >
-              오늘도 새로운 빵을 만나고, 좋은 빵집을 함께 나누세요.
+              BUSAN BAKERY COMMUNITY
             </Typography>
             <Typography
               component="div"
               sx={{
                 textAlign: 'center',
-                fontWeight: 700,
+                fontFamily: theme.typography.h1.fontFamily,
+                fontWeight: 900,
                 lineHeight: 1.4,
-                letterSpacing: '-0.01em',
-                fontSize: { xs: '1.6rem', sm: '2.2rem', md: '2.6rem' },
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.4rem' },
+                wordBreak: 'keep-all',
               }}
             >
               <ScrollFillText>
@@ -206,185 +177,165 @@ const Home = () => {
               </ScrollFillText>
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 4, sm: 5 } }}>
-              <Box
+              <Button
                 component={Link}
                 to="/community"
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  fontSize: '0.9rem',
-                  fontWeight: 700,
-                  color: 'rgba(255,251,244,0.85)',
-                  textDecoration: 'none',
-                  transition: 'gap 0.2s ease, color 0.2s ease',
-                  '&:hover': {
-                    gap: 1,
-                    color: '#FFFBF4',
-                  },
-                }}
+                variant="contained"
+                endIcon={<ArrowForwardIcon />}
+                sx={{ px: 3, py: 1.1, borderRadius: 999 }}
               >
-                자세히 보기
-                <ArrowForwardIcon sx={{ fontSize: '1rem' }} />
-              </Box>
+                커뮤니티 둘러보기
+              </Button>
             </Box>
           </Container>
         </Reveal>
       </HeroCarousel>
 
-      <Reveal distance={36}>
-        <Box sx={{ position: 'relative', py: { xs: 8, sm: 10 } }}>
-          <Box sx={{ ...FULL_BLEED_SX, px: POPULAR_SECTION_PX }}>
-            <Box sx={{ position: 'relative', pl: CAROUSEL_CARD_INSET }}>
-              <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
-                <Box component="img" src={iconFire} alt="" sx={SECTION_ICON_SX} />
-                <RevealText text="오늘 인기 빵집" />
-              </Typography>
-              {bakeriesLoading && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-                  {[0, 1, 2].map((i) => (
-                    <Box key={i} sx={{ display: { xs: i === 0 ? 'block' : 'none', md: 'block' } }}>
-                      <BakeryCardSkeleton />
-                    </Box>
-                  ))}
+      {/* 오늘 인기 빵집 */}
+      <Box sx={{ py: SECTION_PY }}>
+        <SectionHeading
+          eyebrow="TODAY'S PICK"
+          title="오늘 인기 빵집"
+          description="부산 빵덕후들이 오늘 가장 많이 찾은 곳이에요."
+          sx={{ mb: { xs: 4, md: 5 }, px: 2 }}
+        />
+        <Box sx={{ ...FULL_BLEED_SX, px: SECTION_PX }}>
+          {bakeriesLoading && (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+              {[0, 1, 2].map((i) => (
+                <Box key={i} sx={{ display: { xs: i === 0 ? 'block' : 'none', md: 'block' } }}>
+                  <BakeryCardSkeleton />
                 </Box>
-              )}
-              {bakeriesError && bakeriesErrorMessage}
-            </Box>
-          </Box>
-          {!bakeriesLoading && !bakeriesError && popularBakeries.length > 0 && (
-            <Box sx={{ ...FULL_BLEED_SX, px: POPULAR_SECTION_PX }}>
-              <PopularBakeryCarousel bakeries={carouselBakeries} />
+              ))}
             </Box>
           )}
-        </Box>
-      </Reveal>
-
-      <Box sx={{ position: 'relative', pt: { xs: 20, sm: 26 }, pb: { xs: 8, sm: 10 } }}>
-        <Box sx={{ ...FULL_BLEED_SX, px: POPULAR_SECTION_PX }}>
-          <Box sx={{ position: 'relative', pl: CAROUSEL_CARD_INSET }}>
-            <SectionDecor stickers={WEEKLY_REVIEW_DECOR} />
-            <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
-              <Box component="img" src={iconStar} alt="" sx={SECTION_ICON_SX} />
-              <RevealText text="이번 주 인기 리뷰" />
-            </Typography>
-          </Box>
-          <PopularReviewCarousel reviews={POPULAR_REVIEWS} />
+          {bakeriesError && <Container maxWidth="md">{bakeriesErrorMessage}</Container>}
+          {!bakeriesLoading && !bakeriesError && popularBakeries.length > 0 && (
+            <PopularBakeryCarousel bakeries={carouselBakeries} />
+          )}
         </Box>
       </Box>
 
-      {/* 오류일 때는 위 "오늘 인기 빵집"에서 한 번만 안내하고, 이 섹션은 숨겨요 */}
-      {!bakeriesError && (
-        <Box sx={{ position: 'relative', py: { xs: 8, sm: 10 } }}>
-          <Box sx={{ ...FULL_BLEED_SX, px: POPULAR_SECTION_PX }}>
-            <Box sx={{ position: 'relative' }}>
-              <SectionDecor stickers={NEW_BAKERY_DECOR} />
-              <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
-                <Box component="img" src={iconCroissant} alt="" sx={SECTION_ICON_PADDED_SX} />
-                <RevealText text="새로 등록된 빵집" />
-              </Typography>
-              {bakeriesLoading && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
-                  {[0, 1, 2, 3].map((i) => (
-                    <Box key={i} sx={{ display: { xs: i < 2 ? 'block' : 'none', md: 'block' } }}>
-                      <BakeryCardSkeleton />
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </Box>
+      {/* 이번 주 인기 리뷰: 세이지 색 블록 */}
+      <Box sx={{ ...FULL_BLEED_SX }}>
+        <ScallopEdge color={sageColor} position="top" />
+        <Box sx={{ position: 'relative', bgcolor: 'secondary.main', py: SECTION_PY, overflow: 'hidden' }}>
+          <FlatFlower petal={palette.background.paper} center={palette.mustard.main} size={72} sx={{ position: 'absolute', top: 36, left: { xs: -18, md: 64 }, opacity: 0.9 }} />
+          <FlatFlower petal={palette.terracotta.main} center={palette.background.paper} size={44} sx={{ position: 'absolute', top: 118, left: { xs: 40, md: 150 } }} />
+          <FlatFlower petal={palette.primary.main} center={palette.mustard.main} size={56} sx={{ position: 'absolute', top: 44, right: { xs: -12, md: 90 } }} />
+          <SectionHeading
+            eyebrow="WEEKLY REVIEWS"
+            title="이번 주 인기 리뷰"
+            description="한 줄의 리뷰가 누군가의 최고의 선택이 돼요."
+            tone="onColor"
+            sx={{ mb: { xs: 4, md: 5 }, px: 2, position: 'relative' }}
+          />
+          <Box sx={{ px: SECTION_PX, position: 'relative' }}>
+            <PopularReviewCarousel reviews={POPULAR_REVIEWS} />
           </Box>
-          {!bakeriesLoading && (
-            <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', mt: 1 }}>
+        </Box>
+        <ScallopEdge color={sageColor} position="bottom" />
+      </Box>
+
+      {/* 새로 등록된 빵집 (오류일 때는 위에서 한 번만 안내하고 숨겨요) */}
+      {!bakeriesError && (
+        <Box sx={{ py: SECTION_PY }}>
+          <SectionHeading
+            eyebrow="NEW IN BUSAN"
+            title="새로 등록된 빵집"
+            description="새로 문을 연 빵집을 가장 먼저 만나보세요."
+            sx={{ mb: { xs: 4, md: 5 }, px: 2 }}
+          />
+          {bakeriesLoading ? (
+            <Box sx={{ ...FULL_BLEED_SX, px: SECTION_PX }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <Box key={i} sx={{ display: { xs: i < 2 ? 'block' : 'none', md: 'block' } }}>
+                    <BakeryCardSkeleton />
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ ...FULL_BLEED_SX }}>
               <InfiniteBakeryMarquee bakeries={marqueeBakeries} />
             </Box>
           )}
         </Box>
       )}
 
-      <Box
-        sx={{
-          bgcolor: 'background.default',
-          width: '100vw',
-          position: 'relative',
-          left: '50%',
-          right: '50%',
-          marginLeft: '-50vw',
-          marginRight: '-50vw',
-          mt: { xs: 10, sm: 14 },
-        }}
-      >
-        <SectionDecor stickers={ALL_BAKERY_DECOR} />
-        <Box
-          sx={{
-            bgcolor: 'highlight.main',
-            width: '100vw',
-            position: 'relative',
-            left: '50%',
-            right: '50%',
-            marginLeft: '-50vw',
-            marginRight: '-50vw',
-            py: { xs: 4, sm: 6 },
-            borderRadius: { xs: '50% 50% 0 0 / 56px 56px 0 0', sm: '50% 50% 0 0 / 96px 96px 0 0' },
-          }}
-        >
-          <Container maxWidth="xl">
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <TextField
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="빵집 이름이나 메뉴를 검색해보세요"
-                variant="outlined"
-                sx={{
-                  maxWidth: 420,
-                  width: '100%',
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 999,
-                    backgroundColor: '#FFFDF6',
-                    boxShadow: '0 2px 8px rgba(46,42,37,0.08)',
-                    '& fieldset': {
-                      borderColor: 'gold.main',
-                      borderWidth: 2,
-                      transition: 'border-color 0.35s ease',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'primary.main',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: 'primary.main',
-                      borderWidth: 2,
-                    },
-                  },
-                }}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Box>
+      {/* 빵집 찾기: 와인 색 블록 + 검색 */}
+      <Box sx={{ ...FULL_BLEED_SX }}>
+        <Box sx={{ position: 'relative', bgcolor: 'primary.main', pt: SECTION_PY, pb: { xs: 5, md: 6 }, overflow: 'hidden' }}>
+          <FlatFlower petal={palette.mustard.main} center={palette.primary.main} size={60} sx={{ position: 'absolute', top: 28, right: { xs: -16, md: 120 } }} />
+          <FlatFlower petal={palette.background.paper} center={palette.terracotta.main} size={40} sx={{ position: 'absolute', bottom: 24, left: { xs: 12, md: 110 }, opacity: 0.9 }} />
+          <Container maxWidth="sm" sx={{ position: 'relative' }}>
+            <SectionHeading
+              eyebrow="FIND YOUR BAKERY"
+              title="부산 빵집 찾기"
+              description="빵집 이름이나 먹고 싶은 메뉴로 찾아보세요."
+              tone="onColor"
+              sx={{ mb: 3 }}
+            />
+            <TextField
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="예: 소금빵, 해운대, 크루아상"
+              variant="outlined"
+              fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 999,
+                  backgroundColor: 'background.paper',
+                  '& fieldset': { borderColor: 'transparent' },
+                  '&:hover fieldset': { borderColor: 'mustard.main' },
+                  '&.Mui-focused fieldset': { borderColor: 'mustard.main', borderWidth: 2 },
+                },
+              }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
           </Container>
         </Box>
+        <ScallopEdge color={wineColor} position="bottom" />
+      </Box>
 
-        <Container maxWidth="xl">
-          <Box sx={{ pt: { xs: 6, sm: 8 }, pb: { xs: 7, sm: 10 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-              <Typography variant="h2" sx={SECTION_TITLE_SX}>
-                <Box component="img" src={iconDefaultBakery} alt="" sx={SECTION_ICON_PADDED_SX} />
-                <RevealText key={selectedDistrictId || 'all'} text={`${selectedDistrict ? selectedDistrict.name : '전체'} 빵집`} />
+      {/* 전체 빵집 */}
+      <Container maxWidth="xl">
+        <Box sx={{ pt: { xs: 5, md: 7 }, pb: SECTION_PY }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: { xs: 'flex-start', md: 'flex-end' },
+              justifyContent: 'space-between',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2,
+              mb: 3,
+            }}
+          >
+            <Box>
+              <Typography variant="h2" sx={{ color: 'primary.main', fontSize: { xs: '1.5rem', sm: '1.8rem' } }}>
+                {selectedDistrict ? `${selectedDistrict.name} 빵집` : '전체 빵집'}
               </Typography>
+              {!bakeriesLoading && !bakeriesError && (
+                <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary', mt: 0.5 }}>
+                  {filteredBakeries.length}곳
+                </Typography>
+              )}
             </Box>
-
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Chip
                 label="전체"
                 variant={!selectedDistrictId ? 'filled' : 'outlined'}
                 color={!selectedDistrictId ? 'primary' : 'default'}
-                onClick={() => setSelectedDistrictId(null)}
+                onClick={() => handleSelectDistrict(null)}
                 sx={FILTER_CHIP_SX}
               />
               {DISTRICTS.map((district) => (
@@ -393,42 +344,62 @@ const Home = () => {
                   label={district.name}
                   variant={selectedDistrictId === district.id ? 'filled' : 'outlined'}
                   color={selectedDistrictId === district.id ? 'primary' : 'default'}
-                  onClick={() => setSelectedDistrictId(district.id)}
+                  onClick={() => handleSelectDistrict(district.id)}
                   sx={FILTER_CHIP_SX}
                 />
               ))}
             </Box>
-
-            {bakeriesError && bakeriesErrorMessage}
-            {!bakeriesLoading && !bakeriesError && filteredBakeries.length === 0 && (
-              <StatusMessage
-                title="조건에 맞는 빵집이 없어요"
-                description="다른 지역을 고르거나 검색어를 바꿔보세요."
-                actionLabel="검색 초기화"
-                onAction={handleResetFilters}
-              />
-            )}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(3, 1fr)',
-                  lg: 'repeat(4, 1fr)',
-                },
-                gap: 3,
-              }}
-            >
-              {bakeriesLoading &&
-                Array.from({ length: 8 }, (_, i) => <BakeryCardSkeleton key={i} />)}
-              {!bakeriesLoading &&
-                !bakeriesError &&
-                filteredBakeries.map((bakery, index) => renderBakeryCard(bakery, { index: index % 8 }))}
-            </Box>
           </Box>
-        </Container>
-      </Box>
+
+          {bakeriesError && bakeriesErrorMessage}
+          {!bakeriesLoading && !bakeriesError && filteredBakeries.length === 0 && (
+            <StatusMessage
+              title="조건에 맞는 빵집이 없어요"
+              description="다른 지역을 고르거나 검색어를 바꿔보세요."
+              actionLabel="검색 초기화"
+              onAction={handleResetFilters}
+            />
+          )}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(3, 1fr)',
+                lg: 'repeat(4, 1fr)',
+              },
+              gap: 3,
+            }}
+          >
+            {bakeriesLoading &&
+              Array.from({ length: 8 }, (_, i) => <BakeryCardSkeleton key={i} />)}
+            {!bakeriesLoading &&
+              !bakeriesError &&
+              visibleBakeries.map((bakery) => (
+                <BakeryStageCard
+                  key={bakery.id}
+                  {...bakery}
+                  districtLabel={DISTRICTS.find((d) => d.id === bakery.districtId)?.name}
+                  reviewCount={REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0}
+                  isNew={newBakeryIds.has(bakery.id)}
+                />
+              ))}
+          </Box>
+
+          {!bakeriesLoading && !bakeriesError && visibleCount < filteredBakeries.length && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setVisibleCount((count) => count + BAKERY_PAGE_SIZE)}
+                sx={{ px: 4, py: 1.1, borderRadius: 999, borderWidth: 2, '&:hover': { borderWidth: 2 } }}
+              >
+                빵집 더 보기 ({visibleBakeries.length} / {filteredBakeries.length})
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Container>
     </>
   )
 }

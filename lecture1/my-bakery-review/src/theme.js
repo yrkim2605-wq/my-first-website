@@ -10,27 +10,40 @@ export const RADIUS = {
   round: '50%', // 동그란 프로필 사진
 }
 
+// 제목용 세리프 글꼴이에요. 본문(Pretendard)과 짝을 이뤄 "귀엽지만 어른스러운" 느낌을 줘요.
+// sx에서 제목이 아닌 곳에 쓰고 싶을 때: sx={{ fontFamily: DISPLAY_FONT }}
+export const DISPLAY_FONT = '"Noto Serif KR", serif'
+
 const theme = createTheme({
+  // 팔레트: 크림 바탕 + 와인(주인공) + 세이지 · 테라코타 · 머스터드(보조), 글자는 초콜릿 브라운
   palette: {
     primary: {
-      main: '#205A41',
-      light: '#3D7A5C',
-      dark: '#123B29',
-      contrastText: '#FFFFFF',
+      main: '#7B2D3B', // 와인
+      light: '#9A4553',
+      dark: '#5A1F2A',
+      contrastText: '#FBF6EA',
     },
     secondary: {
-      main: '#D9AFA0',
-      light: '#EAC9C1',
-      dark: '#B98576',
-      contrastText: '#1C130C',
+      main: '#8FA67E', // 세이지
+      light: '#B4C6A6',
+      dark: '#6E8560',
+      contrastText: '#2F3A28',
+    },
+    terracotta: {
+      main: '#D9735E',
+      contrastText: '#FBF6EA',
+    },
+    mustard: {
+      main: '#E2B04A',
+      contrastText: '#3B2A22',
     },
     background: {
-      default: '#F7F1E6',
-      paper: '#FFFBF4',
+      default: '#F6EEDC', // 크림
+      paper: '#FBF6EA',
     },
     text: {
-      primary: '#2E2A25',
-      secondary: '#7A7268',
+      primary: '#3B2A22', // 초콜릿 브라운
+      secondary: '#7A6656',
     },
     crust: {
       main: '#332419',
@@ -38,33 +51,39 @@ const theme = createTheme({
     },
     // 레벨 칭호 · 로고 배지처럼 버터색 바탕에 갈색 글씨를 쓰는 곳
     butter: {
-      main: '#F3D9A8',
-      contrastText: '#7A4A16',
+      main: '#F3DFAE',
+      contrastText: '#6E4518',
     },
     // 획득 배지 테두리, 검색창 테두리 등 금색 강조
     gold: {
-      main: '#E3B873',
+      main: '#E2B04A',
     },
-    // 상단 프로모션 띠, 검색 영역 등 밝은 노란 강조
+    // 상단 프로모션 띠, 검색 영역 등 넓은 강조 면
     highlight: {
-      main: '#FFE373',
+      main: '#E2B04A',
     },
   },
   typography: {
     fontFamily: '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Helvetica, Arial, sans-serif',
     h1: {
-      fontSize: '2.5rem',
-      fontWeight: 700,
-      letterSpacing: '-0.02em',
+      fontFamily: DISPLAY_FONT,
+      fontSize: '2.4rem',
+      fontWeight: 900, // Noto Serif KR은 900 굵기만 불러와요
+      letterSpacing: '-0.01em',
+      lineHeight: 1.25,
     },
     h2: {
+      fontFamily: DISPLAY_FONT,
       fontSize: '1.6rem',
-      fontWeight: 700,
+      fontWeight: 900, // Noto Serif KR은 900 굵기만 불러와요
       letterSpacing: '-0.01em',
+      lineHeight: 1.3,
     },
     h3: {
+      fontFamily: DISPLAY_FONT,
       fontSize: '1.15rem',
-      fontWeight: 600,
+      fontWeight: 900, // Noto Serif KR은 900 굵기만 불러와요
+      lineHeight: 1.35,
     },
   },
   shape: {

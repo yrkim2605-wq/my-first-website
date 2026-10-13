@@ -3,8 +3,10 @@ import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import { NavLink } from 'react-router-dom'
 import mascotLogo from '../../assets/logo-mascot-photo.webp'
+import HeaderLevelBadge from './HeaderLevelBadge'
 import { COMMUNITY_CATEGORIES } from '../../constants/categories'
 import { RANKING_TABS } from '../../constants/ranking'
 import { RADIUS } from '../../theme'
@@ -32,20 +34,34 @@ const NAV_ENTRIES = [
       to: `/ranking?tab=${index}`,
     })),
   },
-  { key: 'login', to: '/login', label: '로그인' },
 ]
 
+// 현재 페이지 메뉴 아래에 그리는 머스터드색 물결 밑줄
+const WAVE_UNDERLINE =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M2 4 Q 7 0, 12 4 T 22 4 T 32 4 T 42 4' fill='none' stroke='%23E2B04A' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E\")"
+
 const NAV_LINK_SX = {
-  fontSize: '20px',
+  position: 'relative',
+  display: 'inline-block',
+  py: 0.75,
+  fontSize: { xs: '0.95rem', sm: '1rem' },
   fontWeight: 700,
-  color: 'primary.main',
+  color: 'text.primary',
   textDecoration: 'none',
   transition: 'color 0.15s',
-  '&.active': {
-    color: 'primary.main',
-  },
-  '&:hover': {
-    color: 'primary.main',
+  '&:hover': { color: 'primary.main' },
+  '&.active': { color: 'primary.main' },
+  '&.active::after': {
+    content: '""',
+    position: 'absolute',
+    left: '50%',
+    bottom: -6,
+    width: 32,
+    height: 7,
+    transform: 'translateX(-50%)',
+    backgroundImage: WAVE_UNDERLINE,
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'contain',
   },
 }
 
@@ -62,15 +78,13 @@ const DROPDOWN_ITEM_SX = {
   whiteSpace: 'nowrap',
   transition: 'background-color 0.15s ease, color 0.15s ease',
   '&:hover': {
-    bgcolor: 'rgba(32,90,65,0.08)',
+    bgcolor: 'rgba(123,45,59,0.07)',
     color: 'primary.main',
   },
 }
 
 const Header = () => {
-  const navRef = useRef(null)
   const closeTimerRef = useRef(null)
-  const [indicator, setIndicator] = useState({ left: 0, visible: false })
   const [openMenuKey, setOpenMenuKey] = useState(null)
   const [scrolled, setScrolled] = useState(false)
 
@@ -80,19 +94,6 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const handleEnter = (event) => {
-    const itemRect = event.currentTarget.getBoundingClientRect()
-    const containerRect = navRef.current.getBoundingClientRect()
-    setIndicator({
-      left: itemRect.left - containerRect.left + itemRect.width / 2,
-      visible: true,
-    })
-  }
-
-  const handleLeave = () => {
-    setIndicator((prev) => ({ ...prev, visible: false }))
-  }
 
   const openMenu = (key) => {
     if (closeTimerRef.current) {
@@ -113,164 +114,125 @@ const Header = () => {
       sx={{
         top: 0,
         bgcolor: 'background.paper',
-        transition: 'box-shadow 0.3s ease',
-        boxShadow: scrolled ? '0 6px 20px rgba(46,42,37,0.1)' : 'none',
+        color: 'text.primary',
+        borderBottom: '1px solid',
+        borderColor: scrolled ? 'rgba(59,42,34,0.1)' : 'transparent',
+        transition: 'border-color 0.3s ease',
       }}
     >
-        <Toolbar
-          disableGutters
-          sx={{
-            gap: 2,
-            flexWrap: 'wrap',
-            width: '100%',
-            px: { xs: 3, sm: 6, lg: 9 },
-            py: { xs: 2, sm: 2 },
-            minHeight: { xs: 84, sm: 108 },
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
+      <Toolbar
+        disableGutters
+        sx={{
+          width: '100%',
+          px: { xs: 2.5, sm: 6, lg: 9 },
+          py: { xs: 1.5, md: 1.25 },
+          minHeight: { xs: 64, md: 80 },
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          columnGap: { xs: 2, md: 5 },
+          rowGap: 1,
+        }}
+      >
+        <Box
+          component={NavLink}
+          to="/"
+          aria-label="빵덕후 레벨업 홈"
+          sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none' }}
         >
           <Box
-            component={NavLink}
-            to="/"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'transform 0.15s ease',
-              '&:hover': { transform: 'translateY(-1px)' },
-            }}
-          >
-            <Box
-              component="img"
-              src={mascotLogo}
-              alt=""
-              className="mascot-float"
-              sx={{ width: 48, height: 56, flexShrink: 0, objectFit: 'contain' }}
-            />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Typography
-                sx={{
-                  fontFamily: '"OwnglyphParkDaHyun", cursive',
-                  fontSize: '2rem',
-                  lineHeight: 1,
-                  letterSpacing: '-0.01em',
-                  color: 'text.primary',
-                }}
-              >
-                빵덕후
-              </Typography>
-              <Box
-                sx={{
-                  px: 1.25,
-                  py: 0.3,
-                  borderRadius: 999,
-                  bgcolor: 'butter.main',
-                  color: 'butter.contrastText',
-                  fontFamily: '"OwnglyphParkDaHyun", cursive',
-                  fontSize: '1.15rem',
-                  lineHeight: 1.4,
-                  fontWeight: 700,
-                }}
-              >
-                레벨업
-              </Box>
+            component="img"
+            src={mascotLogo}
+            alt=""
+            sx={{ width: { xs: 36, md: 42 }, height: { xs: 42, md: 49 }, flexShrink: 0, objectFit: 'contain' }}
+          />
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, fontFamily: '"OwnglyphParkDaHyun", cursive', lineHeight: 1 }}>
+            <Box component="span" sx={{ fontSize: { xs: '1.7rem', md: '2rem' }, color: 'primary.main' }}>
+              빵덕후
+            </Box>
+            <Box component="span" sx={{ fontSize: { xs: '1.15rem', md: '1.3rem' }, color: 'terracotta.main' }}>
+              레벨업
             </Box>
           </Box>
+        </Box>
 
-          <Box
-            ref={navRef}
-            onMouseLeave={handleLeave}
-            sx={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: { xs: 3, sm: 5 } }}
-          >
-            <Box
-              sx={{
-                position: 'absolute',
-                top: -12,
-                left: 0,
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                bgcolor: 'primary.main',
-                transform: `translateX(${indicator.left - 4}px)`,
-                opacity: indicator.visible ? 1 : 0,
-                transition: 'transform 0.2s ease, opacity 0.15s ease',
-                pointerEvents: 'none',
-              }}
-            />
-            {NAV_ENTRIES.map((entry) => {
-              if (!entry.items) {
-                return (
-                  <Typography
-                    key={entry.key}
-                    component={NavLink}
-                    to={entry.to}
-                    onMouseEnter={handleEnter}
-                    sx={NAV_LINK_SX}
-                  >
-                    {entry.label}
-                  </Typography>
-                )
-              }
-
-              const isOpen = openMenuKey === entry.key
+        <Box
+          component="nav"
+          aria-label="주 메뉴"
+          sx={{
+            order: { xs: 3, md: 0 },
+            width: { xs: '100%', md: 'auto' },
+            ml: { md: 'auto' },
+            display: 'flex',
+            gap: { xs: 3, md: 4 },
+          }}
+        >
+          {NAV_ENTRIES.map((entry) => {
+            if (!entry.items) {
               return (
-                <Box
-                  key={entry.key}
-                  onMouseEnter={() => openMenu(entry.key)}
-                  onMouseLeave={closeMenuDelayed}
-                  sx={{ position: 'relative' }}
-                >
-                  <Typography
-                    component={NavLink}
-                    to={entry.to}
-                    onMouseEnter={handleEnter}
-                    sx={NAV_LINK_SX}
-                  >
-                    {entry.label}
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: '50%',
-                      mt: 1,
-                      minWidth: 190,
-                      bgcolor: 'rgba(255,253,246,0.55)',
-                      backdropFilter: 'blur(4px)',
-                      border: '1px solid rgba(46,42,37,0.08)',
-                      borderRadius: RADIUS.md,
-                      boxShadow: '0 12px 28px rgba(46,42,37,0.16)',
-                      py: 1,
-                      opacity: isOpen ? 1 : 0,
-                      visibility: isOpen ? 'visible' : 'hidden',
-                      pointerEvents: isOpen ? 'auto' : 'none',
-                      transform: isOpen ? 'translate(-50%, 0)' : 'translate(-50%, -6px)',
-                      transition: 'opacity 0.18s ease, transform 0.18s ease, visibility 0.18s',
-                      zIndex: 20,
-                    }}
-                  >
-                    {entry.items.map((item) => (
-                      <Box
-                        key={item.to}
-                        component={NavLink}
-                        to={item.to}
-                        end={item.end}
-                        sx={DROPDOWN_ITEM_SX}
-                      >
-                        {item.label}
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
+                <Typography key={entry.key} component={NavLink} to={entry.to} sx={NAV_LINK_SX}>
+                  {entry.label}
+                </Typography>
               )
-            })}
-          </Box>
-        </Toolbar>
+            }
+
+            const isOpen = openMenuKey === entry.key
+            return (
+              <Box
+                key={entry.key}
+                onMouseEnter={() => openMenu(entry.key)}
+                onMouseLeave={closeMenuDelayed}
+                sx={{ position: 'relative' }}
+              >
+                <Typography component={NavLink} to={entry.to} sx={NAV_LINK_SX}>
+                  {entry.label}
+                </Typography>
+
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    mt: 1.5,
+                    minWidth: 190,
+                    bgcolor: 'background.paper',
+                    border: '1px solid rgba(59,42,34,0.1)',
+                    borderRadius: RADIUS.md,
+                    boxShadow: '0 12px 28px rgba(59,42,34,0.12)',
+                    py: 1,
+                    opacity: isOpen ? 1 : 0,
+                    visibility: isOpen ? 'visible' : 'hidden',
+                    pointerEvents: isOpen ? 'auto' : 'none',
+                    transform: isOpen ? 'translate(-50%, 0)' : 'translate(-50%, -6px)',
+                    transition: 'opacity 0.18s ease, transform 0.18s ease, visibility 0.18s',
+                    zIndex: 20,
+                  }}
+                >
+                  {entry.items.map((item) => (
+                    <Box key={item.to} component={NavLink} to={item.to} end={item.end} sx={DROPDOWN_ITEM_SX}>
+                      {item.label}
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )
+          })}
+        </Box>
+
+        <Box sx={{ ml: { xs: 'auto', md: 0 }, display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <HeaderLevelBadge />
+          <Button
+            component={NavLink}
+            to="/login"
+            variant="contained"
+            color="secondary"
+            size="small"
+            sx={{ borderRadius: RADIUS.pill, px: 2, py: 0.75, fontWeight: 700, boxShadow: 'none' }}
+          >
+            로그인
+          </Button>
+        </Box>
+      </Toolbar>
     </AppBar>
   )
 }

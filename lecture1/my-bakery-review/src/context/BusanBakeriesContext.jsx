@@ -124,11 +124,15 @@ export const BusanBakeriesProvider = ({ children }) => {
         )
 
         const seen = new Set()
-        const merged = resultsByDistrict.flat().filter((bakery) => {
-          if (seen.has(bakery.id)) return false
-          seen.add(bakery.id)
-          return true
-        })
+        const merged = resultsByDistrict
+          .flat()
+          .filter((bakery) => {
+            if (seen.has(bakery.id)) return false
+            seen.add(bakery.id)
+            return true
+          })
+          // 목록 순서대로 사진 번호를 붙여요. 이웃한 카드에 같은 사진이 나오지 않게 하려는 거예요.
+          .map((bakery, index) => ({ ...bakery, photoSlot: index }))
 
         if (!cancelled) {
           setBakeries(merged)

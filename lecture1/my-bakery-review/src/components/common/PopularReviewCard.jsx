@@ -4,7 +4,7 @@ import Rating from '@mui/material/Rating'
 import Box from '@mui/material/Box'
 import Avatar from '@mui/material/Avatar'
 import { Link } from 'react-router-dom'
-import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
+import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { HOVER_LIFT_SX } from '../../constants/motion'
 
@@ -26,7 +26,7 @@ const PopularReviewCard = ({
   size = 'default',
 }) => {
   const { photosByBakeryId } = useRealBakeryPhotos()
-  const photoSrc = BAKERY_PHOTO_BY_ID[bakeryId] || photosByBakeryId[bakeryId] || DEFAULT_BAKERY_PHOTO
+  const photoSrc = getBakeryPhoto(bakeryId, photosByBakeryId)
 
   return (
     <Card

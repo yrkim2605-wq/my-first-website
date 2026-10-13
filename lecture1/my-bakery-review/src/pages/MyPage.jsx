@@ -15,7 +15,7 @@ import { BADGES } from '../constants/badges'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
 import { getLevelProgress } from '../utils/levelUtils'
-import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../constants/bakeryPhotos'
+import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO, getBakeryPhoto } from '../constants/bakeryPhotos'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
 import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
@@ -210,7 +210,7 @@ const MyPage = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                       <Box
                         component="img"
-                        src={photosByBakeryId[bakery.id] || DEFAULT_BAKERY_PHOTO}
+                        src={getBakeryPhoto(bakery.id, photosByBakeryId, bakery.photoSlot)}
                         alt={bakery.name}
                         sx={{
                           width: 48,

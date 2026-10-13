@@ -20,7 +20,8 @@ const NAV_BUTTON_SX = {
 
 const SLOT_SX_BY_OFFSET = {
   0: {
-    width: { xs: 330, sm: 390, md: 440 },
+    // 모바일은 양옆 화살표를 뺀 남는 폭에 맞춰요 (고정 폭이면 좁은 화면에서 카드 양쪽이 잘려요)
+    width: { xs: '100%', sm: 390, md: 440 },
     opacity: 1,
     zIndex: 2,
   },
