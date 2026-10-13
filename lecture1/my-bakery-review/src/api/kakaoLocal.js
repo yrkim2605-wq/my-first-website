@@ -2,12 +2,14 @@
 // JavaScript 키는 카카오 개발자 콘솔에 등록한 도메인에서만 동작하기 때문에,
 // 브라우저에 키가 보여도 다른 사이트에서는 쓸 수 없어요. (REST 키는 브라우저에 두면 안 돼요)
 const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY
-const SDK_URL = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&libraries=services&autoload=false`
+// services: 장소 검색, clusterer: 홈 지도에서 겹친 마커를 묶어 보여주기
+const SDK_URL = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&libraries=services,clusterer&autoload=false`
 
 let sdkPromise = null
 
 // SDK 스크립트는 처음 한 번만 불러오고, 이후에는 같은 Promise를 재사용해요.
-const loadKakaoSdk = () => {
+// 장소 검색과 홈 지도(BakeryMap)가 함께 써요.
+export const loadKakaoSdk = () => {
   if (sdkPromise) return sdkPromise
 
   sdkPromise = new Promise((resolve, reject) => {

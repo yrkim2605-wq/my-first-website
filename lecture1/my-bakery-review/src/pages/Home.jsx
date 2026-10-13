@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
@@ -9,15 +8,12 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import InputAdornment from '@mui/material/InputAdornment'
 import SearchIcon from '@mui/icons-material/Search'
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import BakeryStageCard from '../components/common/BakeryStageCard'
 import PopularBakeryCarousel from '../components/common/PopularBakeryCarousel'
 import PopularReviewCarousel from '../components/common/PopularReviewCarousel'
-import ScrollFillText from '../components/common/ScrollFillText'
 import InfiniteBakeryMarquee from '../components/common/InfiniteBakeryMarquee'
-import HeroCarousel from '../components/common/HeroCarousel'
-import Reveal from '../components/common/Reveal'
 import SectionHeading from '../components/common/SectionHeading'
+import BakeryMapHero from '../components/home/BakeryMapHero'
 import ScallopEdge from '../components/common/decor/ScallopEdge'
 import FlatFlower from '../components/common/decor/FlatFlower'
 import StatusMessage from '../components/common/StatusMessage'
@@ -28,10 +24,6 @@ import { BAKERY_REVIEWS, REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryRe
 import { FILTER_CHIP_SX } from '../constants/chipStyles'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
-import heroImage1 from '../assets/hero/bakery-1.webp'
-import heroImage2 from '../assets/hero/bakery-2.webp'
-
-const HERO_IMAGES = [heroImage1, heroImage2]
 
 // "전체 빵집"은 처음에 이만큼만 보여주고, "빵집 더 보기"로 같은 수만큼 이어서 보여줘요.
 const BAKERY_PAGE_SIZE = 12
@@ -145,52 +137,8 @@ const Home = () => {
 
   return (
     <>
-      <HeroCarousel images={HERO_IMAGES}>
-        <Reveal distance={28} sx={{ width: '100%' }}>
-          <Container maxWidth="lg">
-            <Typography
-              sx={{
-                color: 'rgba(251,246,234,0.8)',
-                textAlign: 'center',
-                fontSize: { xs: '0.8rem', sm: '0.85rem' },
-                fontWeight: 700,
-                letterSpacing: '0.18em',
-                mb: { xs: 2.5, sm: 3 },
-              }}
-            >
-              BUSAN BAKERY COMMUNITY
-            </Typography>
-            <Typography
-              component="div"
-              sx={{
-                textAlign: 'center',
-                fontFamily: theme.typography.h1.fontFamily,
-                fontWeight: 900,
-                lineHeight: 1.4,
-                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.4rem' },
-                wordBreak: 'keep-all',
-              }}
-            >
-              <ScrollFillText>
-                한 줄의 리뷰가 누군가의 최고의 선택이 됩니다.
-                <br />
-                빵덕후와 함께 성장하는 공간입니다.
-              </ScrollFillText>
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 4, sm: 5 } }}>
-              <Button
-                component={Link}
-                to="/community"
-                variant="contained"
-                endIcon={<ArrowForwardIcon />}
-                sx={{ px: 3, py: 1.1, borderRadius: 999 }}
-              >
-                커뮤니티 둘러보기
-              </Button>
-            </Box>
-          </Container>
-        </Reveal>
-      </HeroCarousel>
+      {/* 첫 화면: 부산 빵집 지도 */}
+      <BakeryMapHero bakeries={realBakeries} loading={bakeriesLoading} error={bakeriesError} onRetry={reloadBakeries} />
 
       {/* 오늘 인기 빵집 */}
       <Box sx={{ py: SECTION_PY }}>
