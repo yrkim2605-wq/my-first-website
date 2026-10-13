@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import SkillsDiagram from './SkillsDiagram';
+import SkillsMobile from './SkillsMobile';
 import useCountUp from '../hooks/useCountUp';
 import { navigateWithFade } from '../utils/pageTransition';
 
@@ -95,19 +96,6 @@ const CAPTIONS = ['(03) SKILLS & TOOLS', 'MOVE YOUR CURSOR TO EXPLORE'];
 const TOOLS_TOTAL = SKILLS.length;
 const SUBS_TOTAL = SKILLS.flatMap((skill) => skill.subs).length;
 
-// 모바일 목록용 자격증 배지 — 데스크톱 다이어그램(캔버스)의 배지와 같은 모양
-const certBadgeSx = {
-  px: 1,
-  py: 0.25,
-  border: '1px solid rgba(17, 17, 17, 0.6)',
-  borderRadius: 999,
-  fontFamily: '"Alumni Sans", sans-serif',
-  fontWeight: 600,
-  fontSize: 13,
-  letterSpacing: '0.04em',
-  lineHeight: 1.2,
-};
-
 const captionSx = {
   fontFamily: '"Alumni Sans", sans-serif',
   fontWeight: 600,
@@ -136,8 +124,8 @@ const Skills = () => {
       sx={{
         bgcolor: '#c4c4c4',
         color: '#111111',
-        px: { xs: 3, md: 0 },
-        py: { xs: 8, md: 0 },
+        px: { xs: 2.5, md: 0 },
+        py: { xs: 9, md: 0 },
         height: { md: '100svh' },
         position: 'relative',
         isolation: 'isolate', // 노이즈 층(zIndex -1)이 배경색 위·다이어그램 아래에 깔리도록
@@ -196,48 +184,15 @@ const Skills = () => {
         <CountCaption />
       </Stack>
 
-      {/* Mobile fallback list */}
-      <Stack spacing={2.5} sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
-        <Box
-          component="a"
-          href={ABOUT_ME_URL}
-          aria-label="WHO AM I ? — 자기소개 페이지로 이동"
-          sx={{ width: 12, height: 12, bgcolor: '#000000', mb: 1 }}
-        />
-        {SKILLS.map((skill) => (
-          <Stack key={skill.title} spacing={0.25} sx={{ alignItems: 'center', textAlign: 'center' }}>
-            {skill.certs && (
-              <Stack direction="row" spacing={0.75} sx={{ mb: 0.5 }}>
-                {skill.certs.map((cert) => (
-                  <Box key={cert} component="span" sx={certBadgeSx}>
-                    {cert}
-                  </Box>
-                ))}
-              </Stack>
-            )}
-            <Typography
-              sx={{
-                fontFamily: '"Alumni Sans", sans-serif',
-                fontWeight: 600,
-                fontSize: 22,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              {skill.title}
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: '"Alumni Sans", sans-serif',
-                fontWeight: 600,
-                fontSize: 14,
-                color: SUB_COLOR,
-              }}
-            >
-              {skill.subs.map((sub) => sub.title).join(' · ')}
-            </Typography>
-          </Stack>
-        ))}
-      </Stack>
+      {/* 모바일 — 다이어그램 대신 제목·툴 목록·WHO AM I ? 버튼 */}
+      <SkillsMobile
+        skills={SKILLS}
+        aboutUrl={ABOUT_ME_URL}
+        onAboutClick={handleWhoAmIClick}
+        caption={CAPTIONS[0]}
+        countCaption={<CountCaption />}
+        captionSx={captionSx}
+      />
     </Box>
   );
 };

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import Box from '@mui/material/Box';
-import { dpx } from '../constants/typography';
+import { dpx, mpx } from '../constants/typography';
 import Typography from '@mui/material/Typography';
 import CircularText from './CircularText';
 import RibbonBand from './RibbonBand';
@@ -13,7 +13,7 @@ const bigDisplaySx = {
   position: 'absolute',
   fontFamily: '"Anton", sans-serif',
   fontWeight: 400,
-  fontSize: { xs: '30cqw', md: dpx(300) },
+  fontSize: { xs: '36cqw', md: dpx(300) },
   lineHeight: 1,
   letterSpacing: '-0.05em',
   whiteSpace: 'nowrap',
@@ -88,8 +88,15 @@ const Hero = () => {
       height="calc(100svh - 58px)"
       // 좌우 여백 없이 항상 가로를 꽉 채운다 (넘치는 세로는 overflow: hidden으로 크롭)
       fullWidth
-      sx={{ mt: '30px', bgcolor: '#ffffff' }}
-      stageSx={{ overflow: 'hidden', aspectRatio: { xs: '4 / 5', md: '1192 / 600' } }}
+      // 모바일도 첫 화면 높이를 꽉 채우고, 무대가 그 높이를 그대로 써서 요소들이 위아래로 펼쳐진다 (위치는 무대 높이의 %)
+      sx={{ mt: '30px', bgcolor: '#ffffff', height: 'calc(100svh - 58px)' }}
+      // 모바일: 무대 안의 요소 전체를 30px(390 시안 기준) 아래로 내린다 — 아래쪽은 빈 공간이라 잘리는 내용이 없다
+      stageSx={{
+        overflow: 'hidden',
+        height: { xs: '100%' },
+        aspectRatio: { xs: 'auto', md: '1192 / 600' },
+        transform: { xs: `translateY(${mpx(30)})`, md: 'none' },
+      }}
     >
       {/* 페이지 제목 — 화면엔 IDEA·MADE 그래픽으로 보이고, 스크린 리더·검색엔진엔 이 글자로 읽힌다 */}
       <h1 className="srOnly">IDEAMADE — 김유리(KIM YURI) 포트폴리오</h1>
@@ -101,7 +108,7 @@ const Hero = () => {
         sx={{
           ...bigDisplaySx,
           left: '-1.2cqw',
-          top: { xs: '4%', md: '7.3%' },
+          top: { xs: '6%', md: '7.3%' },
           color: 'transparent',
           backgroundImage: ideaStripes,
           backgroundSize: '100% 100%',
@@ -119,8 +126,10 @@ const Hero = () => {
         aria-hidden
         sx={{
           ...bigDisplaySx,
-          left: { xs: '30%', md: '61%' },
-          top: { xs: '58%', md: '41%' },
+          // 모바일: 오른쪽 끝에 붙인다 — 끝에서 2cqw 띄운 자리보다 10px(390 시안 기준) 더 오른쪽
+          left: { xs: 'auto', md: '61%' },
+          right: { xs: `calc(2cqw - ${mpx(10)})`, md: 'auto' },
+          top: { xs: '63%', md: '41%' },
           color: 'transparent',
           WebkitTextStroke: '1px #111111',
           ...heroIntroSx('heroRevealUp', 0.35),
@@ -134,8 +143,9 @@ const Hero = () => {
         data-anchor="cube-hero"
         sx={{
           position: 'absolute',
-          left: { xs: '8%', md: '6.5%' },
-          top: { xs: '24%', md: '35%' },
+          // 모바일: 기준 자리(8%, 18%)에서 오른쪽·아래로 20px씩(390 시안 기준) 옮긴다
+          left: { xs: `calc(8% + ${mpx(20)})`, md: '6.5%' },
+          top: { xs: `calc(18% + ${mpx(20)})`, md: '35%' },
           width: '8cqw',
           height: '8cqw',
           transform: { xs: 'scale(1.5)', md: 'none' },
@@ -149,9 +159,9 @@ const Hero = () => {
         ref={ribbonRef}
         sx={{
           position: 'absolute',
-          left: { xs: '30%', md: '23%' },
-          top: { xs: '16%', md: '6%' },
-          transform: { xs: 'scale(1.35)', md: 'none' },
+          left: { xs: '27%', md: '23%' },
+          top: { xs: '29%', md: '6%' },
+          transform: { xs: 'scale(1.6)', md: 'none' },
           width: '46cqw',
           height: '40cqw',
           zIndex: 1,
@@ -167,10 +177,10 @@ const Hero = () => {
         data-anchor="circle-hero"
         sx={{
           position: 'absolute',
-          left: { xs: '50%', md: '69.5%' },
-          top: { xs: '60%', md: '44%' },
-          width: { xs: '40cqw', md: '23cqw' },
-          height: { xs: '40cqw', md: '23cqw' },
+          left: { xs: '46%', md: '69.5%' },
+          top: { xs: '65%', md: '44%' },
+          width: { xs: '46cqw', md: '23cqw' },
+          height: { xs: '46cqw', md: '23cqw' },
           zIndex: 3,
         }}
       >

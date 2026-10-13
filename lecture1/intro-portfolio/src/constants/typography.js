@@ -3,3 +3,8 @@
 export const DESIGN_WIDTH = 1440;
 
 export const dpx = (px) => `${+((px / DESIGN_WIDTH) * 100).toFixed(3)}cqw`;
+
+// 모바일 시안은 390px 너비 기준이다 — mpx(20) → 화면 너비가 390px일 때 20px
+export const MOBILE_WIDTH = 390;
+
+export const mpx = (px) => `${+((px / MOBILE_WIDTH) * 100).toFixed(3)}cqw`;

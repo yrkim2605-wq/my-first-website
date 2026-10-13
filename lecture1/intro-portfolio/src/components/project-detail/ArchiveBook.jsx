@@ -10,6 +10,8 @@ import { aboutTextSx } from '../about-me/aboutMeStyles';
 // · 그림에 커서를 올리면(키보드는 Tab으로 초점) 종이 위로 들려 올라오며 확대된다
 // book(projectDetails.js): spineX(책등 x), top(종이 윗변 y), page({ w, h }), pages(짝수 장)
 //   pages 한 장: { src, alt, title } — src가 없으면 { title, lines }로 글만 있는 맺음 페이지가 된다
+// unit: 시안 px → 화면 길이로 바꾸는 함수 (기본 dpx) — 모바일에선 책 전체를 화면 너비에 맞춘 단위를 넘긴다
+// navUnit: 책 아래 화살표·쪽 번호의 크기 단위 (기본 unit) — 모바일에서 손가락으로 누를 만큼 크게 따로 준다
 //
 // 책 구조 (8쪽 기준)
 //   왼쪽 바닥 페이지: 1쪽 | 넘기는 종이 0: 앞 2쪽 / 뒤 3쪽
@@ -20,7 +22,7 @@ import { aboutTextSx } from '../about-me/aboutMeStyles';
 
 export const COVER_PAD = 10; // 종이 바깥으로 보이는 표지 두께
 const PAGE_PAD = 24; // 종이 안쪽 여백
-const CAPTION_H = 64; // 그림 아래 제목·쪽 번호 자리
+export const CAPTION_H = 64; // 그림 아래 제목·쪽 번호 자리
 const ZOOM = 1.35; // 커서를 올렸을 때 그림 확대 배율
 const TURN_MS = 1100; // 한 장 넘어가는 시간
 const TURN_STAGGER_MS = 90; // 여러 장을 한 번에 넘길 때 장 사이 간격
@@ -35,23 +37,23 @@ const REDUCED_MOTION = '@media (prefers-reduced-motion: reduce)';
 const pad2 = (n) => String(n).padStart(2, '0');
 
 // 종이 크기 → 한 쪽 높이 (정사각형 그림 + 아래 제목 자리)
-const pageHeight =(pageWidth) => pageWidth + CAPTION_H;
+const pageHeight = (pageWidth) => pageWidth + CAPTION_H;
 
 // 책등 쪽이 살짝 어둡게 말려 들어가 보이는 그림자 — side: 이 쪽이 책의 왼쪽/오른쪽 중 어디인지
 const gutterShadow = (side) =>
   `linear-gradient(to ${side === 'left' ? 'left' : 'right'}, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.06) 7%, transparent 16%)`;
 
 // 쪽 아래 가운데 쪽 번호
-const Folio = ({ index, side }) => (
+const Folio = ({ index, side, u }) => (
   <Typography
     sx={{
       ...aboutTextSx,
       position: 'absolute',
-      bottom: dpx(12),
-      [side]: dpx(PAGE_PAD),
+      bottom: u(12),
+      [side]: u(PAGE_PAD),
       color: '#a39c8e',
       fontWeight: 400,
-      fontSize: dpx(10),
+      fontSize: u(10),
       letterSpacing: '0.2em',
     }}
   >
@@ -60,12 +62,12 @@ const Folio = ({ index, side }) => (
 );
 
 // 종이 한 쪽 — 그림 + 제목, 또는 글만 있는 맺음 페이지
-const BookPage = ({ page, index, side, imageSize, isZoomed, onZoomChange, sx = {} }) => (
+const BookPage = ({ page, index, side, imageSize, isZoomed, onZoomChange, u, sx = {} }) => (
   <Box
     sx={{
       position: 'absolute',
       inset: 0,
-      p: dpx(PAGE_PAD),
+      p: u(PAGE_PAD),
       bgcolor: PAPER,
       backgroundImage: gutterShadow(side),
       ...sx,
@@ -86,7 +88,7 @@ const BookPage = ({ page, index, side, imageSize, isZoomed, onZoomChange, sx = {
             position: 'relative',
             zIndex: 1,
             display: 'block',
-            width: dpx(imageSize),
+            width: u(imageSize),
             aspectRatio: '1 / 1',
             objectFit: 'cover',
             cursor: 'zoom-in',
@@ -94,17 +96,17 @@ const BookPage = ({ page, index, side, imageSize, isZoomed, onZoomChange, sx = {
             // 들려 올라올 때 책 바깥쪽으로 살짝 기울어 손으로 집어 든 느낌을 준다
             transform: isZoomed ? `scale(${ZOOM}) rotate(${side === 'left' ? -1.5 : 1.5}deg)` : 'none',
             boxShadow: isZoomed
-              ? `0 ${dpx(28)} ${dpx(60)} rgba(0, 0, 0, 0.5), 0 0 0 ${dpx(6)} #ffffff`
+              ? `0 ${u(28)} ${u(60)} rgba(0, 0, 0, 0.5), 0 0 0 ${u(6)} #ffffff`
               : '0 0 0 1px rgba(0, 0, 0, 0.08)',
             transition: `transform 0.55s ${EASE}, box-shadow 0.55s ${EASE}`,
             [REDUCED_MOTION]: { transition: 'none' },
           }}
         />
-        <Box sx={{ mt: dpx(12), display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <Typography sx={{ ...aboutTextSx, color: INK, fontSize: dpx(19), letterSpacing: '0.01em' }}>
+        <Box sx={{ mt: u(12), display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <Typography sx={{ ...aboutTextSx, color: INK, fontSize: u(19), letterSpacing: '0.01em' }}>
             {page.title}
           </Typography>
-          <Typography sx={{ ...aboutTextSx, color: '#8a8478', fontWeight: 400, fontSize: dpx(12) }}>
+          <Typography sx={{ ...aboutTextSx, color: '#8a8478', fontWeight: 400, fontSize: u(12) }}>
             No.{pad2(index + 1)}
           </Typography>
         </Box>
@@ -122,24 +124,24 @@ const BookPage = ({ page, index, side, imageSize, isZoomed, onZoomChange, sx = {
           color: INK,
         }}
       >
-        <Typography sx={{ ...aboutTextSx, color: INK, fontFamily: '"Anton", sans-serif', fontWeight: 400, fontSize: dpx(56) }}>
+        <Typography sx={{ ...aboutTextSx, color: INK, fontFamily: '"Anton", sans-serif', fontWeight: 400, fontSize: u(56) }}>
           {page.title}
         </Typography>
         {page.lines.map((line) => (
           <Typography
             key={line}
-            sx={{ ...aboutTextSx, mt: dpx(10), color: '#6f6a60', fontWeight: 400, fontSize: dpx(13), letterSpacing: '0.2em' }}
+            sx={{ ...aboutTextSx, mt: u(10), color: '#6f6a60', fontWeight: 400, fontSize: u(13), letterSpacing: '0.2em' }}
           >
             {line}
           </Typography>
         ))}
       </Box>
     )}
-    <Folio index={index} side={side} />
+    <Folio index={index} side={side} u={u} />
   </Box>
 );
 
-const ArchiveBook = ({ book, sx = {} }) => {
+const ArchiveBook = ({ book, unit: u = dpx, navUnit: navU = u, sx = {} }) => {
   const { pages, spineX, top, page: pageSize } = book;
   const pageW = pageSize.w;
   const pageH = pageHeight(pageW);
@@ -186,22 +188,23 @@ const ArchiveBook = ({ book, sx = {} }) => {
     imageSize,
     isZoomed: zoomedIndex === index,
     onZoomChange: setZoomedIndex,
+    u,
   });
 
   const pageBoxSx = (left) => ({
     position: 'absolute',
-    left: dpx(left),
-    top: dpx(top),
-    width: dpx(pageW),
-    height: dpx(pageH),
+    left: u(left),
+    top: u(top),
+    width: u(pageW),
+    height: u(pageH),
   });
 
   const coverSx = {
     position: 'absolute',
-    left: dpx(bookLeft - COVER_PAD),
-    top: dpx(top - COVER_PAD),
-    width: dpx(pageW * 2 + COVER_PAD * 2),
-    height: dpx(pageH + COVER_PAD * 2),
+    left: u(bookLeft - COVER_PAD),
+    top: u(top - COVER_PAD),
+    width: u(pageW * 2 + COVER_PAD * 2),
+    height: u(pageH + COVER_PAD * 2),
   };
 
   return (
@@ -218,18 +221,18 @@ const ArchiveBook = ({ book, sx = {} }) => {
       {/* 표지 */}
       <Box
         aria-hidden
-        sx={{ ...coverSx, bgcolor: '#2b2824', borderRadius: dpx(4), boxShadow: `0 ${dpx(22)} ${dpx(50)} rgba(0, 0, 0, 0.55)` }}
+        sx={{ ...coverSx, bgcolor: '#2b2824', borderRadius: u(4), boxShadow: `0 ${u(22)} ${u(50)} rgba(0, 0, 0, 0.55)` }}
       />
 
       {/* 바닥 페이지 — 바깥쪽으로 겹겹이 보이는 종이 단면이 책의 두께를 만든다 */}
-      <Box sx={{ ...pageBoxSx(bookLeft), zIndex: baseZ(0), boxShadow: `-${dpx(3)} 0 0 #dcd4c4, -${dpx(6)} 0 0 #c8bfad` }}>
+      <Box sx={{ ...pageBoxSx(bookLeft), zIndex: baseZ(0), boxShadow: `-${u(3)} 0 0 #dcd4c4, -${u(6)} 0 0 #c8bfad` }}>
         <BookPage {...pageProps(0, 'left')} />
       </Box>
       <Box
         sx={{
           ...pageBoxSx(spineX),
           zIndex: baseZ(pages.length - 1),
-          boxShadow: `${dpx(3)} 0 0 #dcd4c4, ${dpx(6)} 0 0 #c8bfad`,
+          boxShadow: `${u(3)} 0 0 #dcd4c4, ${u(6)} 0 0 #c8bfad`,
         }}
       >
         <BookPage {...pageProps(pages.length - 1, 'right')} />
@@ -249,7 +252,7 @@ const ArchiveBook = ({ book, sx = {} }) => {
               zIndex: leafZ(i),
               transformOrigin: 'left center',
               transformStyle: 'preserve-3d',
-              transform: `perspective(${dpx(2200)}) rotateY(${isTurned ? -180 : 0}deg)`,
+              transform: `perspective(${u(2200)}) rotateY(${isTurned ? -180 : 0}deg)`,
               transition: `transform ${TURN_MS}ms ${TURN_EASE} ${order * TURN_STAGGER_MS}ms`,
               [REDUCED_MOTION]: { transition: 'none' },
             }}
@@ -291,10 +294,10 @@ const ArchiveBook = ({ book, sx = {} }) => {
             aria-label={label}
             sx={{
               position: 'absolute',
-              left: dpx(left),
-              top: dpx(top + pageH - CORNER),
-              width: dpx(CORNER),
-              height: dpx(CORNER),
+              left: u(left),
+              top: u(top + pageH - CORNER),
+              width: u(CORNER),
+              height: u(CORNER),
               zIndex: 45,
               '& .curl': {
                 position: 'absolute',
@@ -317,12 +320,12 @@ const ArchiveBook = ({ book, sx = {} }) => {
       <Box
         sx={{
           position: 'absolute',
-          left: dpx(spineX),
-          top: dpx(top + pageH + COVER_PAD + 14),
+          left: u(spineX),
+          top: u(top + pageH + COVER_PAD + 14),
           transform: 'translateX(-50%)',
           display: 'flex',
           alignItems: 'center',
-          gap: dpx(18),
+          gap: navU(18),
         }}
       >
         {[
@@ -338,9 +341,9 @@ const ArchiveBook = ({ book, sx = {} }) => {
               aria-label={button.label}
               sx={{
                 ...aboutTextSx,
-                fontSize: dpx(15),
-                width: dpx(28),
-                height: dpx(28),
+                fontSize: navU(15),
+                width: navU(28),
+                height: navU(28),
                 borderRadius: '50%',
                 border: '1px solid rgba(255, 255, 255, 0.35)',
                 transition: 'background-color 0.3s, color 0.3s',
@@ -354,7 +357,7 @@ const ArchiveBook = ({ book, sx = {} }) => {
             <Typography
               key="counter"
               aria-live="polite"
-              sx={{ ...aboutTextSx, fontWeight: 400, fontSize: dpx(12), letterSpacing: '0.12em', whiteSpace: 'pre' }}
+              sx={{ ...aboutTextSx, fontWeight: 400, fontSize: navU(12), letterSpacing: '0.12em', whiteSpace: 'pre' }}
             >
               {pad2(spread * 2 + 1)} — {pad2(spread * 2 + 2)}
               <Box component="span" sx={{ color: '#6f6f6f' }}>

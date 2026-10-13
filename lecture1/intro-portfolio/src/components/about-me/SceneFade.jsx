@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import Box from '@mui/material/Box';
 import useScrollFrame from '../../hooks/useScrollFrame';
+import { isDesktop } from '../../constants/decor';
 
 // 섹션을 화면에 붙여 두고(sticky), 다음 섹션이 아래에서 덮으며 올라오는 동안
 // 이 섹션은 서서히 어두워지고 살짝 작아지며 뒤로 물러난다 → 두 화면이 끊기지 않고 이어진다
@@ -17,7 +18,13 @@ const SceneFade = ({ id, children }) => {
   useScrollFrame(() => {
     const marker = markerRef.current;
     const scene = sceneRef.current;
-    if (!marker || !scene || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!marker || !scene) return;
+    // 모바일은 섹션이 화면보다 길어 붙여 두면 아랫부분이 덮여 버리므로, 효과 없이 차례로 스크롤한다
+    if (!isDesktop()) {
+      ['opacity', 'transform', 'filter'].forEach((name) => scene.style.removeProperty(name));
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     // 섹션 윗변이 화면 위에 닿은 뒤 창 높이만큼 스크롤하는 동안 0 → 1
     const progress = Math.min(Math.max(-marker.getBoundingClientRect().top / window.innerHeight, 0), 1);
     const eased = progress * progress * (3 - 2 * progress); // 처음과 끝을 부드럽게
@@ -31,7 +38,7 @@ const SceneFade = ({ id, children }) => {
       <Box id={id} ref={markerRef} aria-hidden />
       <Box
         ref={sceneRef}
-        sx={{ position: 'sticky', top: 0, zIndex: 0, transformOrigin: '50% 40%', willChange: 'opacity, transform' }}
+        sx={{ position: { xs: 'relative', md: 'sticky' }, top: 0, zIndex: 0, transformOrigin: '50% 40%', willChange: 'opacity, transform' }}
       >
         {children}
       </Box>

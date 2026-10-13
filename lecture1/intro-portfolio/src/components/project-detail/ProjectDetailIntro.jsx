@@ -1,14 +1,23 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import FitStage from '../FitStage';
-import ArchiveBook, { COVER_PAD } from './ArchiveBook';
+import ArchiveBook, { CAPTION_H, COVER_PAD } from './ArchiveBook';
 import SectionNav from '../about-me/SectionNav';
-import { dpx } from '../../constants/typography';
-import { aboutKoreanSx, aboutStageProps, aboutTextSx } from '../about-me/aboutMeStyles';
+import useIsMobile from '../../hooks/useIsMobile';
+import { dpx, mpx } from '../../constants/typography';
+import {
+  MOBILE_BOTTOM_SPACE,
+  MOBILE_GUTTER,
+  aboutKoreanSx,
+  aboutStageProps,
+  aboutTextSx,
+  placeSx,
+} from '../about-me/aboutMeStyles';
 
 // 프로젝트 상세 01 화면 (시안: 프로젝트 상세페이지.pdf, 1440 × 784 기준)
 // 천장에 매달린 전등이 대표 이미지(sheet)를 비추고, 왼쪽 아래 작은 이미지(master)에서 sheet로 선이 이어진다.
 // 구성은 모든 프로젝트가 같고, 글·이미지는 project(projectDetails.js)에서 받는다.
+// 모바일(390 기준): 전등과 sheet(또는 책자)를 화면 위쪽 가운데에 걸고, 왼쪽 글 묶음은 그 아래로 차례로 흐른다
 
 const STAGE = { w: 1440, h: 784 };
 const LAMP_X = 732; // 전등·전선의 가운데 x (시안 px) — 프로젝트에서 lampX를 주면 그 값을 쓴다
@@ -37,8 +46,39 @@ const parseAspect = (aspect) => {
 const ROW_CENTERS = [254, 327, 393];
 const DIVIDER_Y = 462;
 
-const pctX = (x) => `${((x / STAGE.w) * 100).toFixed(2)}%`;
-const pctY = (y) => `${((y / STAGE.h) * 100).toFixed(2)}%`;
+// 전등 장면의 크기·위치 — 데스크톱은 1440 시안, 모바일은 390 시안 px
+const DESKTOP_LAMP = {
+  unit: dpx,
+  w: STAGE.w,
+  shade: { top: 46, w: 58, h: 26 },
+  bulbY: BULB_Y,
+  bulb: 14,
+  glow: 140,
+  beamTop: 22,
+  beamHalf: BEAM_HALF,
+  dots: [116, 151], // 전선 위의 점 y
+};
+const MOBILE_LAMP = {
+  unit: mpx,
+  w: 390,
+  shade: { top: 34, w: 44, h: 20 },
+  bulbY: 58,
+  bulb: 11,
+  glow: 106,
+  beamTop: 16,
+  beamHalf: 220,
+  dots: [92, 114],
+  lampX: 195,
+  sheetTop: 140,
+};
+// 모바일 책자: 책 전체(표지 포함)를 780 단위 너비로 보고 화면 너비에 맞춘다 — 책등이 화면 가운데(390)
+const MOBILE_BOOK_WIDTH = 780;
+const bookUnit = (px) => `${+((px / MOBILE_BOOK_WIDTH) * 100).toFixed(3)}cqw`;
+// 책 아래 화살표·쪽 번호는 손가락으로 누르기 좋게 화면 기준(mpx)으로 크게 그린다
+const BOOK_NAV_SCALE = 1.25;
+const bookNavUnit = (px) => mpx(px * BOOK_NAV_SCALE);
+const BOOK_NAV_GAP = 14; // 책 아랫변 → 화살표 줄 (ArchiveBook과 같은 값, 책 단위)
+const BOOK_NAV_H = 28 * BOOK_NAV_SCALE; // 화살표 줄 높이 (mpx)
 
 // 등장 순서(초): 전선이 내려오고 → 전등이 깜빡이며 켜지고 → 시트가 불빛 아래 내려앉고
 // → 왼쪽 글이 위에서부터 차례로 떠오르고 → 마지막에 master에서 시트로 선이 그려진다
@@ -71,20 +111,45 @@ const lampOnSx = {
 //   02 화면도 같은 구성으로 보여주고 싶을 때, project.second 같은 별도 데이터를 data로 넘기고
 //   activeIndex·id로 몇 번째 화면인지 알려주면 이 컴포넌트를 그대로 재사용할 수 있다
 const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) => {
+  const isMobile = useIsMobile();
+  const L = isMobile ? MOBILE_LAMP : DESKTOP_LAMP;
+  const u = L.unit;
   const { sections } = project;
   const { title, description, rows, persona, sheet, book, master, character } = data;
-  // 시트 위치·크기 — 프로젝트에서 sheet.left / width / aspect를 주면 그 값을 쓴다
+  // 시트 위치·크기 — 프로젝트에서 sheet.left / width / aspect를 주면 그 값을 쓴다 (모바일은 화면 너비에 꽉 차게)
   // book이 있으면 시트 대신 넘겨 보는 책자가 전등 아래 걸리고, 선은 책 표지 왼쪽 끝에 닿는다
-  const sheetBox = {
-    left: book ? book.spineX - book.page.w - COVER_PAD : (sheet?.left ?? SHEET.left),
-    width: sheet?.width ?? SHEET.width,
-    aspect: sheet?.aspect ?? SHEET.aspect,
+  const sheetAspect = sheet?.aspect ?? SHEET.aspect;
+  const sheetBox = isMobile
+    ? { left: MOBILE_GUTTER, top: MOBILE_LAMP.sheetTop, width: MOBILE_LAMP.w - MOBILE_GUTTER * 2, aspect: sheetAspect }
+    : {
+        left: book ? book.spineX - book.page.w - COVER_PAD : (sheet?.left ?? SHEET.left),
+        top: SHEET.top,
+        width: sheet?.width ?? SHEET.width,
+        aspect: sheetAspect,
+      };
+  // 모바일 책자 — 표지 윗변이 전선 끝(sheetTop)에 닿도록 책 단위로 옮긴다
+  const mobileBook = book && {
+    ...book,
+    spineX: MOBILE_BOOK_WIDTH / 2,
+    top: (MOBILE_LAMP.sheetTop * MOBILE_BOOK_WIDTH) / MOBILE_LAMP.w + COVER_PAD,
   };
-  const lampX = data.lampX ?? LAMP_X;
+  // 모바일: 매달린 그림(시트·책자)이 끝나는 높이 → 그 아래부터 글이 흐른다
+  const mobileHangBottom = mobileBook
+    ? ((mobileBook.top + book.page.w + CAPTION_H + COVER_PAD + BOOK_NAV_GAP) * MOBILE_LAMP.w) / MOBILE_BOOK_WIDTH + BOOK_NAV_H
+    : sheetBox.top + sheetBox.width / parseAspect(sheetAspect);
+  const mobileContentTop = mobileHangBottom + 40;
+  const floor = isMobile ? mobileContentTop - 16 : STAGE.h; // 빛기둥이 닿는 바닥
+
+  const lampX = isMobile ? MOBILE_LAMP.lampX : (data.lampX ?? LAMP_X);
+  const { bulbY } = L;
+  const pctX = (x) => `${((x / L.w) * 100).toFixed(2)}%`;
+  const pctY = (y) => `${((y / floor) * 100).toFixed(2)}%`;
+
   // 왼쪽 글 묶음 — 제목 위치와 너비(구분선·캐릭터 소개도 같은 너비로 맞춘다)
   const titleTop = data.titleTop ?? 113;
   const columnWidth = data.columnWidth ?? 305;
-  const showLink = data.showLink ?? Boolean(master); // master → sheet 선 (master가 없으면 그을 곳이 없다)
+  // master → sheet 선 (master가 없으면 그을 곳이 없다) — 모바일은 글이 시트 아래로 내려가 이을 수 없으므로 뺀다
+  const showLink = !isMobile && (data.showLink ?? Boolean(master));
   const rowCenters = data.rowCenters ?? ROW_CENTERS;
   const dividerY = data.dividerY ?? DIVIDER_Y;
   const masterImages = master ? (master.images ?? [{ src: master.src, alt: master.alt }]) : [];
@@ -96,17 +161,20 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
   const linkPoints = makeLinkPoints(MASTER.left + masterWidth, masterTop + MASTER_LINK_OFFSET, sheetBox.left);
 
   return (
-    <FitStage id={id} {...aboutStageProps}>
+    <FitStage id={id} {...aboutStageProps(isMobile)}>
       {/* 불빛 — 전구에서 바닥까지 퍼지는 빛기둥 (자기소개 페이지와 같은 방식) */}
-      <Box aria-hidden sx={{ position: 'absolute', inset: 0, filter: `blur(${dpx(10)})`, ...lampOnSx }}>
+      <Box
+        aria-hidden
+        sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: u(floor), filter: `blur(${u(10)})`, ...lampOnSx }}
+      >
         <Box
           sx={{
             position: 'absolute',
             inset: 0,
-            clipPath: `polygon(${pctX(lampX - 22)} ${pctY(BULB_Y)}, ${pctX(lampX + 22)} ${pctY(BULB_Y)}, ${pctX(lampX + BEAM_HALF)} 100%, ${pctX(lampX - BEAM_HALF)} 100%)`,
+            clipPath: `polygon(${pctX(lampX - L.beamTop)} ${pctY(bulbY)}, ${pctX(lampX + L.beamTop)} ${pctY(bulbY)}, ${pctX(lampX + L.beamHalf)} 100%, ${pctX(lampX - L.beamHalf)} 100%)`,
             background: [
-              `radial-gradient(ellipse 30% 75% at ${pctX(lampX)} ${pctY(BULB_Y)}, rgba(255, 244, 205, 0.4), transparent 70%)`,
-              `radial-gradient(ellipse 55% 110% at ${pctX(lampX)} ${pctY(BULB_Y)}, rgba(236, 226, 196, 0.38), rgba(170, 165, 146, 0.22) 50%, rgba(40, 40, 36, 0.1) 95%)`,
+              `radial-gradient(ellipse 30% 75% at ${pctX(lampX)} ${pctY(bulbY)}, rgba(255, 244, 205, 0.4), transparent 70%)`,
+              `radial-gradient(ellipse 55% 110% at ${pctX(lampX)} ${pctY(bulbY)}, rgba(236, 226, 196, 0.38), rgba(170, 165, 146, 0.22) 50%, rgba(40, 40, 36, 0.1) 95%)`,
             ].join(', '),
           }}
         />
@@ -117,9 +185,9 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(lampX),
+          left: u(lampX),
           top: 0,
-          height: dpx(SHEET.top),
+          height: u(sheetBox.top),
           width: '1px',
           bgcolor: '#ffffff',
           transformOrigin: 'top',
@@ -130,10 +198,10 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(lampX - 29),
-          top: dpx(46),
-          width: dpx(58),
-          height: dpx(26),
+          left: u(lampX - L.shade.w / 2),
+          top: u(L.shade.top),
+          width: u(L.shade.w),
+          height: u(L.shade.h),
           clipPath: 'polygon(50% 0, 100% 100%, 0 100%)',
           background: 'linear-gradient(180deg, #4a4a4a 0%, #8a8a86 70%, #e9e4d4 100%)',
           ...enterSx('riseIn', TIMING.lamp - 0.2, 0.6),
@@ -143,10 +211,10 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(lampX - 70),
-          top: dpx(BULB_Y - 70),
-          width: dpx(140),
-          height: dpx(140),
+          left: u(lampX - L.glow / 2),
+          top: u(bulbY - L.glow / 2),
+          width: u(L.glow),
+          height: u(L.glow),
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(255, 248, 225, 0.55), rgba(255, 240, 200, 0.18) 35%, transparent 70%)',
           ...lampOnSx,
@@ -156,27 +224,27 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         aria-hidden
         sx={{
           position: 'absolute',
-          left: dpx(lampX - 7),
-          top: dpx(BULB_Y - 7),
-          width: dpx(14),
-          height: dpx(14),
+          left: u(lampX - L.bulb / 2),
+          top: u(bulbY - L.bulb / 2),
+          width: u(L.bulb),
+          height: u(L.bulb),
           borderRadius: '50%',
           bgcolor: '#ffffff',
-          boxShadow: `0 0 ${dpx(14)} ${dpx(6)} rgba(255, 248, 225, 0.9)`,
+          boxShadow: `0 0 ${u(14)} ${u(6)} rgba(255, 248, 225, 0.9)`,
           ...lampOnSx,
         }}
       />
       {/* 전선 위의 점 + AI Persona 표시 — 불이 켜진 뒤 점이 하나씩 톡 나타난다 */}
-      {[116, 151].map((y, i) => (
+      {L.dots.map((y, i) => (
         <Box
           key={y}
           aria-hidden
           sx={{
             position: 'absolute',
-            left: dpx(lampX - 3),
-            top: dpx(y - 3),
-            width: dpx(7),
-            height: dpx(7),
+            left: u(lampX - 3),
+            top: u(y - 3),
+            width: u(7),
+            height: u(7),
             borderRadius: '50%',
             bgcolor: '#ffffff',
             ...enterSx('popIn', TIMING.persona + i * 0.12, 0.5),
@@ -188,11 +256,11 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         sx={{
           ...aboutTextSx,
           position: 'absolute',
-          left: dpx(lampX + 10),
-          top: dpx(151),
+          left: u(lampX + 10),
+          top: u(L.dots[1]),
           transform: 'translateY(-50%)',
           fontWeight: 400,
-          fontSize: dpx(11),
+          fontSize: u(11),
           ...enterSx('riseIn', TIMING.persona + 0.25, 0.7),
         }}
       >
@@ -206,18 +274,20 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
       {book ? (
         // zIndex: 확대된 그림이 master에서 오는 선보다 위에 오게 한다
         <ArchiveBook
-          book={book}
+          book={isMobile ? mobileBook : book}
+          unit={isMobile ? bookUnit : dpx}
+          navUnit={isMobile ? bookNavUnit : dpx}
           sx={{ zIndex: 1, transformOrigin: 'top center', ...enterSx('sheetIn', TIMING.sheet, 1.2) }}
         />
       ) : (
       <Box
         sx={{
           position: 'absolute',
-          left: dpx(sheetBox.left),
-          top: dpx(SHEET.top),
-          width: dpx(sheetBox.width),
+          left: u(sheetBox.left),
+          top: u(sheetBox.top),
+          width: u(sheetBox.width),
           aspectRatio: sheetBox.aspect,
-          boxShadow: `0 ${dpx(22)} ${dpx(50)} rgba(0, 0, 0, 0.55)`,
+          boxShadow: `0 ${u(22)} ${u(50)} rgba(0, 0, 0, 0.55)`,
           transformOrigin: 'top center',
           ...enterSx('sheetIn', TIMING.sheet, 1.2),
         }}
@@ -242,7 +312,7 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
               bgcolor: '#bdbdbd',
             }}
           >
-            <Typography sx={{ ...aboutTextSx, color: '#3a3a3a', fontSize: dpx(20) }}>SHEET IMAGE</Typography>
+            <Typography sx={{ ...aboutTextSx, color: '#3a3a3a', fontSize: u(20) }}>SHEET IMAGE</Typography>
           </Box>
         )}
       </Box>
@@ -292,20 +362,29 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
       </Box>
       )}
 
-      {/* 왼쪽 위 — 프로젝트 제목과 소개 (왼쪽 글은 위에서부터 한 줄씩 떠오른다) */}
-      <Box sx={{ position: 'absolute', left: dpx(25), top: dpx(titleTop), width: dpx(Math.max(columnWidth, 380)) }}>
+      {/* 왼쪽 글 묶음 — 데스크톱에선 위치를 잡지 않는 껍데기라 안의 요소가 무대 기준으로 놓이고,
+          모바일에선 매달린 그림 아래부터 위에서 아래로 쌓인다 */}
+      <Box
+        sx={
+          isMobile
+            ? { position: 'relative', px: mpx(MOBILE_GUTTER), pt: mpx(mobileContentTop), pb: mpx(MOBILE_BOTTOM_SPACE) }
+            : {}
+        }
+      >
+      {/* 프로젝트 제목과 소개 (왼쪽 글은 위에서부터 한 줄씩 떠오른다) */}
+      <Box sx={placeSx(isMobile, { left: dpx(25), top: dpx(titleTop), width: dpx(Math.max(columnWidth, 380)) })}>
         <Typography
           component="h1"
           sx={{
             ...aboutTextSx,
-            fontSize: dpx(23),
+            fontSize: u(isMobile ? 22 : 23),
             letterSpacing: '-0.01em',
-            whiteSpace: 'pre',
+            whiteSpace: isMobile ? 'pre-wrap' : 'pre',
             // titleDisplay: 제목을 화면에서 가장 큰 글씨(Anton)로 — 페이지의 주인공이 먼저 보이게
             ...(data.titleDisplay && {
               fontFamily: '"Anton", sans-serif',
               fontWeight: 400,
-              fontSize: dpx(52),
+              fontSize: u(52),
               lineHeight: 1.02,
               letterSpacing: '0.005em',
             }),
@@ -317,14 +396,20 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         <Typography
           sx={{
             ...aboutKoreanSx,
-            mt: dpx(14),
+            mt: u(14),
             color: '#ffffff',
             fontWeight: 600,
-            fontSize: dpx(12),
-            lineHeight: 1.4,
+            fontSize: u(isMobile ? 14 : 12),
+            lineHeight: isMobile ? 1.6 : 1.4,
             wordBreak: 'keep-all',
             // textWrap: balance — 마지막 줄에 한 단어만 떨어지지 않게 줄 길이를 고르게 나눈다
-            ...(data.titleDisplay && { mt: dpx(16), width: dpx(columnWidth), fontWeight: 400, lineHeight: 1.6, textWrap: 'balance' }),
+            ...(data.titleDisplay && {
+              mt: u(16),
+              width: isMobile ? 'auto' : dpx(columnWidth),
+              fontWeight: 400,
+              lineHeight: 1.6,
+              textWrap: 'balance',
+            }),
             ...enterSx('riseIn', TIMING.text + 0.1),
           }}
         >
@@ -333,40 +418,36 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
       </Box>
 
       {/* ROLE / TOOL / PERIOD */}
-      {rows.map((row, i) => (
-        <Box
-          key={row.label}
-          sx={{
-            position: 'absolute',
-            left: dpx(25),
-            top: dpx(rowCenters[i]),
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            ...enterSx('riseIn', TIMING.text + 0.3 + i * 0.1),
-          }}
-        >
-          <Typography sx={{ ...aboutTextSx, width: dpx(103), fontSize: dpx(17) }}>{row.label}</Typography>
-          <Box>
-            {row.lines.map((line) => (
-              <Typography
-                key={line}
-                sx={{ ...aboutTextSx, fontSize: dpx(13.5), lineHeight: 1.4, whiteSpace: 'pre' }}
-              >
-                {line}
-              </Typography>
-            ))}
+      <Box sx={isMobile ? { mt: mpx(28), display: 'flex', flexDirection: 'column', gap: mpx(14) } : {}}>
+        {rows.map((row, i) => (
+          <Box
+            key={row.label}
+            sx={{
+              ...placeSx(isMobile, { left: dpx(25), top: dpx(rowCenters[i]), transform: 'translateY(-50%)' }),
+              display: 'flex',
+              alignItems: 'center',
+              ...enterSx('riseIn', TIMING.text + 0.3 + i * 0.1),
+            }}
+          >
+            <Typography sx={{ ...aboutTextSx, flexShrink: 0, width: u(isMobile ? 96 : 103), fontSize: u(17) }}>{row.label}</Typography>
+            <Box>
+              {row.lines.map((line) => (
+                <Typography
+                  key={line}
+                  sx={{ ...aboutTextSx, fontSize: u(isMobile ? 15 : 13.5), lineHeight: 1.4, whiteSpace: isMobile ? 'pre-wrap' : 'pre' }}
+                >
+                  {line}
+                </Typography>
+              ))}
+            </Box>
           </Box>
-        </Box>
-      ))}
+        ))}
+      </Box>
 
       <Box
         aria-hidden
         sx={{
-          position: 'absolute',
-          left: dpx(25),
-          top: dpx(dividerY),
-          width: dpx(columnWidth),
+          ...placeSx(isMobile, { left: dpx(25), top: dpx(dividerY), width: dpx(columnWidth) }, { mt: mpx(28) }),
           height: '1px',
           bgcolor: 'rgba(255, 255, 255, 0.3)',
           transformOrigin: 'left',
@@ -378,27 +459,24 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
       {character && (
         <Box
           sx={{
-            position: 'absolute',
-            left: dpx(25),
-            top: dpx(dividerY + 24),
-            width: dpx(columnWidth),
+            ...placeSx(isMobile, { left: dpx(25), top: dpx(dividerY + 24), width: dpx(columnWidth) }, { mt: mpx(24) }),
             ...enterSx('riseIn', TIMING.text + 0.8),
           }}
         >
-          <Typography sx={{ ...aboutTextSx, fontSize: dpx(12), letterSpacing: '0.08em', color: '#a3a3a3' }}>
+          <Typography sx={{ ...aboutTextSx, fontSize: u(12), letterSpacing: '0.08em', color: '#a3a3a3' }}>
             {character.label}
           </Typography>
-          <Box sx={{ mt: dpx(8), display: 'flex', alignItems: 'baseline', gap: dpx(8) }}>
-            <Typography component="h2" sx={{ ...aboutTextSx, fontFamily: '"Anton", sans-serif', fontWeight: 400, fontSize: dpx(30) }}>
+          <Box sx={{ mt: u(8), display: 'flex', alignItems: 'baseline', gap: u(8) }}>
+            <Typography component="h2" sx={{ ...aboutTextSx, fontFamily: '"Anton", sans-serif', fontWeight: 400, fontSize: u(30) }}>
               {character.name}
             </Typography>
-            <Typography sx={{ ...aboutKoreanSx, color: '#ffffff', fontSize: dpx(12) }}>{character.nameKo}</Typography>
+            <Typography sx={{ ...aboutKoreanSx, color: '#ffffff', fontSize: u(12) }}>{character.nameKo}</Typography>
           </Box>
-          <Box sx={{ mt: dpx(8) }}>
+          <Box sx={{ mt: u(8) }}>
             {character.description.map((line) => (
               <Typography
                 key={line}
-                sx={{ ...aboutKoreanSx, color: '#ffffff', fontSize: dpx(12), lineHeight: 1.6, wordBreak: 'keep-all', textWrap: 'balance' }}
+                sx={{ ...aboutKoreanSx, color: '#ffffff', fontSize: u(isMobile ? 14 : 12), lineHeight: 1.6, wordBreak: 'keep-all', textWrap: 'balance' }}
               >
                 {line}
               </Typography>
@@ -407,35 +485,37 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         </Box>
       )}
 
-      {/* 왼쪽 아래 — master 이름표 + 이미지 + 설명 (master가 있는 화면만) */}
+      {/* 왼쪽 아래 — master 이름표 + 이미지 + 설명 (master가 있는 화면만) — 모바일은 화면 너비에 꽉 차게 */}
       {master && (
       <>
       <Box
         sx={{
-          position: 'absolute',
-          left: dpx(25),
-          top: dpx(masterTop - MASTER_LABEL_OFFSET),
-          width: dpx(MASTER.left + masterWidth - 25),
-          transform: 'translateY(-50%)',
+          ...placeSx(
+            isMobile,
+            {
+              left: dpx(25),
+              top: dpx(masterTop - MASTER_LABEL_OFFSET),
+              width: dpx(MASTER.left + masterWidth - 25),
+              transform: 'translateY(-50%)',
+            },
+            { mt: mpx(36) },
+          ),
           display: 'flex',
           alignItems: 'center',
-          gap: dpx(8),
+          gap: u(8),
           ...enterSx('riseIn', TIMING.master),
         }}
       >
-        <Typography sx={{ ...aboutTextSx, fontWeight: 400, fontSize: dpx(11), whiteSpace: 'nowrap' }}>
+        <Typography sx={{ ...aboutTextSx, fontWeight: 400, fontSize: u(isMobile ? 13 : 11), whiteSpace: 'nowrap' }}>
           {master.label}
         </Typography>
         <Box aria-hidden sx={{ flex: 1, height: '1px', bgcolor: 'rgba(255, 255, 255, 0.5)' }} />
       </Box>
       <Box
         sx={{
-          position: 'absolute',
-          left: dpx(MASTER.left),
-          top: dpx(masterTop),
-          width: dpx(masterWidth),
+          ...placeSx(isMobile, { left: dpx(MASTER.left), top: dpx(masterTop), width: dpx(masterWidth) }, { mt: mpx(14) }),
           display: 'flex',
-          gap: dpx(MASTER_GAP),
+          gap: u(MASTER_GAP),
           ...enterSx('riseIn', TIMING.master + 0.1),
         }}
       >
@@ -458,16 +538,17 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
       {master.captions && (
       <Box
         sx={{
-          position: 'absolute',
-          left: dpx(MASTER.left),
-          top: dpx(masterBottom + MASTER_CAPTION_GAP),
-          width: dpx(masterWidth),
+          ...placeSx(
+            isMobile,
+            { left: dpx(MASTER.left), top: dpx(masterBottom + MASTER_CAPTION_GAP), width: dpx(masterWidth) },
+            { mt: mpx(MASTER_CAPTION_GAP) },
+          ),
           textAlign: 'right',
           ...enterSx('riseIn', TIMING.master + 0.2),
         }}
       >
         {master.captions.map((caption) => (
-          <Typography key={caption} sx={{ ...aboutTextSx, fontWeight: 400, fontSize: dpx(11), lineHeight: 1.45 }}>
+          <Typography key={caption} sx={{ ...aboutTextSx, fontWeight: 400, fontSize: u(isMobile ? 13 : 11), lineHeight: 1.45 }}>
             {caption}
           </Typography>
         ))}
@@ -475,6 +556,7 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
       )}
       </>
       )}
+      </Box>
 
       {/* 오른쪽 01~04 표시와 Scroll 안내 — 모든 등장이 끝날 즈음 나타난다
           감싼 상자는 클릭을 막지 않고, 안의 링크만 눌린다 */}

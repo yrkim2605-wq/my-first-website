@@ -19,6 +19,8 @@ const SectionNav = ({ activeIndex, sections = ABOUT_SECTIONS, label = '자기소
         component="nav"
         aria-label={label}
         sx={{
+          // 모바일은 섹션이 그냥 이어지며 스크롤되므로 진행 표시·Scroll 안내를 숨긴다
+          display: { xs: 'none', md: 'block' },
           position: 'absolute',
           left: dpx(1389),
           top: dpx(185),
@@ -84,6 +86,7 @@ const SectionNav = ({ activeIndex, sections = ABOUT_SECTIONS, label = '자기소
           href={`#${next.id}`}
           aria-label={`${next.label} 섹션으로 이동`}
           sx={{
+            display: { xs: 'none', md: 'flex' },
             position: 'absolute',
             left: dpx(1386),
             top: dpx(699),
