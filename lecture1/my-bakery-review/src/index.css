@@ -176,3 +176,16 @@ body::before {
     animation: none;
   }
 }
+
+/* 움직임 줄이기 설정을 켠 사람에게는 화면 전환 · 호버 애니메이션도 거의 즉시 끝나게 해요.
+   (부드러운 스크롤 Lenis는 따로 꺼요. 자동 슬라이드 · 흐르는 카드는 각 컴포넌트에서 멈춰요.) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

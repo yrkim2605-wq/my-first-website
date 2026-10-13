@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 import { RADIUS } from '../../theme'
 
@@ -11,9 +12,29 @@ const SIZES = {
 
 const XpTrack = ({ percent, size = 'md', sx, ...rest }) => {
   const { height, pad, border, shine } = SIZES[size]
+  const trackRef = useRef(null)
+  // 화면에 보이기 시작하면 0%에서 목표 값까지 차올라요 (움직임 줄이기 설정이면 전역 CSS가 바로 끝내요)
+  const [filled, setFilled] = useState(false)
+
+  useEffect(() => {
+    const node = trackRef.current
+    if (!node) return undefined
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setFilled(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.3 },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <Box
+      ref={trackRef}
       {...rest}
       sx={{
         height,
@@ -30,8 +51,9 @@ const XpTrack = ({ percent, size = 'md', sx, ...rest }) => {
       <Box
         sx={{
           position: 'relative',
-          width: `${percent}%`,
-          minWidth: percent > 0 ? height * 0.5 : 0,
+          width: filled ? `${percent}%` : '0%',
+          minWidth: filled && percent > 0 ? height * 0.5 : 0,
+          transition: 'width 0.9s cubic-bezier(0.22, 1, 0.36, 1), min-width 0.9s ease',
           height: '100%',
           borderRadius: RADIUS.pill,
           background: (theme) =>

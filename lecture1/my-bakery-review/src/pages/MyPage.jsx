@@ -93,8 +93,9 @@ const MyPage = () => {
     <Container maxWidth="md">
       <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 4, sm: 6 } }}>
         <SectionHeading
-          eyebrow="MY PAGE"
-          title="마이 인벤토리"
+          variant="sign"
+          eyebrow="MY ADVENTURER"
+          title="내 모험가 상태창"
           description="내 레벨과 배지, 다녀온 빵집을 모아봤어요."
           sx={{ mb: { xs: 4, sm: 5 } }}
         />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
+import useMediaQuery from '@mui/material/useMediaQuery'
 import Typography from '@mui/material/Typography'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
@@ -19,15 +20,18 @@ const NAV_BUTTON_SX = GAME_ICON_BUTTON_SX
 const PopularBakeryCarousel = ({ bakeries, highlightedId }) => {
   const [index, setIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
+  // 움직임 줄이기 설정이면 자동으로 넘기지 않고, 화살표로만 넘겨요
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+  const autoPlayStopped = isPaused || prefersReducedMotion
   const total = bakeries.length
 
   useEffect(() => {
-    if (isPaused || total <= 1) return undefined
+    if (autoPlayStopped || total <= 1) return undefined
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % total)
     }, SLIDE_INTERVAL)
     return () => clearInterval(timer)
-  }, [isPaused, total])
+  }, [autoPlayStopped, total])
 
   if (total === 0) return null
 
@@ -82,11 +86,12 @@ const PopularBakeryCarousel = ({ bakeries, highlightedId }) => {
         </Typography>
         <IconButton
           onClick={() => setIsPaused((prev) => !prev)}
-          aria-label={isPaused ? '자동 재생' : '일시 정지'}
+          aria-label={autoPlayStopped ? '자동 재생' : '일시 정지'}
+          disabled={prefersReducedMotion}
           size="small"
           sx={{ ...NAV_BUTTON_SX, width: 36, height: 36 }}
         >
-          {isPaused ? <PlayArrowIcon sx={{ fontSize: '1rem' }} /> : <PauseIcon sx={{ fontSize: '1rem' }} />}
+          {autoPlayStopped ? <PlayArrowIcon sx={{ fontSize: '1rem' }} /> : <PauseIcon sx={{ fontSize: '1rem' }} />}
         </IconButton>
       </Box>
     </Box>

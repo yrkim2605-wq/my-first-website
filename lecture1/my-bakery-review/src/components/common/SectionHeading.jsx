@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import WavyDivider from './decor/WavyDivider'
+import Reveal from './Reveal'
 
 // 홈 섹션 제목: 작은 영문 라벨 → 세리프 제목 → 물결 선 → 한 줄 설명 (가운데 정렬)
 // tone="onColor"는 색 블록 위에 올릴 때 써요.
@@ -24,6 +25,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
   )
 
   return (
+    <Reveal distance={14}>
     <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', ...sx }}>
       {eyebrow && (
         <Typography
@@ -61,6 +63,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
         </Typography>
       )}
     </Box>
+    </Reveal>
   )
 }
 

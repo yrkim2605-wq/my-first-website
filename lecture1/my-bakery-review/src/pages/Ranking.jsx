@@ -104,8 +104,9 @@ const Ranking = () => {
     <Container maxWidth="md">
       <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 4, sm: 6 } }}>
         <SectionHeading
-          eyebrow="RANKING"
-          title="이번 달 빵덕후 랭킹"
+          variant="sign"
+          eyebrow="HALL OF FAME"
+          title="이번 달 명예의 전당"
           description="리뷰와 방문으로 쌓은 이번 달 순위예요."
           sx={{ mb: { xs: 3, sm: 4 } }}
         />

@@ -3,15 +3,16 @@ import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { NavLink } from 'react-router-dom'
 import ScallopEdge from '../common/decor/ScallopEdge'
-import FlatFlower from '../common/decor/FlatFlower'
+import Sparkle from '../common/decor/Sparkle'
+import HandNote from '../common/decor/HandNote'
 import Illustration from '../common/decor/Illustration'
 import logo from '../../assets/logo.webp'
 
 const FOOTER_LINKS = [
   { to: '/', label: '홈' },
   { to: '/community', label: '커뮤니티' },
-  { to: '/ranking', label: '랭킹' },
-  { to: '/mypage', label: '마이페이지' },
+  { to: '/ranking', label: '명예의 전당' },
+  { to: '/mypage', label: '내 모험가' },
 ]
 
 const Footer = () => {
@@ -32,14 +33,21 @@ const Footer = () => {
           px: 3,
         }}
       >
-        <FlatFlower petal={palette.mustard.main} center={palette.primary.main} size={48} sx={{ position: 'absolute', top: 24, left: { xs: 16, md: '12%' } }} />
-        <FlatFlower petal={palette.background.paper} center={palette.terracotta.main} size={34} sx={{ position: 'absolute', bottom: 28, right: { xs: 20, md: '14%' }, opacity: 0.9 }} />
+        {/* 모험 종료 화면: 잠든 빵 기사 + 별. 장식은 가운데 정렬된 글자와 겹치지 않는 가장자리에만 둬요. */}
+        <Sparkle size={22} twinkle sx={{ position: 'absolute', top: 28, left: { xs: 18, md: '16%' } }} />
+        <Sparkle size={14} twinkle delay={1} sx={{ position: 'absolute', top: 64, left: { xs: 48, md: 'calc(16% + 34px)' } }} />
+        <Sparkle size={18} twinkle delay={1.8} sx={{ position: 'absolute', top: 40, right: { xs: 22, md: '15%' } }} />
         {/* 왼쪽 아래 구석의 식빵: 가운데 정렬된 메뉴 · 저작권 문구와 겹치지 않는 자리예요 */}
         <Illustration
           name="loaf"
           width={{ xs: 48, md: 84 }}
           sx={{ position: 'absolute', bottom: { xs: 12, md: 22 }, left: { xs: 12, md: '9%' }, transform: 'rotate(-8deg)' }}
         />
+
+        <Illustration name="knightSleep" width={{ xs: 120, md: 150 }} sx={{ mx: 'auto' }} />
+        <HandNote color="gold.light" rotate={0} sx={{ mb: 2, fontSize: { xs: '1.25rem', md: '1.45rem' } }}>
+          오늘의 모험은 여기까지! 내일 또 빵집 탐험을 떠나요
+        </HandNote>
 
         <Box component="img" src={logo} alt="빵덕후 레벨업" sx={{ height: { xs: 84, md: 104 }, width: 'auto', display: 'block', mx: 'auto', mb: 1 }} />
         <Typography sx={{ fontSize: '0.9rem', opacity: 0.85, mb: 3 }}>

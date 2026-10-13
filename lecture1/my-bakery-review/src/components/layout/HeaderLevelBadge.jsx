@@ -50,6 +50,7 @@ const HeaderLevelBadge = () => {
   const [open, setOpen] = useState(false)
   const progress = getLevelProgress(MOCK_USER.visitedBakeryIds.length, MOCK_USER.totalHearts)
   const { currentLevel, nextLevel } = progress
+  const levelNumber = LEVELS.findIndex((level) => level.id === currentLevel.id) + 1
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current) {
@@ -139,6 +140,9 @@ const HeaderLevelBadge = () => {
           <Medal level={currentLevel} size={32} />
         </Box>
         <Typography component="span" sx={{ fontSize: '0.8rem', fontWeight: 700, display: { xs: 'none', sm: 'inline' } }}>
+          <Box component="span" sx={{ color: 'gold.light', fontWeight: 800, mr: 0.6 }}>
+            Lv.{levelNumber}
+          </Box>
           {currentLevel.name}
         </Typography>
         <XpTrack aria-hidden="true" size="sm" percent={progress.percent} sx={{ display: { xs: 'none', md: 'block' }, width: 56 }} />

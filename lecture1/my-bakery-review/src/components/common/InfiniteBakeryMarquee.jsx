@@ -18,6 +18,7 @@ const InfiniteBakeryMarquee = ({ bakeries }) => {
         width: '100%',
         maskImage: EDGE_MASK,
         WebkitMaskImage: EDGE_MASK,
+        '@media (prefers-reduced-motion: reduce)': { overflowX: 'auto', maskImage: 'none', WebkitMaskImage: 'none' },
       }}
     >
       <Box
@@ -26,6 +27,7 @@ const InfiniteBakeryMarquee = ({ bakeries }) => {
           width: 'max-content',
           gap: 2.5,
           animation: `bakeryMarquee ${durationSeconds}s linear infinite`,
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none', px: 2 },
           '@keyframes bakeryMarquee': {
             '0%': { transform: 'translateX(0)' },
             '100%': { transform: 'translateX(-50%)' },
@@ -33,7 +35,15 @@ const InfiniteBakeryMarquee = ({ bakeries }) => {
         }}
       >
         {loopItems.map((bakery, i) => (
-          <Box key={`${bakery.id}-${i}`} sx={{ flex: `0 0 ${CARD_WIDTH}px`, width: CARD_WIDTH }}>
+          <Box
+            key={`${bakery.id}-${i}`}
+            aria-hidden={i >= bakeries.length ? true : undefined}
+            sx={{
+              flex: `0 0 ${CARD_WIDTH}px`,
+              width: CARD_WIDTH,
+              '@media (prefers-reduced-motion: reduce)': i >= bakeries.length ? { display: 'none' } : {},
+            }}
+          >
             <BakeryStageCard {...bakery} variant="default" discovery />
           </Box>
         ))}

@@ -3,6 +3,7 @@ import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
 import { Link } from 'react-router-dom'
 import SectionHeading from '../common/SectionHeading'
+import Reveal from '../common/Reveal'
 import XpProgressBar from '../common/XpProgressBar'
 import WoodButton from '../common/WoodButton'
 import Illustration from '../common/decor/Illustration'
@@ -29,6 +30,7 @@ const LevelUpTeaser = () => {
 
   return (
     <Container maxWidth="lg" component="section" aria-labelledby="level-up-title" sx={{ pt: { xs: 6, md: 8 } }}>
+      <Reveal>
       <Box
         sx={{
           position: 'relative',
@@ -221,6 +223,7 @@ const LevelUpTeaser = () => {
           </WoodButton>
         </Box>
       </Box>
+      </Reveal>
     </Container>
   )
 }

@@ -3,10 +3,10 @@ import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
 import { NavLink } from 'react-router-dom'
 import logo from '../../assets/logo.webp'
 import HeaderLevelBadge from './HeaderLevelBadge'
+import WoodButton from '../common/WoodButton'
 import { COMMUNITY_CATEGORIES } from '../../constants/categories'
 import { RANKING_TABS } from '../../constants/ranking'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
@@ -25,11 +25,11 @@ const NAV_ENTRIES = [
       })),
     ],
   },
-  { key: 'mypage', to: '/mypage', label: '마이페이지' },
+  { key: 'mypage', to: '/mypage', label: '내 모험가' },
   {
     key: 'ranking',
     to: '/ranking',
-    label: '랭킹',
+    label: '명예의 전당',
     items: RANKING_TABS.map((tab, index) => ({
       label: tab.label,
       to: `/ranking?tab=${index}`,
@@ -225,16 +225,9 @@ const Header = () => {
 
         <Box sx={{ ml: { xs: 'auto', md: 0 }, display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <HeaderLevelBadge />
-          <Button
-            component={NavLink}
-            to="/login"
-            variant="contained"
-            color="secondary"
-            size="small"
-            sx={{ borderRadius: RADIUS.pill, px: 2, py: 0.75, fontWeight: 700, boxShadow: 'none' }}
-          >
+          <WoodButton component={NavLink} to="/login" size="sm" showStar={false}>
             로그인
-          </Button>
+          </WoodButton>
         </Box>
       </Toolbar>
     </AppBar>

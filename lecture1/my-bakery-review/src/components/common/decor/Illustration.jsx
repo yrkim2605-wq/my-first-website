@@ -25,7 +25,8 @@ const ILLUSTRATIONS = {
 
 // 꾸밈용 그림: 클릭을 막지 않고(pointer-events: none), 화면 읽기 프로그램은 건너뛰어요.
 // width만 정하면 높이는 원본 비율대로 따라가요.
-const Illustration = ({ name, width, className, sx }) => (
+// eager: 첫 화면처럼 바로 보여야 하는 그림은 true로 (기본은 화면에 가까워질 때 불러와요)
+const Illustration = ({ name, width, className, eager = false, sx }) => (
   <Box
     component="img"
     src={ILLUSTRATIONS[name]}
@@ -33,7 +34,7 @@ const Illustration = ({ name, width, className, sx }) => (
     aria-hidden="true"
     className={className}
     draggable={false}
-    loading="lazy"
+    loading={eager ? 'eager' : 'lazy'}
     sx={{ width, height: 'auto', display: 'block', pointerEvents: 'none', userSelect: 'none', ...sx }}
   />
 )

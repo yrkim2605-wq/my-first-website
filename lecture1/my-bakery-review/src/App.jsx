@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { ReactLenis } from 'lenis/react'
+import useMediaQuery from '@mui/material/useMediaQuery'
 import Layout from './components/layout/Layout'
 import Home from './pages/Home'
 
@@ -17,11 +18,14 @@ import { VisitedBakeriesProvider } from './context/VisitedBakeriesContext'
 import { RealBakeryPhotosProvider } from './context/RealBakeryPhotosContext'
 
 function App() {
+  // 움직임 줄이기 설정이면 부드러운 스크롤(Lenis)을 쓰지 않고 브라우저 기본 스크롤을 써요
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+
   return (
     <BusanBakeriesProvider>
       <VisitedBakeriesProvider>
         <RealBakeryPhotosProvider>
-          <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: true }}>
+          <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: !prefersReducedMotion }}>
             <HashRouter>
               <Routes>
                 <Route element={<Layout />}>

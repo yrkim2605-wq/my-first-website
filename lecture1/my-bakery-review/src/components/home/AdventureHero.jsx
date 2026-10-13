@@ -59,6 +59,7 @@ const AdventureHero = () => {
               name="knightHero"
               width={{ xs: 190, sm: 250, md: 380 }}
               className="float-soft"
+              eager
               sx={{ position: 'relative' }}
             />
             <Sparkle size={30} twinkle sx={{ position: 'absolute', top: '4%', left: '-6%' }} />

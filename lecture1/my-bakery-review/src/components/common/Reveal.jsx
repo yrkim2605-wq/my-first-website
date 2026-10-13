@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
 const Reveal = ({ children, delay = 0, distance = 20, sx }) => {
   const ref = useRef(null)
-  const [visible, setVisible] = useState(false)
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+  const [seen, setSeen] = useState(false)
+  // 움직임 줄이기 설정이면 등장 효과 없이 바로 보여요
+  const visible = seen || prefersReducedMotion
 
   useEffect(() => {
     const node = ref.current
@@ -12,7 +16,7 @@ const Reveal = ({ children, delay = 0, distance = 20, sx }) => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true)
+          setSeen(true)
           observer.disconnect()
         }
       },
