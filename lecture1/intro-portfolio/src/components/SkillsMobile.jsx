@@ -3,6 +3,8 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import useInView from '../hooks/useInView';
 import { INK, POINT_LIME } from '../constants/colors';
+import Reveal from './Reveal';
+import WaveText from './WaveText';
 
 // 세 번째 섹션의 모바일 화면 — 데스크톱 방사형 다이어그램 대신
 // 큰 제목 + 번호 붙은 툴 목록 + "WHO AM I ?" 버튼(자기소개 페이지로 이동)을 위에서 아래로 보여 준다.
@@ -52,10 +54,12 @@ const SkillsMobile = ({ skills, aboutUrl, onAboutClick, caption, countCaption, c
   return (
     <Box sx={{ display: { xs: 'block', md: 'none' } }}>
       {/* 위 캡션 — 데스크톱 아래 모서리 캡션과 같은 글 */}
-      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Typography sx={captionSx}>{caption}</Typography>
-        {countCaption}
-      </Stack>
+      <Reveal>
+        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <Typography sx={captionSx}>{caption}</Typography>
+          {countCaption}
+        </Stack>
+      </Reveal>
 
       <Typography
         component="h2"
@@ -69,9 +73,9 @@ const SkillsMobile = ({ skills, aboutUrl, onAboutClick, caption, countCaption, c
           color: INK,
         }}
       >
-        SKILLS
+        <WaveText text="SKILLS" charDelay={40} />
         <br />
-        &amp; TOOLS
+        <WaveText text="& TOOLS" charDelay={40} startDelay={240} />
       </Typography>
 
       {/* 툴 목록 — 번호 / 툴 이름·세부 스킬 / 자격증 배지 */}
@@ -81,6 +85,25 @@ const SkillsMobile = ({ skills, aboutUrl, onAboutClick, caption, countCaption, c
             key={skill.title}
             component="li"
             sx={{
+              position: 'relative',
+              cursor: 'default',
+              WebkitTapHighlightColor: 'transparent',
+              // 줄을 누르거나 마우스를 올리면 윗선이 왼쪽부터 진하게 그어지고 이름이 살짝 밀려난다
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: 0,
+                top: -1,
+                width: '100%',
+                height: 2,
+                bgcolor: INK,
+                transform: 'scaleX(0)',
+                transformOrigin: 'left',
+                transition: `transform 0.5s ${EASE}`,
+              },
+              '& .skillName': { transition: `transform 0.4s ${EASE}` },
+              '&:hover::before, &:active::before': { transform: 'scaleX(1)' },
+              '&:hover .skillName, &:active .skillName': { transform: 'translateX(6px)' },
               display: 'grid',
               gridTemplateColumns: '32px 1fr auto',
               alignItems: 'baseline',
@@ -91,7 +114,7 @@ const SkillsMobile = ({ skills, aboutUrl, onAboutClick, caption, countCaption, c
             }}
           >
             <Typography sx={{ ...alumniSx, fontSize: 13, color: MUTED }}>{String(index + 1).padStart(2, '0')}</Typography>
-            <Box>
+            <Box className="skillName">
               <Typography component="h3" sx={{ ...alumniSx, fontSize: 28, letterSpacing: '-0.01em', color: INK }}>
                 {skill.title}
               </Typography>
@@ -115,6 +138,7 @@ const SkillsMobile = ({ skills, aboutUrl, onAboutClick, caption, countCaption, c
       </Box>
 
       {/* WHO AM I ? — 데스크톱 가운데 사각형의 모바일 버전. 누르면 자기소개 페이지로 넘어간다 */}
+      <Reveal>
       <Box
         component="a"
         href={aboutUrl}
@@ -144,6 +168,7 @@ const SkillsMobile = ({ skills, aboutUrl, onAboutClick, caption, countCaption, c
           <path d="M0 12 H32 M21 1 L32 12 L21 23" fill="none" stroke="currentColor" strokeWidth="1.4" />
         </Box>
       </Box>
+      </Reveal>
     </Box>
   );
 };

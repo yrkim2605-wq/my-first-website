@@ -8,6 +8,7 @@ import useIsMobile from '../../hooks/useIsMobile';
 import { dpx, mpx } from '../../constants/typography';
 import { aboutKoreanSx, aboutStageProps, aboutTextSx, mobileFlowSx, placeSx, sectionDividerSx } from './aboutMeStyles';
 import rainyPopo from '../../assets/rainy-popo.png';
+import RollingNumber from '../RollingNumber';
 
 // 02 My Story (시안: 자기소개-1.png)
 // 화면에 들어오면 제목이 한 줄씩 올라오고, 타임라인 선이 왼쪽부터 그어지며 점이 차례로 켜진다.
@@ -123,7 +124,7 @@ const AboutStory = () => {
             {TIMELINE.map((item, index) => {
               const delay = 500 + (index / (TIMELINE.length - 1)) * TIMELINE_LINE_MS * 0.7;
               return (
-                <Box key={item.period} component="li" sx={{ position: 'relative', pb: mpx(26) }}>
+                <Box key={item.period} component="li" data-roll-trigger sx={{ position: 'relative', pb: mpx(26) }}>
                   <Box
                     sx={{
                       position: 'absolute',
@@ -144,7 +145,7 @@ const AboutStory = () => {
                         {item.title.join(' ')}
                       </Typography>
                       <Typography sx={{ ...aboutKoreanSx, flexShrink: 0, fontWeight: 600, fontSize: mpx(12), color: '#a3a3a3' }}>
-                        {item.period}
+                        <RollingNumber value={item.period} delay={delay + 150} />
                       </Typography>
                     </Stack>
                     <Typography sx={{ ...aboutKoreanSx, mt: mpx(6), fontWeight: 400, fontSize: mpx(13), color: '#ffffff' }}>
@@ -181,6 +182,7 @@ const AboutStory = () => {
                   <Stack
                     key={item.period}
                     component="li"
+                    data-roll-trigger
                     sx={{
                       position: 'absolute',
                       left: dpx(item.x),
@@ -225,7 +227,7 @@ const AboutStory = () => {
                       <Typography
                         sx={{ ...aboutKoreanSx, mt: dpx(4), fontWeight: 600, fontSize: dpx(13), letterSpacing: 0, color: '#ffffff' }}
                       >
-                        {item.period}
+                        <RollingNumber value={item.period} delay={delay + 150} />
                       </Typography>
                     </Box>
                   </Stack>

@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
 import FitStage from './FitStage';
 import WaveText from './WaveText';
+import Reveal from './Reveal';
 
 const MAIL = 'melon0503@naver.com';
 const TEL = '010.7221.2605';
@@ -71,6 +72,7 @@ const Contact = () => {
           <WaveText text="CONTACT" charDelay={45} />
         </Typography>
 
+        <Reveal delay={350}>
         <Typography
           sx={{
             mt: { xs: 2, md: '1cqw' },
@@ -94,7 +96,9 @@ const Contact = () => {
         >
           새로운 아이디어와 협업의 기회를 기다리고 있습니다.
         </Typography>
+        </Reveal>
 
+        <Reveal delay={550}>
         <Stack
           component="a"
           href={`mailto:${MAIL}`}
@@ -141,6 +145,7 @@ const Contact = () => {
           </Typography>
           <ArrowForwardIosRoundedIcon sx={{ fontSize: { xs: 22, md: '1.5cqw' } }} />
         </Stack>
+        </Reveal>
       </Stack>
 
       {/* 푸터 정보 */}
@@ -155,6 +160,7 @@ const Contact = () => {
           px: { xs: 3, md: 0 },
         }}
       >
+        <Reveal threshold={0.2}>
         <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Stack spacing={{ xs: 1.5, md: '0.55cqw' }}>
             <Typography sx={footerTextSx}>CONTACT ME</Typography>
@@ -185,6 +191,7 @@ const Contact = () => {
         <Typography sx={{ ...footerTextSx, mt: { xs: 4, md: '2.3cqw' } }}>
           © 2026 KIM YURI. ALL RIGHTS RESERVED.
         </Typography>
+        </Reveal>
       </Box>
     </FitStage>
   );

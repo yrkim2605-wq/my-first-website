@@ -56,6 +56,12 @@ const lampOnSx = {
   '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
 };
 
+// 글 묶음이 아래에서 떠오르며 나타난다 (키프레임: index.css의 riseIn)
+const riseSx = (delay) => ({
+  animation: `riseIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s both`,
+  '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+});
+
 const AboutIntro = () => {
   const isMobile = useIsMobile();
   const G = isMobile ? MOBILE : DESKTOP;
@@ -265,7 +271,7 @@ const AboutIntro = () => {
       </Box>
 
       {/* 섹션 번호 */}
-      <Box sx={{ position: 'absolute', left: u(number.left), top: u(number.top) }}>
+      <Box sx={{ position: 'absolute', left: u(number.left), top: u(number.top), ...riseSx(0.3) }}>
         <Typography sx={{ ...aboutTextSx, fontWeight: 400, fontSize: u(number.size), letterSpacing: '-0.02em' }}>01</Typography>
         <Typography sx={{ ...aboutTextSx, mt: u(number.gap), fontSize: u(number.sub), letterSpacing: '-0.01em' }}>
           About Me
@@ -273,7 +279,7 @@ const AboutIntro = () => {
       </Box>
 
       {/* 소개 글 — 데스크톱은 왼쪽, 모바일은 그림 아래 */}
-      <Box sx={{ position: 'absolute', left: u(name.left), top: u(name.top) }}>
+      <Box sx={{ position: 'absolute', left: u(name.left), top: u(name.top), ...riseSx(0.6) }}>
         <Typography
           component="h1"
           sx={{ ...aboutTextSx, fontSize: u(name.size), letterSpacing: '-0.02em', lineHeight: 0.9 }}

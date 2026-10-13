@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import WhatIDo from './WhatIDo';
 import FitStage from './FitStage';
 import WaveText from './WaveText';
+import Reveal from './Reveal';
 
 // 데스크톱: 섹션을 화면에 고정해 두고, 이만큼(창 높이 %) 더 스크롤하는 동안 WHAT I DO 큐브가 구른다
 const ROLL_VH = 120;
@@ -45,6 +46,7 @@ const About = () => {
           <WaveText text="INTO EXPERIENCE" startDelay={320} />
         </Typography>
 
+        <Reveal delay={650}>
         <Typography
           sx={{
             mt: { xs: '3cqw', md: '1.2cqw' },
@@ -59,6 +61,7 @@ const About = () => {
           <br />
           AND TURN THEM INTO EXPERIENCES PEOPLE CAN SEE AND USE.
         </Typography>
+        </Reveal>
 
         {/* WHAT I DO ? — 스크롤하면 앞으로 굴러 답이 적힌 면이 올라오는 큐브 */}
         <WhatIDo sectionRef={sectionRef} />

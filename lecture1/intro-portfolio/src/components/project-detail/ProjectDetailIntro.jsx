@@ -17,7 +17,7 @@ import {
 // 프로젝트 상세 01 화면 (시안: 프로젝트 상세페이지.pdf, 1440 × 784 기준)
 // 천장에 매달린 전등이 대표 이미지(sheet)를 비추고, 왼쪽 아래 작은 이미지(master)에서 sheet로 선이 이어진다.
 // 구성은 모든 프로젝트가 같고, 글·이미지는 project(projectDetails.js)에서 받는다.
-// 모바일(390 기준): 전등과 sheet(또는 책자)를 화면 위쪽 가운데에 걸고, 왼쪽 글 묶음은 그 아래로 차례로 흐른다
+// 모바일(390 기준): 제목·설명을 맨 위에, 그 아래 전등과 sheet(또는 책자)를 가운데 걸고, 나머지 글은 그 아래로 흐른다
 
 const STAGE = { w: 1440, h: 784 };
 const LAMP_X = 732; // 전등·전선의 가운데 x (시안 px) — 프로젝트에서 lampX를 주면 그 값을 쓴다
@@ -137,8 +137,8 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
   const mobileHangBottom = mobileBook
     ? ((mobileBook.top + book.page.w + CAPTION_H + COVER_PAD + BOOK_NAV_GAP) * MOBILE_LAMP.w) / MOBILE_BOOK_WIDTH + BOOK_NAV_H
     : sheetBox.top + sheetBox.width / parseAspect(sheetAspect);
-  const mobileContentTop = mobileHangBottom + 40;
-  const floor = isMobile ? mobileContentTop - 16 : STAGE.h; // 빛기둥이 닿는 바닥
+  const mobileSceneHeight = mobileHangBottom + 24; // 모바일: 전등 장면 상자의 높이 (이 아래부터 나머지 글이 흐른다)
+  const floor = isMobile ? mobileSceneHeight - 8 : STAGE.h; // 빛기둥이 닿는 바닥
 
   const lampX = isMobile ? MOBILE_LAMP.lampX : (data.lampX ?? LAMP_X);
   const { bulbY } = L;
@@ -160,8 +160,18 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
   const masterBottom = masterTop + masterImageWidth / parseAspect(masterAspect);
   const linkPoints = makeLinkPoints(MASTER.left + masterWidth, masterTop + MASTER_LINK_OFFSET, sheetBox.left);
 
+  const stageProps = aboutStageProps(isMobile);
+
   return (
-    <FitStage id={id} {...aboutStageProps(isMobile)}>
+    <FitStage
+      id={id}
+      {...stageProps}
+      // 모바일: 세로로 쌓되 order로 순서를 정한다 — 제목·설명(0) → 전등 장면(1) → 나머지 글(2)
+      stageSx={{ ...stageProps.stageSx, ...(isMobile && { display: 'flex', flexDirection: 'column' }) }}
+    >
+      {/* 전등 장면 — 데스크톱에선 위치를 잡지 않는 껍데기라 안의 요소가 무대 기준으로 놓이고,
+          모바일에선 제목 아래에 놓인 상자가 되어 전등·그림이 이 상자 기준으로 걸린다 */}
+      <Box sx={isMobile ? { order: 1, position: 'relative', flexShrink: 0, height: mpx(mobileSceneHeight) } : {}}>
       {/* 불빛 — 전구에서 바닥까지 퍼지는 빛기둥 (자기소개 페이지와 같은 방식) */}
       <Box
         aria-hidden
@@ -361,18 +371,19 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         />
       </Box>
       )}
+      </Box>
 
-      {/* 왼쪽 글 묶음 — 데스크톱에선 위치를 잡지 않는 껍데기라 안의 요소가 무대 기준으로 놓이고,
-          모바일에선 매달린 그림 아래부터 위에서 아래로 쌓인다 */}
-      <Box
-        sx={
-          isMobile
-            ? { position: 'relative', px: mpx(MOBILE_GUTTER), pt: mpx(mobileContentTop), pb: mpx(MOBILE_BOTTOM_SPACE) }
-            : {}
-        }
-      >
+      {/* 왼쪽 글 묶음 — 데스크톱에선 위치를 잡지 않는 껍데기라 안의 요소가 무대 기준으로 놓인다
+          모바일에선 껍데기를 없애(display: contents) 제목과 나머지 글이 각자 순서(order)대로 놓인다 */}
+      <Box sx={isMobile ? { display: 'contents' } : {}}>
       {/* 프로젝트 제목과 소개 (왼쪽 글은 위에서부터 한 줄씩 떠오른다) */}
-      <Box sx={placeSx(isMobile, { left: dpx(25), top: dpx(titleTop), width: dpx(Math.max(columnWidth, 380)) })}>
+      <Box
+        sx={placeSx(
+          isMobile,
+          { left: dpx(25), top: dpx(titleTop), width: dpx(Math.max(columnWidth, 380)) },
+          { order: 0, px: mpx(MOBILE_GUTTER), pt: mpx(84), pb: mpx(12) },
+        )}
+      >
         <Typography
           component="h1"
           sx={{
@@ -417,8 +428,14 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         </Typography>
       </Box>
 
-      {/* ROLE / TOOL / PERIOD */}
-      <Box sx={isMobile ? { mt: mpx(28), display: 'flex', flexDirection: 'column', gap: mpx(14) } : {}}>
+      {/* ROLE / TOOL / PERIOD — 모바일에선 제목 바로 아래(전등 장면 위)에 놓인다 */}
+      <Box
+        sx={
+          isMobile
+            ? { order: 0, display: 'flex', flexDirection: 'column', gap: mpx(14), px: mpx(MOBILE_GUTTER), pt: mpx(16), pb: mpx(12) }
+            : {}
+        }
+      >
         {rows.map((row, i) => (
           <Box
             key={row.label}
@@ -444,10 +461,13 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         ))}
       </Box>
 
+      {/* 나머지 글 — 모바일에선 전등 장면 아래에 놓인다 */}
+      <Box sx={isMobile ? { order: 2, px: mpx(MOBILE_GUTTER), pb: mpx(MOBILE_BOTTOM_SPACE) } : {}}>
+      {/* 정보 줄 아래 구분선 — 모바일에선 사이에 전등 장면이 들어가 나눌 필요가 없어 숨긴다 */}
       <Box
         aria-hidden
         sx={{
-          ...placeSx(isMobile, { left: dpx(25), top: dpx(dividerY), width: dpx(columnWidth) }, { mt: mpx(28) }),
+          ...placeSx(isMobile, { left: dpx(25), top: dpx(dividerY), width: dpx(columnWidth) }, { display: 'none' }),
           height: '1px',
           bgcolor: 'rgba(255, 255, 255, 0.3)',
           transformOrigin: 'left',
@@ -556,6 +576,7 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
       )}
       </>
       )}
+      </Box>
       </Box>
 
       {/* 오른쪽 01~04 표시와 Scroll 안내 — 모든 등장이 끝날 즈음 나타난다

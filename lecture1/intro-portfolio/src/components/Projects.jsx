@@ -6,10 +6,14 @@ import Stack from '@mui/material/Stack';
 import FitStage from './FitStage';
 import WaveText from './WaveText';
 import ClickCursor from './ClickCursor';
+import useInView from '../hooks/useInView';
+import { POINT_LIME } from '../constants/colors';
 import { navigateWithFade } from '../utils/pageTransition';
 import drJartThumb from '../assets/project-drjart.jpg';
 import aiInfluencerThumb from '../assets/project-ai-influencer.jpg';
 import illustrationThumb from '../assets/project-illustration.png';
+import RollingNumber from './RollingNumber';
+import Reveal from './Reveal';
 
 // image: 나중에 이미지 경로를 넣으면 회색 박스 대신 이미지가 보인다
 // link: 썸네일을 눌렀을 때 열릴 주소 (없으면 null)
@@ -342,6 +346,108 @@ const ProjectInfo = ({ project, sizes }) => (
   </Stack>
 );
 
+// ───────── 모바일 목록 ─────────
+const MOBILE_MUTED = 'rgba(255, 255, 255, 0.6)';
+const MOBILE_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+const pad2 = (n) => String(n).padStart(2, '0');
+
+const mobileCaptionSx = {
+  fontFamily: '"Alumni Sans", sans-serif',
+  fontWeight: 600,
+  fontSize: 13,
+  letterSpacing: '0.02em',
+  lineHeight: 1,
+  color: MOBILE_MUTED,
+};
+
+// 화면에 들어오기 전엔 아래로 살짝 내려가 숨어 있다가 delay(ms) 뒤에 올라온다
+const mobileRevealSx = (isInView, delay) => ({
+  opacity: isInView ? 1 : 0,
+  transform: isInView ? 'none' : 'translateY(20px)',
+  transition: `opacity 0.8s ${MOBILE_EASE} ${delay}ms, transform 0.8s ${MOBILE_EASE} ${delay}ms`,
+  '@media (prefers-reduced-motion: reduce)': { opacity: 1, transform: 'none', transition: 'none' },
+});
+
+// 프로젝트 한 개 — 번호 줄 → 썸네일(아래에서 위로 걷히듯 드러남) → 제목·소개 → 열기 버튼
+// 모바일엔 CLICK 커서가 없으므로, 누를 수 있다는 걸 "VIEW PROJECT" 버튼으로 알려 준다
+const MobileProjectItem = ({ project, index }) => {
+  const [ref, isInView] = useInView(0.2);
+  const isExternal = /^https?:\/\//.test(project.link ?? '');
+
+  return (
+    <Box ref={ref} component="article">
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 1.5, ...mobileRevealSx(isInView, 0) }}>
+        <Typography sx={{ ...mobileCaptionSx, color: '#ffffff', fontSize: 15 }}>{pad2(index + 1)}</Typography>
+        <Box
+          aria-hidden
+          sx={{
+            flex: 1,
+            height: '1px',
+            bgcolor: 'rgba(255, 255, 255, 0.3)',
+            transformOrigin: 'left',
+            transform: isInView ? 'scaleX(1)' : 'scaleX(0)',
+            transition: `transform 1s ${MOBILE_EASE} 100ms`,
+            '@media (prefers-reduced-motion: reduce)': { transform: 'none', transition: 'none' },
+          }}
+        />
+        <Typography sx={mobileCaptionSx}>{pad2(PROJECTS.length)}</Typography>
+      </Stack>
+
+      <Box
+        sx={{
+          mt: 2,
+          clipPath: isInView ? 'inset(0 0 0 0)' : 'inset(100% 0 0 0)',
+          transition: `clip-path 1.1s ${MOBILE_EASE} 150ms`,
+          '@media (prefers-reduced-motion: reduce)': { clipPath: 'none', transition: 'none' },
+        }}
+      >
+        <ProjectCard project={project} index={index} link={project.link} />
+      </Box>
+
+      <Box sx={{ mt: 2.5, ...mobileRevealSx(isInView, 350) }}>
+        <ProjectInfo project={project} sizes={{ title: 24, body: 14, bodyWidth: 'none', gap: 1.25 }} />
+      </Box>
+
+      {project.link && (
+        <Box
+          component="a"
+          {...linkProps(project.link)}
+          aria-label={`${project.title.replace(/\s+/g, ' ')} ${isExternal ? '사이트 열기' : '상세 페이지 열기'}`}
+          sx={{
+            mt: 2.5,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 1.25,
+            py: 1,
+            color: '#ffffff',
+            textDecoration: 'none',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.5)',
+            '& .viewArrow': { transition: `transform 0.3s ${MOBILE_EASE}` },
+            '&:active .viewArrow, &:hover .viewArrow': { transform: isExternal ? 'translate(3px, -3px)' : 'translateX(5px)' },
+            ...mobileRevealSx(isInView, 450),
+          }}
+        >
+          <Box aria-hidden sx={{ width: 10, height: 10, bgcolor: POINT_LIME }} />
+          <Typography
+            sx={{ fontFamily: '"Alumni Sans", sans-serif', fontWeight: 600, fontSize: 17, letterSpacing: '0.04em', lineHeight: 1 }}
+          >
+            {isExternal ? 'VISIT SITE' : 'VIEW PROJECT'}
+          </Typography>
+          {/* 외부 사이트는 새 탭으로 열리므로 ↗, 상세 페이지는 → */}
+          <Box component="svg" className="viewArrow" viewBox="0 0 24 24" aria-hidden sx={{ width: 18, height: 18 }}>
+            <path
+              d={isExternal ? 'M5 19 L19 5 M8 5 H19 V16' : 'M2 12 H21 M14 5 L21 12 L14 19'}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+            />
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
 const Projects = () => {
   const sectionRef = useRef(null);
   const progress = useStackProgress(sectionRef);
@@ -426,16 +532,25 @@ const Projects = () => {
       {/* 썸네일 위에서 커서가 CLICK 동그라미로 바뀐다 */}
       <ClickCursor />
 
-      {/* Mobile: 세로 목록 */}
-      <Stack spacing={6} sx={{ display: { xs: 'flex', md: 'none' }, px: 3, py: 8 }}>
-        <Intro size="12vw" />
-        {PROJECTS.map((project, i) => (
-          <Stack key={project.title} spacing={2}>
-            <ProjectCard project={project} index={i} link={project.link} />
-            <ProjectInfo project={project} sizes={{ title: 20, body: 13, bodyWidth: 'none', gap: 1 }} />
+      {/* Mobile: 캡션 + 큰 제목 + 번호 붙은 프로젝트 목록 (세 번째 섹션 모바일과 같은 구성) */}
+      <Box sx={{ display: { xs: 'block', md: 'none' }, px: 2.5, py: 9 }}>
+        <Reveal>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Typography sx={mobileCaptionSx}>(04) SELECTED WORKS</Typography>
+            <Typography data-roll-trigger sx={mobileCaptionSx}>
+              <RollingNumber value={pad2(PROJECTS.length)} delay={200} /> PROJECTS
+            </Typography>
           </Stack>
-        ))}
-      </Stack>
+        </Reveal>
+        <Box sx={{ mt: 2 }}>
+          <Intro size="clamp(48px, 15vw, 80px)" />
+        </Box>
+        <Stack spacing={8} sx={{ mt: 6 }}>
+          {PROJECTS.map((project, i) => (
+            <MobileProjectItem key={project.title} project={project} index={i} />
+          ))}
+        </Stack>
+      </Box>
     </Box>
   );
 };
