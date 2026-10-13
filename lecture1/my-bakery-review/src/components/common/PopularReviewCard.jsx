@@ -2,17 +2,21 @@ import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
 import Rating from '@mui/material/Rating'
 import Box from '@mui/material/Box'
-import Avatar from '@mui/material/Avatar'
 import { Link } from 'react-router-dom'
+import PlaceIcon from '@mui/icons-material/Place'
 import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { HOVER_LIFT_SX } from '../../constants/motion'
+import { PARCHMENT_SX } from '../../constants/rpgStyles'
+import { DISPLAY_FONT, RADIUS } from '../../theme'
 
 const IMAGE_HEIGHT_BY_SIZE = { lg: 220, default: 150, sm: 96 }
 const PADDING_BY_SIZE = { lg: 3, default: 2.5, sm: 1.75 }
 const CLAMP_BY_SIZE = { lg: 3, default: 2, sm: 1 }
-const AUTHOR_FONT_BY_SIZE = { lg: '0.9rem', default: '0.875rem', sm: '0.8rem' }
+const AUTHOR_FONT_BY_SIZE = { lg: '1rem', default: '0.95rem', sm: '0.85rem' }
 
+// 모험 일지 모양 리뷰 카드: 왼쪽에 가죽 제본(고리 구멍) · 줄 노트 종이 · 사진은 테두리를 둘러 붙인 느낌이에요.
+// 작성자는 레벨 메달 + 닉네임 + 레벨 칭호를 크게 보여줘요. (경험치 수치는 실제 데이터가 없어서 보여주지 않아요)
 const PopularReviewCard = ({
   bakeryId,
   bakeryName,
@@ -21,6 +25,7 @@ const PopularReviewCard = ({
   avatarEmoji,
   avatarImage,
   avatarScale,
+  levelName,
   author,
   rating,
   content,
@@ -38,23 +43,53 @@ const PopularReviewCard = ({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        bgcolor: 'background.paper',
+        position: 'relative',
+        pl: '14px', // 왼쪽 제본 띠 자리
         textDecoration: 'none',
         color: 'inherit',
         overflow: 'hidden',
-        border: '1px solid rgba(46,42,37,0.07)',
-        boxShadow: '0 1px 3px rgba(46,42,37,0.05)',
+        ...PARCHMENT_SX,
+        // 노트의 가로 줄
+        backgroundImage: `repeating-linear-gradient(180deg, transparent 0 27px, rgba(201,165,106,0.26) 27px 28px), ${PARCHMENT_SX.backgroundImage}`,
+        borderRadius: RADIUS.lg,
+        // 가죽 제본 띠 + 고리 구멍
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 14,
+          backgroundColor: '#6b4423',
+          backgroundImage: 'radial-gradient(circle at 50% 50%, #f9edcb 3px, rgba(0,0,0,0.35) 3.5px, transparent 4.5px)',
+          backgroundSize: '14px 30px',
+          backgroundPosition: '0 12px',
+          borderRight: '2px solid #3e2713',
+          pointerEvents: 'none',
+        },
         ...HOVER_LIFT_SX,
         '@media (hover: hover)': {
           '&:hover': {
             ...HOVER_LIFT_SX['@media (hover: hover)']['&:hover'],
-            borderColor: 'rgba(123,45,59,0.3)',
+            borderColor: 'gold.main',
           },
           '&:hover .review-photo': { transform: 'scale(1.03)' },
         },
       }}
     >
-      <Box sx={{ position: 'relative', height: IMAGE_HEIGHT_BY_SIZE[size], flexShrink: 0, overflow: 'hidden', transition: 'height 0.35s ease' }}>
+      <Box
+        sx={{
+          position: 'relative',
+          height: IMAGE_HEIGHT_BY_SIZE[size],
+          flexShrink: 0,
+          overflow: 'hidden',
+          m: 1.25,
+          mb: 0,
+          borderRadius: '10px',
+          border: '2px solid #c9a56a',
+          transition: 'height 0.35s ease',
+        }}
+      >
         <Box
           component="img"
           src={photoSrc}
@@ -72,16 +107,53 @@ const PopularReviewCard = ({
       </Box>
 
       <Box sx={{ p: PADDING_BY_SIZE[size], flexGrow: 1, display: 'flex', flexDirection: 'column', transition: 'padding 0.35s ease' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Avatar variant="square" src={avatarImage} sx={{ width: 40, height: 40, fontSize: '1rem', bgcolor: avatarImage ? 'transparent' : 'butter.main', overflow: 'visible', '& img': { objectFit: 'contain', transform: `scale(${avatarScale ?? 1})` } }}>
-              {avatarEmoji}
-            </Avatar>
-            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: AUTHOR_FONT_BY_SIZE[size] }}>
-              {author}
-            </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+            <Box sx={{ width: 46, height: 46, flexShrink: 0, display: 'grid', placeItems: 'center' }}>
+              {avatarImage ? (
+                <Box
+                  component="img"
+                  src={avatarImage}
+                  alt=""
+                  sx={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(${avatarScale ?? 1})` }}
+                />
+              ) : (
+                <Typography sx={{ fontSize: '1.4rem', lineHeight: 1 }}>{avatarEmoji}</Typography>
+              )}
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: AUTHOR_FONT_BY_SIZE[size], lineHeight: 1.25 }} noWrap>
+                {author}
+              </Typography>
+              {levelName && (
+                <Box
+                  component="span"
+                  sx={{
+                    display: 'inline-block',
+                    mt: 0.25,
+                    px: 0.9,
+                    py: 0.1,
+                    borderRadius: RADIUS.pill,
+                    bgcolor: 'wood.main',
+                    color: 'gold.light',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    lineHeight: 1.6,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {levelName}
+                </Box>
+              )}
+            </Box>
           </Box>
-          <Rating value={rating} precision={0.5} readOnly size="small" />
+          <Rating
+            value={rating}
+            precision={0.5}
+            readOnly
+            size="small"
+            sx={{ flexShrink: 0, '& .MuiRating-iconFilled': { color: 'mustard.main' } }}
+          />
         </Box>
         <Typography
           variant="body2"
@@ -96,13 +168,18 @@ const PopularReviewCard = ({
         >
           {content}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto', pt: 0.75, borderTop: '1px dashed rgba(201,165,106,0.7)' }}>
           {bakeryIconImage ? (
             <Box component="img" src={bakeryIconImage} alt="" sx={{ width: 18, height: 18, objectFit: 'contain' }} />
-          ) : (
+          ) : bakeryEmoji ? (
             <Typography sx={{ fontSize: '0.9rem', lineHeight: 1 }}>{bakeryEmoji}</Typography>
+          ) : (
+            <PlaceIcon sx={{ fontSize: '1rem', color: 'primary.main' }} />
           )}
-          <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            방문지
+          </Typography>
+          <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }} noWrap>
             {bakeryName}
           </Typography>
         </Box>

@@ -12,8 +12,10 @@ import BookmarkIcon from '@mui/icons-material/Bookmark'
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import PlaceIcon from '@mui/icons-material/Place'
 import { Link } from 'react-router-dom'
+import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
+import { PARCHMENT_SX, WOOD_PLANK_SX } from '../../constants/rpgStyles'
 import { RADIUS } from '../../theme'
 
 // 사진 위쪽을 둥근 아치 모양으로 깎아요. 사진이 낮으면 브라우저가 비율을 줄여 완만한 돔이 돼요.
@@ -33,6 +35,7 @@ const BakeryStageCard = ({
   height,
   photoSlot,
   highlighted = false, // 홈 지도에서 고른 빵집이면 선택 표시
+  quest = false, // 퀘스트 보드 모양: 양피지 카드 + QUEST 라벨 + [빵집 탐험하기] 표시 (보상 · 경험치 같은 건 보여주지 않아요)
 }) => {
   const { photosByBakeryId } = useRealBakeryPhotos()
   const photoSrc = getBakeryPhoto(id, photosByBakeryId, photoSlot)
@@ -51,6 +54,7 @@ const BakeryStageCard = ({
       component={Link}
       to={`/bakery/${id}`}
       sx={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         height: height ?? '100%',
@@ -60,6 +64,7 @@ const BakeryStageCard = ({
         overflow: 'hidden',
         border: '1px solid rgba(59,42,34,0.08)',
         boxShadow: 'none',
+        ...(quest && { ...PARCHMENT_SX, borderRadius: RADIUS.lg }),
         ...(highlighted && {
           borderColor: 'primary.main',
           boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
@@ -71,13 +76,44 @@ const BakeryStageCard = ({
             transform: 'translateY(-3px)',
             borderColor: 'rgba(123,45,59,0.35)',
             boxShadow: '0 14px 28px rgba(59,42,34,0.12)',
+            // 퀘스트 카드는 금빛 테두리로 은은하게 강조해요
+            ...(quest && {
+              borderColor: 'gold.main',
+              boxShadow: `inset 0 0 0 3px rgba(255,248,225,0.7), 0 0 0 3px rgba(226,176,74,0.5), 0 10px 22px rgba(59,42,34,0.16)`,
+            }),
           },
+          '&:hover .quest-cta': { transform: 'translateY(-2px)' },
           '&:hover .bakery-name': { color: 'primary.main' },
           '&:hover .bakery-photo': { transform: 'scale(1.03)' },
         },
         '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 3 },
       }}
     >
+      {quest && (
+        <Box
+          component="span"
+          sx={{
+            position: 'absolute',
+            top: 14,
+            left: 16,
+            zIndex: 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.4,
+            px: 1.1,
+            py: 0.3,
+            ...WOOD_PLANK_SX,
+            borderRadius: '8px',
+            fontSize: '0.72rem',
+            fontWeight: 800,
+            letterSpacing: '0.12em',
+            color: 'gold.light',
+          }}
+        >
+          <StarRoundedIcon sx={{ fontSize: '0.9rem' }} />
+          QUEST
+        </Box>
+      )}
       <Box
         sx={{
           position: 'relative',
@@ -230,6 +266,32 @@ const BakeryStageCard = ({
                 sx={{ bgcolor: 'rgba(143,166,126,0.18)', color: 'secondary.contrastText', borderRadius: RADIUS.pill }}
               />
             ))}
+          </Box>
+        )}
+        {quest && (
+          <Box
+            className="quest-cta"
+            aria-hidden="true"
+            sx={{
+              mt: 'auto',
+              alignSelf: 'stretch',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.75,
+              py: 0.8,
+              ...WOOD_PLANK_SX,
+              borderRadius: '12px',
+              boxShadow: 'inset 0 2px 0 rgba(255,220,160,0.25), 0 3px 0 rgba(33,20,10,0.4)',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              transition: 'transform 0.15s ease',
+            }}
+          >
+            빵집 탐험하기
+            <Box component="span" sx={{ color: 'gold.light' }}>
+              →
+            </Box>
           </Box>
         )}
       </CardContent>

@@ -52,6 +52,7 @@ const POPULAR_REVIEWS = [...BAKERY_REVIEWS]
     bakery: BAKERIES.find((b) => b.id === review.bakeryId),
     avatarImage: getAuthorLevel(review.author).iconImage,
     avatarScale: getAuthorLevel(review.author).iconScale,
+    levelName: getAuthorLevel(review.author).name,
   }))
 
 const Home = () => {
@@ -159,9 +160,10 @@ const Home = () => {
       {/* 오늘 인기 빵집 */}
       <Box sx={{ py: SECTION_PY }}>
         <SectionHeading
-          eyebrow="TODAY'S PICK"
-          title="오늘 인기 빵집"
-          description="부산 빵덕후들이 오늘 가장 많이 찾은 곳이에요."
+          variant="sign"
+          eyebrow="TODAY'S QUEST"
+          title="오늘의 추천 퀘스트"
+          description="마음에 드는 퀘스트를 골라 빵집 탐험을 떠나보세요."
           sx={{ mb: { xs: 4, md: 5 }, px: 2 }}
         />
         <Box sx={{ ...FULL_BLEED_SX, px: SECTION_PX }}>
@@ -189,9 +191,10 @@ const Home = () => {
           <FlatFlower petal={palette.terracotta.main} center={palette.background.paper} size={44} sx={{ position: 'absolute', top: 118, left: { xs: 40, md: 150 } }} />
           <FlatFlower petal={palette.primary.main} center={palette.mustard.main} size={56} sx={{ position: 'absolute', top: 44, right: { xs: -12, md: 90 } }} />
           <SectionHeading
-            eyebrow="WEEKLY REVIEWS"
-            title="이번 주 인기 리뷰"
-            description="한 줄의 리뷰가 누군가의 최고의 선택이 돼요."
+            variant="sign"
+            eyebrow="ADVENTURER'S LOG"
+            title="모험가의 기록"
+            description="한 줄의 기록이 누군가의 다음 모험이 돼요."
             tone="onColor"
             sx={{ mb: { xs: 4, md: 5 }, px: 2, position: 'relative' }}
           />

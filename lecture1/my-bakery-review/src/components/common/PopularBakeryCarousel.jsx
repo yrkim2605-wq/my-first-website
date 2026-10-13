@@ -7,17 +7,13 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import PauseIcon from '@mui/icons-material/Pause'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import BakeryStageCard from './BakeryStageCard'
+import { GAME_ICON_BUTTON_SX } from '../../constants/rpgStyles'
 
 const SLIDE_INTERVAL = 4000
-const CARD_HEIGHT = { xs: 430, sm: 445, md: 465 }
+const CARD_HEIGHT = { xs: 490, sm: 505, md: 525 } // 아래쪽 [빵집 탐험하기] 줄 높이만큼 늘렸어요
 const VISIBLE_COUNT = 3
 
-const NAV_BUTTON_SX = {
-  bgcolor: 'background.paper',
-  boxShadow: '0 2px 8px rgba(46,42,37,0.15)',
-  flexShrink: 0,
-  '&:hover': { bgcolor: '#fff' },
-}
+const NAV_BUTTON_SX = GAME_ICON_BUTTON_SX
 
 // highlightedId: 지도에서 고른 빵집이 이 목록에 있으면 그 카드에 선택 표시를 해요
 const PopularBakeryCarousel = ({ bakeries, highlightedId }) => {
@@ -66,7 +62,7 @@ const PopularBakeryCarousel = ({ bakeries, highlightedId }) => {
                 display: i === 2 ? { xs: 'none', md: 'block' } : i === 1 ? { xs: 'none', sm: 'block' } : 'block',
               }}
             >
-              <BakeryStageCard {...bakery} variant="featured" height={CARD_HEIGHT} highlighted={bakery.id === highlightedId} />
+              <BakeryStageCard {...bakery} variant="featured" height={CARD_HEIGHT} highlighted={bakery.id === highlightedId} quest />
             </Box>
           ))}
         </Box>

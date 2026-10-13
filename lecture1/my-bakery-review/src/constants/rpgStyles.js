@@ -20,3 +20,14 @@ export const WOOD_PLANK_SX = {
   boxShadow: 'inset 0 2px 0 rgba(255,220,160,0.25), 0 2px 0 rgba(33,20,10,0.35)',
   color: '#fbf6ea',
 }
+
+// 슬라이더 화살표 · 일시정지 같은 동그란 아이콘 버튼: 양피지 바탕 + 나무색 테두리 + 단단한 그림자
+export const GAME_ICON_BUTTON_SX = {
+  bgcolor: '#fdf6e0',
+  color: '#6b4423',
+  border: '2px solid #6b4423',
+  boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
+  flexShrink: 0,
+  '&:hover': { bgcolor: '#f9edcb', boxShadow: '0 3px 0 rgba(33,20,10,0.35)' },
+  '&:active': { boxShadow: '0 0 0 rgba(33,20,10,0)' },
+}

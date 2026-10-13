@@ -7,17 +7,13 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import PauseIcon from '@mui/icons-material/Pause'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PopularReviewCard from './PopularReviewCard'
+import { GAME_ICON_BUTTON_SX } from '../../constants/rpgStyles'
 
 const SLIDE_INTERVAL = 3500
 const REVIEW_EDGE_MASK = 'linear-gradient(to right, transparent 0, black 7%, black 93%, transparent 100%)'
 const OFFSETS = [-2, -1, 0, 1, 2]
 
-const NAV_BUTTON_SX = {
-  bgcolor: 'background.paper',
-  boxShadow: '0 2px 8px rgba(46,42,37,0.15)',
-  flexShrink: 0,
-  '&:hover': { bgcolor: '#fff' },
-}
+const NAV_BUTTON_SX = GAME_ICON_BUTTON_SX
 
 const SLOT_SX_BY_OFFSET = {
   0: {
@@ -101,6 +97,7 @@ const PopularReviewCarousel = ({ reviews }) => {
                   avatarEmoji={review.avatarEmoji}
                   avatarImage={review.avatarImage}
                   avatarScale={review.avatarScale}
+                  levelName={review.levelName}
                   author={review.author}
                   rating={review.rating}
                   content={review.content}
