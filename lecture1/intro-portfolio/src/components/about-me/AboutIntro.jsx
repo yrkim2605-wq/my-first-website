@@ -5,7 +5,7 @@ import SectionNav from './SectionNav';
 import useIsMobile from '../../hooks/useIsMobile';
 import { dpx, mpx } from '../../constants/typography';
 import { aboutStageProps, aboutTextSx } from './aboutMeStyles';
-import lazyAfternoon from '../../assets/lazy-afternoon.jpg';
+import lazyAfternoon from '../../assets/lazy-afternoon.webp';
 
 // 01 About Me (시안: 자기소개.png)
 // 어두운 방에 전등 하나가 켜지고, 전선에 매달린 그림이 불빛 아래에서 살짝 흔들린다.

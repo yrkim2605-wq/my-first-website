@@ -8,6 +8,7 @@ import GlassCube from './GlassCube';
 import FitStage from './FitStage';
 import useScrollFrame from '../hooks/useScrollFrame';
 import { CIRCLE_TEXT_PROPS, heroIntroSx, isDesktop } from '../constants/decor';
+import OpenToWork from './OpenToWork';
 
 const bigDisplaySx = {
   position: 'absolute',
@@ -188,6 +189,19 @@ const Hero = () => {
         <Box sx={{ display: { xs: 'block', md: 'none' }, width: '100%', height: '100%', ...heroIntroSx('heroPopIn', 1, 1.2) }}>
           <CircularText {...CIRCLE_TEXT_PROPS} sx={{ width: '100%', height: '100%' }} />
         </Box>
+      </Box>
+
+      {/* 구직 상태 배지 — 첫 화면 왼쪽 아래, 큰 글자·장식이 다 자리 잡은 뒤 떠오른다 */}
+      <Box
+        sx={{
+          position: 'absolute',
+          left: { xs: '5%', md: '2%' },
+          bottom: { xs: '6%', md: '5%' },
+          zIndex: 4,
+          ...heroIntroSx('riseIn', 1.4, 0.9),
+        }}
+      >
+        <OpenToWork />
       </Box>
     </FitStage>
   );

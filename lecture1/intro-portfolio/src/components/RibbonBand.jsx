@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import { navigateWithFade } from '../utils/pageTransition';
-import drJartThumb from '../assets/project-drjart-mobile.png';
-import aiInfluencerThumb from '../assets/project-ai-influencer-left.jpg';
-import illustrationThumb from '../assets/project-illustration.png';
-import appleslateKeyringThumb from '../assets/project-appleslate-keyring.jpg';
+import drJartThumb from '../assets/project-drjart-mobile.webp';
+import aiInfluencerThumb from '../assets/project-ai-influencer-left.webp';
+import illustrationThumb from '../assets/project-illustration.webp';
+import appleslateKeyringThumb from '../assets/project-appleslate-keyring.webp';
 
 // 카드가 둘러선 원기둥 (참고: dayonedream.com 히어로)
 // - 카메라를 가깝게 두어(perspective) 앞쪽 카드는 크게, 뒤쪽 카드는 작게 보이는 강한 원근감

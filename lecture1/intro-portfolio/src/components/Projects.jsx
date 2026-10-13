@@ -9,9 +9,9 @@ import ClickCursor from './ClickCursor';
 import useInView from '../hooks/useInView';
 import { POINT_LIME } from '../constants/colors';
 import { navigateWithFade } from '../utils/pageTransition';
-import drJartThumb from '../assets/project-drjart.jpg';
-import aiInfluencerThumb from '../assets/project-ai-influencer.jpg';
-import illustrationThumb from '../assets/project-illustration.png';
+import drJartThumb from '../assets/project-drjart.webp';
+import aiInfluencerThumb from '../assets/project-ai-influencer.webp';
+import illustrationThumb from '../assets/project-illustration.webp';
 import RollingNumber from './RollingNumber';
 import Reveal from './Reveal';
 

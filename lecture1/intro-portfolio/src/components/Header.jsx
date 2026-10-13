@@ -5,7 +5,7 @@ import { heroIntroSx } from '../constants/decor';
 
 const NAV_ITEMS = [
   { label: 'HOME', href: '#home' },
-  { label: 'ABOUT', href: '#skills' }, // 세 번째 섹션(Skills)으로 이동
+  { label: 'ABOUT', href: 'about.html' }, // 자기소개 페이지 (linkPrefix가 붙어 어느 페이지에서든 같은 곳으로 간다)
   { label: 'PROJECTS', href: '#projects' },
   { label: 'CONTACT', href: '#contact' },
 ];

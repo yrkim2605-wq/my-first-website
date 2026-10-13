@@ -7,7 +7,7 @@ import useInView from '../../hooks/useInView';
 import useIsMobile from '../../hooks/useIsMobile';
 import { dpx, mpx } from '../../constants/typography';
 import { aboutKoreanSx, aboutStageProps, aboutTextSx, mobileFlowSx, placeSx, sectionDividerSx } from './aboutMeStyles';
-import rainyPopo from '../../assets/rainy-popo.png';
+import rainyPopo from '../../assets/rainy-popo.webp';
 import RollingNumber from '../RollingNumber';
 
 // 02 My Story (시안: 자기소개-1.png)

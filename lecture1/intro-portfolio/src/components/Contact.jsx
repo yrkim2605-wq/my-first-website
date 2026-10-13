@@ -6,9 +6,9 @@ import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRound
 import FitStage from './FitStage';
 import WaveText from './WaveText';
 import Reveal from './Reveal';
+import OpenToWork from './OpenToWork';
 
 const MAIL = 'melon0503@naver.com';
-const TEL = '010.7221.2605';
 const GITHUB_URL = 'https://github.com/yrkim2605-wq';
 
 const footerTextSx = {
@@ -59,6 +59,9 @@ const Contact = () => {
       stageSx={{ pt: { xs: '20vw', md: '6.55cqw' }, pb: { xs: 12, md: 0 } }}
     >
       <Stack sx={{ alignItems: 'center', textAlign: 'center' }}>
+        <Reveal sx={{ mb: { xs: 3, md: '1.4cqw' } }}>
+          <OpenToWork />
+        </Reveal>
         <Typography
           component="h2"
           sx={{
@@ -164,19 +167,10 @@ const Contact = () => {
         <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Stack spacing={{ xs: 1.5, md: '0.55cqw' }}>
             <Typography sx={footerTextSx}>CONTACT ME</Typography>
-            <Stack
-              direction={{ xs: 'column', md: 'row' }}
-              spacing={{ xs: 1.5, md: 0 }}
-              sx={{ gap: { md: '8.3cqw' } }}
-            >
-              <Stack direction="row" sx={{ gap: { xs: 1, md: '0.6cqw' } }}>
-                <Typography sx={footerTextSx}>MAIL :</Typography>
-                <FooterLink href={`mailto:${MAIL}`}>{MAIL}</FooterLink>
-              </Stack>
-              <Stack direction="row" sx={{ gap: { xs: 1, md: '0.7cqw' } }}>
-                <Typography sx={footerTextSx}>TEL :</Typography>
-                <FooterLink href={`tel:${TEL.replaceAll('.', '')}`}>{TEL}</FooterLink>
-              </Stack>
+            {/* 전화번호는 공개 사이트라 싣지 않는다 — 연락은 메일로 받는다 */}
+            <Stack direction="row" sx={{ gap: { xs: 1, md: '0.6cqw' } }}>
+              <Typography sx={footerTextSx}>MAIL :</Typography>
+              <FooterLink href={`mailto:${MAIL}`}>{MAIL}</FooterLink>
             </Stack>
           </Stack>
 
