@@ -9,6 +9,7 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import '@fontsource/noto-serif-kr/900.css'
+import '@fontsource/gaegu/700.css'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(

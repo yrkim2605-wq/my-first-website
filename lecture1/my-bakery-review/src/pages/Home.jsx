@@ -17,6 +17,8 @@ import BakeryMapHero from '../components/home/BakeryMapHero'
 import LevelUpTeaser from '../components/home/LevelUpTeaser'
 import ScallopEdge from '../components/common/decor/ScallopEdge'
 import FlatFlower from '../components/common/decor/FlatFlower'
+import Illustration from '../components/common/decor/Illustration'
+import HandNote from '../components/common/decor/HandNote'
 import StatusMessage from '../components/common/StatusMessage'
 import BakeryCardSkeleton from '../components/common/BakeryCardSkeleton'
 import { BAKERIES } from '../constants/bakeries'
@@ -229,8 +231,26 @@ const Home = () => {
       {/* 이름 · 메뉴 검색: 와인 색 블록 (위치로 찾기는 맨 위 지도 Hero에서) */}
       <Box sx={{ ...FULL_BLEED_SX }}>
         <Box sx={{ position: 'relative', bgcolor: 'primary.main', pt: SECTION_PY, pb: { xs: 5, md: 6 }, overflow: 'hidden' }}>
-          <FlatFlower petal={palette.mustard.main} center={palette.primary.main} size={60} sx={{ position: 'absolute', top: 28, right: { xs: -16, md: 120 } }} />
+          <FlatFlower petal={palette.mustard.main} center={palette.primary.main} size={60} sx={{ position: 'absolute', top: 28, right: { xs: -16, md: 120, lg: '3%' } }} />
           <FlatFlower petal={palette.background.paper} center={palette.terracotta.main} size={40} sx={{ position: 'absolute', bottom: 24, left: { xs: 12, md: 110 }, opacity: 0.9 }} />
+          {/* 검색창 양옆 여백의 장식: 왼쪽 빵 바구니, 오른쪽 손글씨 + 딸기 케이크. 여백이 넉넉한 넓은 화면에서만 보여요. */}
+          <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+            <Illustration
+              name="breadBasket"
+              width={180}
+              sx={{ position: 'absolute', left: '5%', top: '50%', transform: 'translateY(-50%) rotate(-4deg)' }}
+            />
+            <HandNote color="mustard.main" rotate={-8} sx={{ position: 'absolute', right: '12%', top: 52 }}>
+              맛있는 빵집을
+              <br />
+              더 쉽게 찾아보세요!
+            </HandNote>
+            <Illustration
+              name="strawberryCake"
+              width={104}
+              sx={{ position: 'absolute', right: '6%', bottom: 40, transform: 'rotate(6deg)' }}
+            />
+          </Box>
           <Container maxWidth="sm" sx={{ position: 'relative' }}>
             <SectionHeading
               eyebrow="SEARCH BY NAME"

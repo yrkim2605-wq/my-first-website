@@ -8,7 +8,7 @@ import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
 import WoodPanel from '../components/common/WoodPanel'
 import SectionHeading from '../components/common/SectionHeading'
-import mascotLogo from '../assets/logo-mascot-photo.webp'
+import logo from '../assets/logo.webp'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -29,7 +29,7 @@ const Login = () => {
   return (
     <Container maxWidth="xs">
       <Box sx={{ py: { xs: 6, sm: 10 }, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Box component="img" src={mascotLogo} alt="" sx={{ width: 72, height: 84, objectFit: 'contain', mb: 1.5 }} />
+        <Box component="img" src={logo} alt="빵덕후 레벨업" sx={{ width: { xs: 180, sm: 210 }, height: 'auto', mb: 1.5 }} />
         <SectionHeading eyebrow="WELCOME BACK" title="로그인" description="빵덕후 레벨업에 오신 걸 환영해요" sx={{ mb: 4 }} />
 
         <WoodPanel variant="light" sx={{ p: 3, width: '100%' }}>

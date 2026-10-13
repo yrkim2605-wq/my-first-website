@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import { NavLink } from 'react-router-dom'
-import mascotLogo from '../../assets/logo-mascot-photo.webp'
+import logo from '../../assets/logo.webp'
 import HeaderLevelBadge from './HeaderLevelBadge'
 import { COMMUNITY_CATEGORIES } from '../../constants/categories'
 import { RANKING_TABS } from '../../constants/ranking'
@@ -138,22 +138,14 @@ const Header = () => {
           component={NavLink}
           to="/"
           aria-label="빵덕후 레벨업 홈"
-          sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none' }}
+          sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
         >
           <Box
             component="img"
-            src={mascotLogo}
-            alt=""
-            sx={{ width: { xs: 36, md: 42 }, height: { xs: 42, md: 49 }, flexShrink: 0, objectFit: 'contain' }}
+            src={logo}
+            alt="빵덕후 레벨업"
+            sx={{ height: { xs: 52, md: 72 }, width: 'auto', display: 'block' }}
           />
-          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, fontFamily: '"OwnglyphParkDaHyun", cursive', lineHeight: 1 }}>
-            <Box component="span" sx={{ fontSize: { xs: '1.7rem', md: '2rem' }, color: 'primary.main' }}>
-              빵덕후
-            </Box>
-            <Box component="span" sx={{ fontSize: { xs: '1.15rem', md: '1.3rem' }, color: 'terracotta.main' }}>
-              레벨업
-            </Box>
-          </Box>
         </Box>
 
         <Box

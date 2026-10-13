@@ -1,10 +1,13 @@
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import WavyDivider from '../common/decor/WavyDivider'
 import FlatFlower from '../common/decor/FlatFlower'
+import Illustration from '../common/decor/Illustration'
 import { LEVELS } from '../../constants/levels'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
@@ -19,7 +22,7 @@ const getCriteriaParts = (level) =>
 
 const describeCriteria = (level) => getCriteriaParts(level).join(' · ')
 
-// 홈의 작은 레벨업 안내 띠 (이번 주 인기 리뷰 아래). 메달을 누르면 마이페이지의 레벨 영역으로 가요.
+// 홈의 작은 레벨업 안내 띠 (이번 주 인기 리뷰 아래). 메달이나 버튼을 누르면 마이페이지로 가요.
 const LevelUpTeaser = () => {
   const { palette } = useTheme()
 
@@ -29,13 +32,13 @@ const LevelUpTeaser = () => {
         sx={{
           position: 'relative',
           overflow: 'hidden',
-          maxWidth: 1040,
+          maxWidth: 1120,
           mx: 'auto',
-          // 넓은 화면: 소개 글 : 메달 = 1 : 1.15, 모바일: 위아래로
+          // 넓은 화면: 빵 캐릭터 | 소개 글 | 메달 | 버튼, 중간 화면: 버튼만 아랫줄, 모바일: 위아래로
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1fr 1.15fr' },
+          gridTemplateColumns: { xs: '1fr', md: 'auto 1fr 1.15fr', lg: 'auto 1fr 1.2fr auto' },
           alignItems: 'center',
-          gap: { xs: 3, md: 5 },
+          gap: { xs: 3, md: 3 },
           px: { xs: 2.5, sm: 5 },
           py: { xs: 4, sm: 4.5 },
           bgcolor: 'background.paper',
@@ -45,6 +48,9 @@ const LevelUpTeaser = () => {
       >
         <FlatFlower petal={palette.mustard.main} center={palette.primary.main} size={34} sx={{ position: 'absolute', top: 14, right: 18, opacity: 0.8 }} />
 
+        {/* 바게트를 든 빵 캐릭터: 넓은 화면에서 소개 글 왼쪽에 있어요. 좁은 화면에서는 숨겨요. */}
+        <Illustration name="mascot" width={92} sx={{ display: { xs: 'none', md: 'block' }, transform: 'rotate(-4deg)' }} />
+
         <Box sx={{ textAlign: { xs: 'center', md: 'left' }, display: 'flex', flexDirection: 'column', alignItems: { xs: 'center', md: 'flex-start' } }}>
           <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.18em', color: 'terracotta.main', mb: 1 }}>
             BAKERY LEVEL UP
@@ -52,7 +58,7 @@ const LevelUpTeaser = () => {
           <Typography
             id="level-up-title"
             variant="h2"
-            sx={{ fontSize: { xs: '1.4rem', sm: '1.7rem' }, color: 'primary.main', wordBreak: 'keep-all' }}
+            sx={{ fontSize: { xs: '1.4rem', sm: '1.7rem' }, color: 'primary.main', wordBreak: 'keep-all', textWrap: 'balance' }}
           >
             빵을 좋아할수록 성장하는 나의 레벨
           </Typography>
@@ -64,12 +70,30 @@ const LevelUpTeaser = () => {
 
         <Box
           component="ul"
-          sx={{ listStyle: 'none', m: 0, p: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: { xs: 1, sm: 2 }, width: '100%', maxWidth: 460, mx: 'auto' }}
+          sx={{ listStyle: 'none', m: 0, p: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: { xs: 1, sm: 3 }, width: '100%', maxWidth: 460, mx: 'auto' }}
         >
           {FEATURED_LEVEL_INDEXES.map((index) => {
             const level = LEVELS[index]
             return (
-              <Box component="li" key={level.id}>
+              <Box
+                component="li"
+                key={level.id}
+                sx={{
+                  position: 'relative',
+                  // 메달 사이의 화살표(→): 레벨이 차례로 오른다는 느낌. 모바일에서는 간격이 좁아 숨겨요.
+                  '&:not(:last-of-type)::after': {
+                    content: '"→" / ""',
+                    display: { xs: 'none', sm: 'block' },
+                    position: 'absolute',
+                    top: 40,
+                    right: -20,
+                    color: 'terracotta.main',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    pointerEvents: 'none',
+                  },
+                }}
+              >
                 <Box
                   component={Link}
                   to="/mypage"
@@ -97,15 +121,18 @@ const LevelUpTeaser = () => {
                     alt=""
                     sx={{ width: { xs: 64, sm: 76 }, height: { xs: 64, sm: 76 }, objectFit: 'contain', transform: `scale(${level.iconScale ?? 1})`, mb: 1 }}
                   />
+                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: 'terracotta.main', lineHeight: 1.2 }}>
+                    Lv.{index + 1}
+                  </Typography>
                   <Typography sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '0.95rem', sm: '1.05rem' }, color: 'primary.main' }}>
                     {level.name}
                   </Typography>
                   <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.8125rem' }, color: 'text.secondary', textAlign: 'center', lineHeight: 1.45, mt: 0.5, wordBreak: 'keep-all' }}>
                     {/* 좁은 화면에서는 방문 · 하트를 한 줄씩 (중간에서 어색하게 끊기지 않게) */}
                     {getCriteriaParts(level).map((part, i) => (
-                      <Box key={part} component="span" sx={{ display: { xs: 'block', sm: 'inline' }, whiteSpace: 'nowrap' }}>
+                      <Box key={part} component="span" sx={{ display: { xs: 'block', sm: 'inline', lg: 'block' }, whiteSpace: 'nowrap' }}>
                         {i > 0 && (
-                          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline', lg: 'none' } }}>
                             {' · '}
                           </Box>
                         )}
@@ -118,6 +145,25 @@ const LevelUpTeaser = () => {
             )
           })}
         </Box>
+
+        <Button
+          component={Link}
+          to="/mypage"
+          variant="outlined"
+          endIcon={<ArrowForwardIcon fontSize="small" />}
+          sx={{
+            gridColumn: { xs: '1', md: '1 / -1', lg: 'auto' },
+            justifySelf: 'center',
+            px: 2.5,
+            py: 1,
+            borderRadius: 999,
+            borderWidth: 2,
+            whiteSpace: 'nowrap',
+            '&:hover': { borderWidth: 2 },
+          }}
+        >
+          내 레벨과 메달 보기
+        </Button>
       </Box>
     </Container>
   )

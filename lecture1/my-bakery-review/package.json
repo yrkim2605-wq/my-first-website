@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@fontsource/gaegu": "^5.3.0",
     "@fontsource/noto-serif-kr": "^5.3.1",
     "@fontsource/press-start-2p": "^5.2.7",
     "@fontsource/roboto": "^5.2.10",
