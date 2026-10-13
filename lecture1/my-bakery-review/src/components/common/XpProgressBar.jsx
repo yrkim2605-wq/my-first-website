@@ -4,8 +4,8 @@ import XpTrack from './XpTrack'
 import { RADIUS } from '../../theme'
 
 // 다음 레벨까지의 진행 막대 (마이페이지 프로필 카드 안에서 써요)
-// 막대는 방문 수 · 하트 수로 계산한 진행률(%)을 그대로 보여줘요. 새로 만든 점수가 아니에요.
-const XpProgressBar = ({ levelName, nextLevelName, percent, visitsNeeded, heartsNeeded, isMaxLevel }) => {
+// 막대는 저장된 리뷰로 계산한 누적 EXP의 현재 레벨 구간 진행률(%)을 그대로 보여줘요.
+const XpProgressBar = ({ levelName, nextLevelName, percent, exp, expToNext, isMaxLevel }) => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -47,7 +47,7 @@ const XpProgressBar = ({ levelName, nextLevelName, percent, visitsNeeded, hearts
         percent={percent}
       />
       <Typography sx={{ display: 'block', mt: 0.75, fontSize: '0.8rem' }}>
-        {isMaxLevel ? '최고 레벨 달성!' : `다음 레벨까지 방문 ${visitsNeeded}곳, 하트 ${heartsNeeded}개 필요`}
+        {isMaxLevel ? `최고 레벨 달성! (누적 EXP ${exp})` : `누적 EXP ${exp} · 다음 레벨까지 EXP ${expToNext} 필요`}
       </Typography>
     </Box>
   )

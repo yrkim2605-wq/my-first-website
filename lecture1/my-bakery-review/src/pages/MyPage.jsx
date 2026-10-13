@@ -14,7 +14,7 @@ import { MOCK_USER } from '../constants/userProfile'
 import { BADGES } from '../constants/badges'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
-import { getLevelProgress } from '../utils/levelUtils'
+import { useGameState } from '../hooks/useGameState'
 import { getBakeryPhoto } from '../constants/bakeryPhotos'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
@@ -81,7 +81,7 @@ const VisitedBakeryRow = ({ bakery, photoSrc, caption, chipLabel }) => (
 const MyPage = () => {
   const [levelBookOpen, setLevelBookOpen] = useState(false)
   const visitedCount = MOCK_USER.visitedBakeryIds.length
-  const progress = getLevelProgress(visitedCount, MOCK_USER.totalHearts)
+  const { progress } = useGameState()
   const visitedBakeries = BAKERIES.filter((b) => MOCK_USER.visitedBakeryIds.includes(b.id))
 
   const { bakeries: realBakeries } = useBusanBakeries()
@@ -145,12 +145,12 @@ const MyPage = () => {
             levelName={progress.currentLevel.name}
             nextLevelName={progress.nextLevel?.name}
             percent={progress.percent}
-            visitsNeeded={progress.visitsNeeded}
-            heartsNeeded={progress.heartsNeeded}
+            exp={progress.exp}
+            expToNext={progress.expToNext}
             isMaxLevel={progress.isMaxLevel}
           />
           <Typography sx={{ mt: 2, fontSize: '0.875rem', fontWeight: 700, color: 'primary.main' }}>
-            현재 레벨 혜택 · {progress.currentLevel.perk}
+            예정 혜택 · {progress.currentLevel.perk}
           </Typography>
         </Box>
 

@@ -6,9 +6,8 @@ import Fade from '@mui/material/Fade'
 import ClickAwayListener from '@mui/material/ClickAwayListener'
 import Button from '@mui/material/Button'
 import { NavLink } from 'react-router-dom'
-import { MOCK_USER } from '../../constants/userProfile'
 import { LEVELS } from '../../constants/levels'
-import { getLevelProgress } from '../../utils/levelUtils'
+import { useGameState } from '../../hooks/useGameState'
 import XpTrack from '../common/XpTrack'
 import { PARCHMENT_SX, WOOD_PLANK_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
@@ -28,8 +27,7 @@ const Medal = ({ level, size }) =>
   )
 
 // 다음 레벨까지 남은 양을 "방문 8곳 · 하트 20개"처럼 (이미 채운 항목은 빼고) 만들어요
-const describeRemaining = ({ visitsNeeded, heartsNeeded }) =>
-  [visitsNeeded > 0 && `방문 ${visitsNeeded}곳`, heartsNeeded > 0 && `하트 ${heartsNeeded}개`].filter(Boolean).join(' · ')
+const describeRemaining = ({ expToNext }) => `EXP ${expToNext}`
 
 // 헤더 오른쪽의 레벨 칩: 누르면(모바일은 탭) 레벨업 방법과 내 진행 상황을 보여주는 작은 안내창이 열려요
 // 안내창은 모달이 아니라 헤더 안에 붙는 Popper예요.
@@ -48,7 +46,7 @@ const HeaderLevelBadge = () => {
   const closeTimerRef = useRef(null)
   const pinnedRef = useRef(false) // 클릭으로 고정된 상태인지 (고정되면 마우스가 벗어나도 안 닫혀요)
   const [open, setOpen] = useState(false)
-  const progress = getLevelProgress(MOCK_USER.visitedBakeryIds.length, MOCK_USER.totalHearts)
+  const { progress, profile } = useGameState()
   const { currentLevel, nextLevel } = progress
   const levelNumber = LEVELS.findIndex((level) => level.id === currentLevel.id) + 1
 
@@ -183,7 +181,8 @@ const HeaderLevelBadge = () => {
           레벨업 하는 법
         </Typography>
         <Typography sx={{ fontSize: '0.85rem', lineHeight: 1.6, mb: 1.75 }}>
-          빵집을 방문하고 하트를 모으면 레벨이 올라가요. 방문한 빵집 수와 하트 수가 <b>모두</b> 다음 레벨 기준을 넘어야 해요.
+          빵집에 리뷰를 남기면 EXP가 쌓이고, 퀘스트를 완료하면 보너스 EXP를 받아요. 누적 EXP가 다음 레벨 기준을 넘으면 레벨이 올라요.
+          {!profile && ' 지금은 로그인하지 않은 상태라 기록이 쌓이지 않아요.'}
         </Typography>
 
         {/* 내 진행 상황 */}
@@ -201,7 +200,7 @@ const HeaderLevelBadge = () => {
           </Box>
           <XpTrack size="sm" percent={progress.percent} />
           <Typography sx={{ fontSize: '0.75rem', color: 'butter.contrastText', mt: 0.75 }}>
-            {progress.isMaxLevel ? '최고 레벨이에요!' : `다음 레벨까지 ${describeRemaining(progress)} 더 필요해요`}
+            {progress.isMaxLevel ? '최고 레벨이에요!' : `다음 레벨까지 ${describeRemaining(progress)} 더 필요해요 (누적 EXP ${progress.exp})`}
           </Typography>
         </Box>
 
@@ -209,10 +208,7 @@ const HeaderLevelBadge = () => {
         <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0, mb: 1.75 }}>
           {LEVELS.map((level) => {
             const isCurrent = level.id === currentLevel.id
-            const criteria =
-              level.minVisits === 0 && level.minHearts === 0
-                ? '시작 레벨'
-                : [`방문 ${level.minVisits}곳`, level.minHearts > 0 && `하트 ${level.minHearts}개`].filter(Boolean).join(' · ')
+            const criteria = level.minExp === 0 ? '시작 레벨' : `EXP ${level.minExp}`
             return (
               <Box
                 component="li"

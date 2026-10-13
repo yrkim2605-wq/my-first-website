@@ -1,41 +1,45 @@
 import { LEVELS } from '../constants/levels'
 
-export const calculateLevel = (visitedCount, totalHearts) => {
+// 누적 EXP로 현재 레벨을 찾아요.
+export const calculateLevel = (exp) => {
   for (let i = LEVELS.length - 1; i >= 0; i -= 1) {
-    const level = LEVELS[i]
-    if (visitedCount >= level.minVisits && totalHearts >= level.minHearts) {
-      return level
-    }
+    if (exp >= LEVELS[i].minExp) return LEVELS[i]
   }
   return LEVELS[0]
 }
 
-export const getLevelProgress = (visitedCount, totalHearts) => {
-  const currentLevel = calculateLevel(visitedCount, totalHearts)
+// 누적 EXP로 레벨 진행 상황을 계산해요. 진행률(percent)은 "현재 레벨 구간 안에서" 얼마나 왔는지예요.
+export const getLevelProgress = (rawExp) => {
+  const exp = Math.max(0, Math.floor(rawExp))
+  const currentLevel = calculateLevel(exp)
   const currentIndex = LEVELS.findIndex((level) => level.id === currentLevel.id)
-  const nextLevel = LEVELS[currentIndex + 1]
+  const nextLevel = LEVELS[currentIndex + 1] ?? null
 
   if (!nextLevel) {
     return {
+      exp,
       currentLevel,
+      currentIndex,
       nextLevel: null,
       percent: 100,
       isMaxLevel: true,
-      visitsNeeded: 0,
-      heartsNeeded: 0,
+      expToNext: 0,
+      expInLevel: exp - currentLevel.minExp,
+      expSpan: 0,
     }
   }
 
-  const visitRatio = nextLevel.minVisits > 0 ? visitedCount / nextLevel.minVisits : 1
-  const heartRatio = nextLevel.minHearts > 0 ? totalHearts / nextLevel.minHearts : 1
-  const percent = Math.round(Math.min(visitRatio, heartRatio, 1) * 100)
-
+  const expSpan = nextLevel.minExp - currentLevel.minExp
+  const expInLevel = exp - currentLevel.minExp
   return {
+    exp,
     currentLevel,
+    currentIndex,
     nextLevel,
-    percent,
+    percent: Math.round((expInLevel / expSpan) * 100),
     isMaxLevel: false,
-    visitsNeeded: Math.max(nextLevel.minVisits - visitedCount, 0),
-    heartsNeeded: Math.max(nextLevel.minHearts - totalHearts, 0),
+    expToNext: nextLevel.minExp - exp,
+    expInLevel,
+    expSpan,
   }
 }

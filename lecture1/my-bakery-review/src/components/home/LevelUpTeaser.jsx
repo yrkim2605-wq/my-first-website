@@ -8,16 +8,12 @@ import XpProgressBar from '../common/XpProgressBar'
 import WoodButton from '../common/WoodButton'
 import Illustration from '../common/decor/Illustration'
 import { LEVELS } from '../../constants/levels'
-import { MOCK_USER } from '../../constants/userProfile'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
-import { getLevelProgress } from '../../utils/levelUtils'
+import { useGameState } from '../../hooks/useGameState'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
-// levels.js의 실제 기준으로 "방문 15곳 · 하트 100개" 같은 문구를 만들어요
-const getCriteriaParts = (level) =>
-  level.minVisits === 0 && level.minHearts === 0
-    ? ['누구나 여기서 시작']
-    : [`방문 ${level.minVisits}곳`, level.minHearts > 0 && `하트 ${level.minHearts}개`].filter(Boolean)
+// levels.js의 실제 기준으로 "EXP 180" 같은 문구를 만들어요
+const getCriteriaParts = (level) => (level.minExp === 0 ? ['누구나 여기서 시작'] : [`EXP ${level.minExp}`])
 
 const describeCriteria = (level) => getCriteriaParts(level).join(' · ')
 
@@ -25,8 +21,8 @@ const describeCriteria = (level) => getCriteriaParts(level).join(' · ')
 // 레벨 계산은 헤더 · 마이페이지와 같은 getLevelProgress를 써서 값이 항상 같아요.
 // 메달이나 버튼을 누르면 마이페이지로 가요.
 const LevelUpTeaser = () => {
-  const progress = getLevelProgress(MOCK_USER.visitedBakeryIds.length, MOCK_USER.totalHearts)
-  const currentIndex = LEVELS.findIndex((level) => level.id === progress.currentLevel.id)
+  const { progress, profile } = useGameState()
+  const currentIndex = progress.currentIndex
 
   return (
     <Container maxWidth="lg" component="section" aria-labelledby="level-up-title" sx={{ pt: { xs: 6, md: 8 } }}>
@@ -48,7 +44,7 @@ const LevelUpTeaser = () => {
           eyebrow="ADVENTURERS GUILD"
           title="모험가 길드"
           titleId="level-up-title"
-          description="빵집을 방문하고 하트를 모으면 레벨이 오르고, 특별한 메달을 받아요."
+          description="리뷰를 남기고 퀘스트를 완료하면 EXP가 쌓여 레벨이 오르고, 특별한 메달을 받아요."
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
 
@@ -207,14 +203,14 @@ const LevelUpTeaser = () => {
         >
           <Box>
             <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: 'terracotta.main', mb: 1 }}>
-              내 모험가 상태
+              {profile ? `${profile.nickname}의 모험가 상태` : '내 모험가 상태 · 로그인하면 기록이 쌓여요'}
             </Typography>
             <XpProgressBar
               levelName={progress.currentLevel.name}
               nextLevelName={progress.nextLevel?.name}
               percent={progress.percent}
-              visitsNeeded={progress.visitsNeeded}
-              heartsNeeded={progress.heartsNeeded}
+              exp={progress.exp}
+              expToNext={progress.expToNext}
               isMaxLevel={progress.isMaxLevel}
             />
           </Box>

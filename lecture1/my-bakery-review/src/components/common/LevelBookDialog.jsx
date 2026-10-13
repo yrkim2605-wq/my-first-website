@@ -10,13 +10,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBook'
 import { LEVELS } from '../../constants/levels'
 import { RADIUS } from '../../theme'
 
-const formatLevelCondition = (level) => {
-  if (level.minVisits === 0 && level.minHearts === 0) return '가입 시 기본 지급'
-  const parts = []
-  if (level.minVisits > 0) parts.push(`방문 ${level.minVisits}회`)
-  if (level.minHearts > 0) parts.push(`하트 ${level.minHearts}개`)
-  return `${parts.join(' · ')} 이상`
-}
+const formatLevelCondition = (level) => (level.minExp === 0 ? '시작 레벨' : `누적 EXP ${level.minExp} 이상`)
 
 const LevelBookDialog = ({ open, onClose, currentLevelId }) => {
   return (
@@ -50,7 +44,7 @@ const LevelBookDialog = ({ open, onClose, currentLevelId }) => {
                     {index + 1}. {level.name}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    {level.perk}
+                    예정 혜택 · {level.perk}
                   </Typography>
                 </Box>
               </Box>
