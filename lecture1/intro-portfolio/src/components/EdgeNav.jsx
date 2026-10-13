@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import { navigateWithFade } from '../utils/pageTransition';
 
 // 화면 양옆 가운데에 붙는 이전·다음 페이지 링크 (참고: seunghyuk.com의 "< ABOUT · CONTACT >")
-// 페이지를 한 줄로 이어 둔다: MAIN → ABOUT ME → AI INFLUENCER → ILLUSTRATION → MAIN
+// 페이지를 한 줄로 이어 둔다: MAIN → ABOUT ME → DR.JART+ → AI INFLUENCER → ILLUSTRATION → MAIN
 // 데스크톱에서만 보인다 — 모바일은 화면이 좁아 본문과 겹치므로 BACK 버튼과 헤더 메뉴로 충분하다
 
 const BASE = import.meta.env.BASE_URL;
@@ -10,6 +10,7 @@ const BASE = import.meta.env.BASE_URL;
 export const PAGE_LINKS = {
   main: { label: 'MAIN', href: BASE },
   about: { label: 'ABOUT ME', href: `${BASE}about.html` },
+  drjart: { label: 'DR.JART+', href: `${BASE}project-drjart.html` },
   ai: { label: 'AI INFLUENCER', href: `${BASE}project-ai.html` },
   illustration: { label: 'ILLUSTRATION', href: `${BASE}project-illustration.html` },
 };

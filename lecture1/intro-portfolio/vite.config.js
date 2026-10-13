@@ -11,6 +11,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         about: resolve(import.meta.dirname, 'about.html'),
+        projectDrjart: resolve(import.meta.dirname, 'project-drjart.html'),
         projectAi: resolve(import.meta.dirname, 'project-ai.html'),
         projectIllustration: resolve(import.meta.dirname, 'project-illustration.html'),
       },

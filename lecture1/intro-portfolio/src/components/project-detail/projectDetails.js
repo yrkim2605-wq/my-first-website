@@ -17,6 +17,10 @@ import goodsFlatlay from '../../assets/goods-flatlay.webp';
 import goodsOutdoorKeyring from '../../assets/goods-outdoor-keyring.webp';
 import goodsIphoneSticker from '../../assets/goods-iphone-sticker.webp';
 import amuziOcean from '../../assets/amuzi-ocean.webp';
+import drJartHero from '../../assets/project-drjart.webp';
+import drJartMobile from '../../assets/project-drjart-mobile.webp';
+import drJartBefore from '../../assets/drjart-before.webp';
+import drJartAfter from '../../assets/drjart-after.webp';
 
 // 프로젝트 상세 페이지 내용 — 화면 구성(ProjectDetailIntro)은 같고, 여기 값만 프로젝트마다 다르다
 // sheet: 전등 아래 걸리는 큰 이미지 (src가 null이면 회색 자리 표시 상자)
@@ -172,6 +176,73 @@ export const PROJECT_DETAILS = {
           { src: goodsIphoneSticker, title: 'ON IPHONE', alt: '아이폰 뒷면에 붙인 어뮤지 캐릭터 스티커' },
         ],
       },
+    },
+  },
+  // Dr.Jart+ 리디자인 — 01 소개(전등 + 리디자인 첫 화면) → 02 문제와 개선 방향 → 03 Before / After 비교
+  // 내용 출처: 닥터자르트 사이트 분석.pdf(장점·문제점·개선방향·구조), 닥터자르트 리디자인 (2).pdf(시안)
+  drjart: {
+    key: 'drjart',
+    sections: makeSections('project-drjart', 3),
+    title: 'DR.JART+\nREDESIGN',
+    titleDisplay: true,
+    titleTop: 92,
+    columnWidth: 340,
+    description:
+      "'Doctor Joins Art, 의학과 예술의 만남'이라는 브랜드 가치를 실험실 무드의 과학적인 비주얼로 풀어낸 리디자인",
+    rows: [
+      { label: 'ROLE', lines: ['UX Analysis  ·  Web Design', 'Front-end Development'] },
+      { label: 'TOOL', lines: ['React  /  MUI  /  Vite'] },
+      // 리디자인 사이트 저장소(dr-jart-website)의 첫 커밋 ~ 마지막 커밋
+      { label: 'PERIOD', lines: ['2026.08.27 – 2026.09.08'] },
+    ],
+    rowCenters: [300, 328, 356],
+    dividerY: 382,
+    sheet: {
+      src: drJartHero,
+      alt: 'Dr.Jart+ 리디자인 첫 화면 — 가운데 시카페어 제품과 양옆 Dr. / Jart+ 로고, 제품 설명 주석선',
+      aspect: '1440 / 800',
+    },
+    master: {
+      label: 'Mobile',
+      src: drJartMobile,
+      alt: 'Dr.Jart+ 리디자인 모바일 화면',
+      aspect: '374 / 665',
+      width: 120,
+      top: 432,
+      captions: ['Responsive', 'Mobile View'],
+    },
+    // 02 화면 — 기존 사이트 분석에서 찾은 문제와 개선 방향
+    caseStudy: {
+      label: 'Problem & Direction',
+      heading: ['SCIENCE', 'FOR YOUR SKIN'],
+      intro: "피부 고민을 과학적으로 해결하는 더마 브랜드 — 이 정체성이 사이트에서 먼저 보이도록 다시 설계했습니다.",
+      problems: [
+        { title: '브랜드 정체성 전달 부족', body: "'피부 고민을 과학적으로 해결하는 더마 브랜드'라는 정체성이 사이트에서 충분히 드러나지 않음" },
+        { title: '과도한 콘텐츠로 이미지 분산', body: '신제품·베스트셀러·컬렉션·프로모션이 한꺼번에 놓여 브랜드의 핵심 이미지가 흩어짐' },
+        { title: '복잡한 헤더 구조', body: '메뉴와 카테고리가 세분화되어 원하는 제품이나 정보를 찾기 어려움' },
+      ],
+      directions: [
+        { title: '디지털 연구소로 재해석', body: '핵심 정체성인 피부과학을 현대적인 디지털 연구소의 형태로 풀어 전문적이고 신뢰감 있는 이미지 구축' },
+        { title: '제품군 중심 → 피부 고민 중심', body: '제품을 나열하는 대신, 사용자가 피부 고민(REDNESS · DRYNESS · PORES)을 먼저 고르고 맞는 제품을 탐색' },
+        { title: '메인 페이지 간결화', body: '중복되거나 우선순위가 낮은 콘텐츠를 정리하고, 헤더도 PRODUCTS · LAB · BRAND · SEARCH로 단순화' },
+      ],
+      // 메인 페이지 구조 — 기존 9단 → 변경 7단
+      structure: {
+        before: ['헤더', '메인', '베스트셀러', '신제품', '피부 고민별 제품', '마스크팩 광고', '제품 후기', '마스크팩 광고', '푸터'],
+        after: ['HEADER', 'MAIN — SCIENCE FOR YOUR SKIN', 'SKIN CONCERN', 'BEST SELLER', 'PRODUCT REVIEW', 'MASK', 'FOOTER'],
+      },
+    },
+    // 03 화면 — 기존 사이트와 리디자인 시안을 겹쳐 손잡이로 밀어 비교한다 (둘 다 가로 1160px 전체 페이지)
+    compare: {
+      label: 'Before / After',
+      heading: ['BEFORE', '& AFTER'],
+      description: [
+        '기존 공식 사이트(왼쪽)와 리디자인 시안(오른쪽)을 겹쳐 두었습니다.',
+        '손잡이를 좌우로 밀어 비교하고, 화면 안을 스크롤하면 페이지 전체를 볼 수 있습니다.',
+      ],
+      before: { src: drJartBefore, alt: '기존 Dr.Jart+ 공식 사이트 메인 페이지 전체 — 프로모션 배너, 베스트셀러, 컬렉션, 마스크팩 광고가 이어지는 구성' },
+      after: { src: drJartAfter, alt: 'Dr.Jart+ 리디자인 메인 페이지 전체 — Dr./Jart+ 첫 화면, Doctor Joins Art, 피부 고민 선택, 베스트셀러, 리뷰, 마스크' },
+      site: 'https://yrkim2605-wq.github.io/dr-jart-website/',
     },
   },
 };

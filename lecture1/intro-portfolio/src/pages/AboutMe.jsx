@@ -27,7 +27,7 @@ const AboutMe = () => {
       </Box>
 
       <BackButton />
-      <EdgeNav prev={PAGE_LINKS.main} next={PAGE_LINKS.ai} />
+      <EdgeNav prev={PAGE_LINKS.main} next={PAGE_LINKS.drjart} />
       <SiteEffects />
 
       <SceneFade id={ABOUT_SECTIONS[0].id}>

@@ -26,7 +26,7 @@ const PROJECTS = [
     title: 'DR.JART+ REDESIGN',
     body: '"Doctor Joins Art, 의학과 예술의 만남"이라는 브랜드 가치를 실험실 무드의 과학적인 비주얼로 풀어낸 리디자인',
     image: drJartThumb, // 리디자인한 사이트의 데스크톱 첫 화면(hero) 캡처
-    link: 'https://yrkim2605-wq.github.io/dr-jart-website/',
+    link: `${import.meta.env.BASE_URL}project-drjart.html`, // 케이스 스터디 상세 페이지 (실제 사이트는 그 안의 VISIT SITE로)
     backdrop: 'rays',
     aspect: '1440 / 800',
   },

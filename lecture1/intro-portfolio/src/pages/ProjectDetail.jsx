@@ -7,15 +7,18 @@ import SceneFade from '../components/about-me/SceneFade';
 import SiteEffects from '../components/SiteEffects';
 import EdgeNav, { PAGE_LINKS } from '../components/EdgeNav';
 import useSmoothScroll from '../hooks/useSmoothScroll';
+import ProjectCaseStudy from '../components/project-detail/ProjectCaseStudy';
+import ProjectCompare from '../components/project-detail/ProjectCompare';
 
 // 프로젝트 상세 페이지 — 메인 네 번째 섹션의 카드(썸네일·CLICK)를 누르면 열린다
 // project: projectDetails.js의 한 항목 (프로젝트마다 진입점에서 넘겨준다)
 
 const HOME_URL = import.meta.env.BASE_URL;
 
-// 양옆 이전·다음 페이지 (EdgeNav의 순서: MAIN → ABOUT ME → AI → ILLUSTRATION → MAIN)
+// 양옆 이전·다음 페이지 (EdgeNav의 순서: MAIN → ABOUT ME → DR.JART+ → AI → ILLUSTRATION → MAIN)
 const EDGE_PAGES = {
-  ai: { prev: PAGE_LINKS.about, next: PAGE_LINKS.illustration },
+  drjart: { prev: PAGE_LINKS.about, next: PAGE_LINKS.ai },
+  ai: { prev: PAGE_LINKS.drjart, next: PAGE_LINKS.illustration },
   illustration: { prev: PAGE_LINKS.ai, next: PAGE_LINKS.main },
 };
 
@@ -33,7 +36,23 @@ const ProjectDetail = ({ project }) => {
       <EdgeNav {...EDGE_PAGES[project.key]} />
       <SiteEffects />
 
-      {project.second ? (
+      {project.caseStudy ? (
+        <>
+          {/* 케이스 스터디 — 01 소개 → 02 문제와 개선 방향 → 03 Before / After (자기소개 페이지와 같은 겹침 방식) */}
+          <SceneFade id={project.sections[0].id}>
+            <ProjectDetailIntro project={project} />
+          </SceneFade>
+          {/* 02의 sticky가 03이 올라오는 동안에도 붙어 있으려면, 02와 03이 같은 부모 안에 있어야 한다 */}
+          <Box sx={{ position: 'relative', zIndex: 1, bgcolor: '#000000' }}>
+            <SceneFade id={project.sections[1].id}>
+              <ProjectCaseStudy project={project} />
+            </SceneFade>
+            <Box sx={{ position: 'relative', zIndex: 1, bgcolor: '#000000' }}>
+              <ProjectCompare project={project} />
+            </Box>
+          </Box>
+        </>
+      ) : project.second ? (
         <>
           {/* 01은 화면에 붙은 채 뒤로 물러나고, 02가 같은 구성(전등 + 책자)으로 그 위를 덮으며 올라온다 */}
           <SceneFade id={project.sections[0].id}>
