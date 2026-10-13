@@ -123,7 +123,7 @@ const PopularReviewCarousel = ({ reviews }) => {
           onClick={() => setIsPaused((prev) => !prev)}
           aria-label={isPaused ? '자동 재생' : '일시 정지'}
           size="small"
-          sx={{ ...NAV_BUTTON_SX, width: 28, height: 28 }}
+          sx={{ ...NAV_BUTTON_SX, width: 36, height: 36 }}
         >
           {isPaused ? <PlayArrowIcon sx={{ fontSize: '1rem' }} /> : <PauseIcon sx={{ fontSize: '1rem' }} />}
         </IconButton>

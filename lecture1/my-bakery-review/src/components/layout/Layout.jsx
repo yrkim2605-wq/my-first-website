@@ -1,4 +1,5 @@
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
+import { useLenis } from 'lenis/react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { Outlet, useLocation, Link } from 'react-router-dom'
@@ -8,6 +9,13 @@ import ScrollToTopButton from '../common/ScrollToTopButton'
 
 const Layout = () => {
   const location = useLocation()
+  const lenis = useLenis()
+
+  // 다른 페이지로 이동하면 맨 위에서 시작해요 (부드러운 스크롤 Lenis를 쓰면 그쪽으로 즉시 이동)
+  useEffect(() => {
+    if (lenis) lenis.scrollTo(0, { immediate: true })
+    else window.scrollTo(0, 0)
+  }, [location.pathname, lenis])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

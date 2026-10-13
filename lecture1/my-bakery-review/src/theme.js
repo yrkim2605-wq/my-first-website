@@ -43,7 +43,7 @@ const theme = createTheme({
     },
     text: {
       primary: '#3B2A22', // 초콜릿 브라운
-      secondary: '#7A6656',
+      secondary: '#6B5747', // 보조 글자: 크림 바탕에서도 또렷하게 (대비 약 5.8:1)
     },
     crust: {
       main: '#332419',

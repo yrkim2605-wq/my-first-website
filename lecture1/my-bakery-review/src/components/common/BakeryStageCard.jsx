@@ -10,6 +10,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import BookmarkIcon from '@mui/icons-material/Bookmark'
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
+import PlaceIcon from '@mui/icons-material/Place'
 import { Link } from 'react-router-dom'
 import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
@@ -31,6 +32,7 @@ const BakeryStageCard = ({
   variant = 'default',
   height,
   photoSlot,
+  highlighted = false, // 홈 지도에서 고른 빵집이면 선택 표시
 }) => {
   const { photosByBakeryId } = useRealBakeryPhotos()
   const photoSrc = getBakeryPhoto(id, photosByBakeryId, photoSlot)
@@ -58,12 +60,22 @@ const BakeryStageCard = ({
         overflow: 'hidden',
         border: '1px solid rgba(59,42,34,0.08)',
         boxShadow: 'none',
-        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-        '&:hover': {
-          borderColor: 'rgba(123,45,59,0.35)',
-          boxShadow: '0 10px 24px rgba(59,42,34,0.08)',
+        ...(highlighted && {
+          borderColor: 'primary.main',
+          boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
+        }),
+        transition: 'transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
+        // 마우스가 있는 기기에서만 호버 효과 (터치 화면은 호버에 의존하지 않아요)
+        '@media (hover: hover)': {
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            borderColor: 'rgba(123,45,59,0.35)',
+            boxShadow: '0 14px 28px rgba(59,42,34,0.12)',
+          },
+          '&:hover .bakery-name': { color: 'primary.main' },
+          '&:hover .bakery-photo': { transform: 'scale(1.03)' },
         },
-        '&:hover .bakery-name': { color: 'primary.main' },
+        '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 3 },
       }}
     >
       <Box
@@ -74,8 +86,9 @@ const BakeryStageCard = ({
           mt: 1.5,
           borderRadius: ARCH_RADIUS,
           bgcolor: 'butter.main',
+          // 사진 높이를 고정해 모든 카드의 크롭 비율을 맞춰요 (캐러셀처럼 카드 높이가 정해진 경우도)
           ...(height
-            ? { flex: '1 1 auto', minHeight: 0 }
+            ? { height: { xs: 240, sm: 260, md: 280 }, flexShrink: 0 }
             : variant === 'featured'
               ? { height: { xs: 220, sm: 290, md: 330 }, flexShrink: 0 }
               : variant === 'square'
@@ -85,6 +98,7 @@ const BakeryStageCard = ({
       >
         <Box
           component="img"
+          className="bakery-photo"
           src={photoSrc}
           alt={name}
           loading="lazy"
@@ -92,8 +106,9 @@ const BakeryStageCard = ({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            transition: 'transform 0.5s ease',
-            '.MuiCard-root:hover &': { transform: 'scale(1.04)' },
+            objectPosition: 'center',
+            display: 'block',
+            transition: 'transform 0.4s ease',
           }}
         />
         {isNew && (
@@ -119,6 +134,8 @@ const BakeryStageCard = ({
             position: 'absolute',
             bottom: 8,
             right: 8,
+            width: 40,
+            height: 40,
             bgcolor: 'rgba(251,246,234,0.92)',
             '&:hover': { bgcolor: 'background.paper' },
           }}
@@ -131,7 +148,16 @@ const BakeryStageCard = ({
         </IconButton>
       </Box>
 
-      <CardContent sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 0.75, pt: 2 }}>
+      <CardContent sx={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: 0.75, pt: 2 }}>
+        {highlighted && (
+          <Typography
+            component="span"
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25, fontSize: '0.75rem', fontWeight: 700, color: 'primary.main' }}
+          >
+            <PlaceIcon sx={{ fontSize: '0.95rem' }} />
+            지도에서 선택한 빵집
+          </Typography>
+        )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
           <Typography
             variant="h3"
@@ -143,21 +169,23 @@ const BakeryStageCard = ({
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              minHeight: '2.7em', // 이름이 한 줄이어도 두 줄 높이를 차지해서 카드끼리 줄이 맞아요
             }}
+            title={name}
           >
             {name}
           </Typography>
           {districtLabel && (
             <Typography
               component="span"
-              sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'secondary.dark', flexShrink: 0, pt: 0.4 }}
+              sx={{ fontSize: '0.8125rem', fontWeight: 700, color: 'text.secondary', flexShrink: 0, pt: 0.4 }}
             >
               {districtLabel}
             </Typography>
           )}
         </Box>
 
-        <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
+        <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary' }} noWrap>
           {signatureMenu ? `대표 메뉴 · ${signatureMenu}` : '메뉴 정보 준비 중'}
         </Typography>
 
@@ -185,7 +213,7 @@ const BakeryStageCard = ({
             </Box>
           </Box>
         ) : (
-          <Typography sx={{ fontSize: '0.8rem', color: 'terracotta.main', fontWeight: 600 }}>
+          <Typography sx={{ fontSize: '0.8125rem', color: 'primary.main', fontWeight: 600 }}>
             아직 리뷰가 없어요 · 첫 리뷰를 남겨주세요
           </Typography>
         )}

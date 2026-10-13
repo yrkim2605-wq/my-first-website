@@ -97,7 +97,7 @@ const PodiumCard = ({ item }) => {
             borderRadius: RADIUS.pill,
             bgcolor: 'butter.main',
             color: 'butter.contrastText',
-            fontSize: '0.7rem',
+            fontSize: '0.75rem',
             fontWeight: 700,
           }}
         >

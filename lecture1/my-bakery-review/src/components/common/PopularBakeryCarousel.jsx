@@ -9,7 +9,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import BakeryStageCard from './BakeryStageCard'
 
 const SLIDE_INTERVAL = 4000
-const CARD_HEIGHT = { xs: 460, sm: 480, md: 500 }
+const CARD_HEIGHT = { xs: 430, sm: 445, md: 465 }
 const VISIBLE_COUNT = 3
 
 const NAV_BUTTON_SX = {
@@ -19,7 +19,8 @@ const NAV_BUTTON_SX = {
   '&:hover': { bgcolor: '#fff' },
 }
 
-const PopularBakeryCarousel = ({ bakeries }) => {
+// highlightedId: 지도에서 고른 빵집이 이 목록에 있으면 그 카드에 선택 표시를 해요
+const PopularBakeryCarousel = ({ bakeries, highlightedId }) => {
   const [index, setIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const total = bakeries.length
@@ -65,7 +66,7 @@ const PopularBakeryCarousel = ({ bakeries }) => {
                 display: i === 2 ? { xs: 'none', md: 'block' } : i === 1 ? { xs: 'none', sm: 'block' } : 'block',
               }}
             >
-              <BakeryStageCard {...bakery} variant="featured" height={CARD_HEIGHT} />
+              <BakeryStageCard {...bakery} variant="featured" height={CARD_HEIGHT} highlighted={bakery.id === highlightedId} />
             </Box>
           ))}
         </Box>
@@ -87,7 +88,7 @@ const PopularBakeryCarousel = ({ bakeries }) => {
           onClick={() => setIsPaused((prev) => !prev)}
           aria-label={isPaused ? '자동 재생' : '일시 정지'}
           size="small"
-          sx={{ ...NAV_BUTTON_SX, width: 28, height: 28 }}
+          sx={{ ...NAV_BUTTON_SX, width: 36, height: 36 }}
         >
           {isPaused ? <PlayArrowIcon sx={{ fontSize: '1rem' }} /> : <PauseIcon sx={{ fontSize: '1rem' }} />}
         </IconButton>

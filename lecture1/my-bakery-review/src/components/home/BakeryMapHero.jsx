@@ -8,14 +8,14 @@ import { MAP_REGIONS, DEFAULT_MAP_REGION_ID } from '../../constants/mapRegions'
 import { RADIUS } from '../../theme'
 
 // 홈 첫 화면: 부산 빵집을 지도에서 찾아보는 Hero 섹션
-const BakeryMapHero = ({ bakeries, loading, error, onRetry }) => {
+const BakeryMapHero = ({ bakeries, selectedId, onSelectBakery, loading, error, onRetry }) => {
   // 같은 지역 버튼을 다시 눌러도 지도가 돌아가도록, 누를 때마다 n을 올려요
   const [regionRequest, setRegionRequest] = useState({ id: DEFAULT_MAP_REGION_ID, n: 0 })
 
   return (
-    <Box component="section" aria-labelledby="map-hero-title" sx={{ bgcolor: 'background.default', pt: { xs: 5, md: 6 }, pb: { xs: 5, md: 7 } }}>
+    <Box component="section" aria-labelledby="map-hero-title" sx={{ bgcolor: 'background.default', pt: { xs: 4, md: 5 }, pb: { xs: 2, md: 2 } }}>
       <Container maxWidth="lg">
-        <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 3, md: 3.5 } }}>
+        <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
           <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.18em', color: 'terracotta.main', mb: 1 }}>
             FIND YOUR BAKERY
           </Typography>
@@ -82,8 +82,20 @@ const BakeryMapHero = ({ bakeries, loading, error, onRetry }) => {
           })}
         </Box>
 
-        <BakeryMap bakeries={bakeries} regionRequest={regionRequest} loading={loading} error={error} onRetry={onRetry} />
       </Container>
+
+      {/* 지도는 제목 · 버튼보다 넓게 (최대 1320px), 화면이 좁으면 화면 폭에 맞춰요 */}
+      <Box sx={{ maxWidth: 1320 + 48, mx: 'auto', px: { xs: 2, sm: 3 } }}>
+        <BakeryMap
+          bakeries={bakeries}
+          regionRequest={regionRequest}
+          selectedId={selectedId}
+          onSelectBakery={onSelectBakery}
+          loading={loading}
+          error={error}
+          onRetry={onRetry}
+        />
+      </Box>
     </Box>
   )
 }

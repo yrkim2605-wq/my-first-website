@@ -14,6 +14,7 @@ import PopularReviewCarousel from '../components/common/PopularReviewCarousel'
 import InfiniteBakeryMarquee from '../components/common/InfiniteBakeryMarquee'
 import SectionHeading from '../components/common/SectionHeading'
 import BakeryMapHero from '../components/home/BakeryMapHero'
+import LevelUpTeaser from '../components/home/LevelUpTeaser'
 import ScallopEdge from '../components/common/decor/ScallopEdge'
 import FlatFlower from '../components/common/decor/FlatFlower'
 import StatusMessage from '../components/common/StatusMessage'
@@ -55,6 +56,8 @@ const Home = () => {
   const [selectedDistrictId, setSelectedDistrictId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [visibleCount, setVisibleCount] = useState(BAKERY_PAGE_SIZE)
+  // 지도에서 고른 빵집: 오늘 인기 빵집 캐러셀에도 선택 표시를 해요
+  const [mapSelectedId, setMapSelectedId] = useState(null)
   const {
     bakeries: realBakeries,
     loading: bakeriesLoading,
@@ -138,7 +141,14 @@ const Home = () => {
   return (
     <>
       {/* 첫 화면: 부산 빵집 지도 */}
-      <BakeryMapHero bakeries={realBakeries} loading={bakeriesLoading} error={bakeriesError} onRetry={reloadBakeries} />
+      <BakeryMapHero
+        bakeries={realBakeries}
+        selectedId={mapSelectedId}
+        onSelectBakery={setMapSelectedId}
+        loading={bakeriesLoading}
+        error={bakeriesError}
+        onRetry={reloadBakeries}
+      />
 
       {/* 오늘 인기 빵집 */}
       <Box sx={{ py: SECTION_PY }}>
@@ -160,7 +170,7 @@ const Home = () => {
           )}
           {bakeriesError && <Container maxWidth="md">{bakeriesErrorMessage}</Container>}
           {!bakeriesLoading && !bakeriesError && popularBakeries.length > 0 && (
-            <PopularBakeryCarousel bakeries={carouselBakeries} />
+            <PopularBakeryCarousel bakeries={carouselBakeries} highlightedId={mapSelectedId} />
           )}
         </Box>
       </Box>
@@ -185,6 +195,9 @@ const Home = () => {
         </Box>
         <ScallopEdge color={sageColor} position="bottom" />
       </Box>
+
+      {/* 레벨업 안내 (작은 띠) */}
+      <LevelUpTeaser />
 
       {/* 새로 등록된 빵집 (오류일 때는 위에서 한 번만 안내하고 숨겨요) */}
       {!bakeriesError && (
@@ -213,15 +226,15 @@ const Home = () => {
         </Box>
       )}
 
-      {/* 빵집 찾기: 와인 색 블록 + 검색 */}
+      {/* 이름 · 메뉴 검색: 와인 색 블록 (위치로 찾기는 맨 위 지도 Hero에서) */}
       <Box sx={{ ...FULL_BLEED_SX }}>
         <Box sx={{ position: 'relative', bgcolor: 'primary.main', pt: SECTION_PY, pb: { xs: 5, md: 6 }, overflow: 'hidden' }}>
           <FlatFlower petal={palette.mustard.main} center={palette.primary.main} size={60} sx={{ position: 'absolute', top: 28, right: { xs: -16, md: 120 } }} />
           <FlatFlower petal={palette.background.paper} center={palette.terracotta.main} size={40} sx={{ position: 'absolute', bottom: 24, left: { xs: 12, md: 110 }, opacity: 0.9 }} />
           <Container maxWidth="sm" sx={{ position: 'relative' }}>
             <SectionHeading
-              eyebrow="FIND YOUR BAKERY"
-              title="부산 빵집 찾기"
+              eyebrow="SEARCH BY NAME"
+              title="찾고 싶은 빵집이 있나요?"
               description="빵집 이름이나 먹고 싶은 메뉴로 찾아보세요."
               tone="onColor"
               sx={{ mb: 3 }}
@@ -229,7 +242,7 @@ const Home = () => {
             <TextField
               value={searchQuery}
               onChange={handleSearchChange}
-              placeholder="예: 소금빵, 해운대, 크루아상"
+              placeholder="빵집 이름이나 메뉴를 검색해 보세요"
               variant="outlined"
               fullWidth
               sx={{

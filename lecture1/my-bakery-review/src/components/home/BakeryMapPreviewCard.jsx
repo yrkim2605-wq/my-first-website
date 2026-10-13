@@ -1,0 +1,109 @@
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
+import Rating from '@mui/material/Rating'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { Link } from 'react-router-dom'
+import { getBakeryPhoto } from '../../constants/bakeryPhotos'
+import { DISTRICTS } from '../../constants/districts'
+import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
+import { DISPLAY_FONT, RADIUS } from '../../theme'
+
+// 지도 Hero의 빵집 미리보기 카드 (마커 정보를 보여주는 유일한 카드예요)
+// 처음에는 대표 빵집, 마커를 누르면 그 빵집을 보여주고, [상세 보기]로 상세페이지에 가요.
+// variant="overlay": 넓은 화면에서 지도 위에 뜨는 세로형 / variant="compact": 모바일에서 지도 아래 가로형
+const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', sx }) => {
+  const { photosByBakeryId } = useRealBakeryPhotos()
+  const district = DISTRICTS.find((d) => d.id === bakery.districtId)
+  const isCompact = variant === 'compact'
+  const hasRating = bakery.rating > 0
+
+  return (
+    <Box
+      aria-live="polite"
+      sx={{
+        display: 'flex',
+        flexDirection: isCompact ? 'row' : 'column',
+        alignItems: isCompact ? 'center' : 'stretch',
+        gap: isCompact ? 1.5 : 0,
+        p: isCompact ? 1.25 : 1.5,
+        bgcolor: 'background.paper',
+        borderRadius: RADIUS.lg,
+        border: '1px solid rgba(59,42,34,0.08)',
+        boxShadow: '0 10px 28px rgba(59,42,34,0.16)',
+        ...sx,
+      }}
+    >
+      <Box
+        component="img"
+        src={getBakeryPhoto(bakery.id, photosByBakeryId, bakery.photoSlot)}
+        alt=""
+        sx={{
+          width: isCompact ? 72 : '100%',
+          height: isCompact ? 72 : 128,
+          flexShrink: 0,
+          objectFit: 'cover',
+          borderRadius: isCompact ? '999px 999px 10px 10px' : '999px 999px 12px 12px',
+          mb: isCompact ? 0 : 1.25,
+        }}
+      />
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em', color: 'primary.main', mb: 0.25 }}>
+          {isSelected ? '선택한 빵집' : '오늘의 추천 빵집'}
+        </Typography>
+        <Typography
+          sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: isCompact ? '1rem' : '1.1rem', lineHeight: 1.35 }}
+          noWrap
+          title={bakery.name}
+        >
+          {bakery.name}
+        </Typography>
+        <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', mt: 0.25 }} noWrap>
+          {district ? `${district.name} · ` : ''}
+          {bakery.address}
+        </Typography>
+        {/* 평점은 실제 데이터가 있을 때만 보여줘요 (없으면 이 줄을 숨겨요) */}
+        {hasRating && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+            <Rating
+              value={bakery.rating}
+              precision={0.5}
+              readOnly
+              size="small"
+              sx={{ fontSize: '1rem', '& .MuiRating-iconFilled': { color: 'mustard.main' } }}
+            />
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700 }}>{bakery.rating.toFixed(1)}</Typography>
+          </Box>
+        )}
+        {!isCompact && (
+          <Button
+            component={Link}
+            to={`/bakery/${bakery.id}`}
+            variant="contained"
+            size="small"
+            fullWidth
+            endIcon={<ArrowForwardIcon sx={{ fontSize: '1rem !important' }} />}
+            aria-label={`${bakery.name} 상세 보기`}
+            sx={{ mt: 1.25, borderRadius: RADIUS.pill, py: 0.6, fontWeight: 700 }}
+          >
+            상세 보기
+          </Button>
+        )}
+      </Box>
+      {isCompact && (
+        <Button
+          component={Link}
+          to={`/bakery/${bakery.id}`}
+          variant="contained"
+          size="small"
+          aria-label={`${bakery.name} 상세 보기`}
+          sx={{ flexShrink: 0, borderRadius: RADIUS.pill, px: 1.5, py: 0.6, fontWeight: 700, minWidth: 0 }}
+        >
+          상세 보기
+        </Button>
+      )}
+    </Box>
+  )
+}
+
+export default BakeryMapPreviewCard

@@ -1,1 +1,0 @@
-import{b as e,wt as t}from"./contains-CvjSQ-Ys.js";var n=`/my-first-website/my-bakery-review/assets/logo-mascot-photo-DXsKWRLQ.webp`,r=t(),i=({children:t,variant:n=`light`,sx:i,...a})=>(0,r.jsx)(e,{className:n===`dark`?`wood-panel`:`wood-panel-light`,sx:{p:2,...i},...a,children:t});export{n,i as t};

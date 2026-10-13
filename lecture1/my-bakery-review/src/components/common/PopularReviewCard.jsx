@@ -45,9 +45,12 @@ const PopularReviewCard = ({
         border: '1px solid rgba(46,42,37,0.07)',
         boxShadow: '0 1px 3px rgba(46,42,37,0.05)',
         ...HOVER_LIFT_SX,
-        '&:hover': {
-          ...HOVER_LIFT_SX['&:hover'],
-          borderColor: 'rgba(46,42,37,0.14)',
+        '@media (hover: hover)': {
+          '&:hover': {
+            ...HOVER_LIFT_SX['@media (hover: hover)']['&:hover'],
+            borderColor: 'rgba(123,45,59,0.3)',
+          },
+          '&:hover .review-photo': { transform: 'scale(1.03)' },
         },
       }}
     >
@@ -57,14 +60,13 @@ const PopularReviewCard = ({
           src={photoSrc}
           alt={`${bakeryName} 리뷰 사진`}
           loading="lazy"
+          className="review-photo"
           sx={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+            display: 'block',
             transition: 'transform 0.4s ease',
-            '.MuiCard-root:hover &': {
-              transform: 'scale(1.06)',
-            },
           }}
         />
       </Box>

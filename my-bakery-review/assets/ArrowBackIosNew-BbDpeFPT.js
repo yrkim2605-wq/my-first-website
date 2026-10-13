@@ -1,1 +1,0 @@
-import{_ as e,wt as t}from"./contains-CvjSQ-Ys.js";var n=t(),r=e((0,n.jsx)(`path`,{d:`M17.77 3.77 16 2 6 12l10 10 1.77-1.77L9.54 12z`}),`ArrowBackIosNew`);export{r as t};
