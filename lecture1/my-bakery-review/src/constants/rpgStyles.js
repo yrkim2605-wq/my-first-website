@@ -31,3 +31,26 @@ export const GAME_ICON_BUTTON_SX = {
   '&:hover': { bgcolor: '#f9edcb', boxShadow: '0 3px 0 rgba(33,20,10,0.35)' },
   '&:active': { boxShadow: '0 0 0 rgba(33,20,10,0)' },
 }
+
+// 모험 일지 종이: 양피지 + 줄 노트 + 왼쪽 가죽 제본 띠(고리 구멍). 리뷰 카드에 써요.
+// 제본 띠 자리(왼쪽 14px)를 비워 두려고 pl을 같이 줘요.
+export const JOURNAL_PAPER_SX = {
+  position: 'relative',
+  pl: '14px',
+  ...PARCHMENT_SX,
+  backgroundImage: `repeating-linear-gradient(180deg, transparent 0 27px, rgba(201,165,106,0.26) 27px 28px), ${PARCHMENT_SX.backgroundImage}`,
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 14,
+    backgroundColor: '#6b4423',
+    backgroundImage: 'radial-gradient(circle at 50% 50%, #f9edcb 3px, rgba(0,0,0,0.35) 3.5px, transparent 4.5px)',
+    backgroundSize: '14px 30px',
+    backgroundPosition: '0 12px',
+    borderRight: '2px solid #3e2713',
+    pointerEvents: 'none',
+  },
+}

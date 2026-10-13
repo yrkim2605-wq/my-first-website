@@ -189,3 +189,22 @@ body::before {
     scroll-behavior: auto !important;
   }
 }
+
+/* 보상 화면의 "+EXP" 숫자가 톡 튀어나오는 효과 (움직임 줄이기 설정이면 전역 규칙이 바로 끝내요) */
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pop-in {
+  animation: popIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

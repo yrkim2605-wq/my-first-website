@@ -26,10 +26,10 @@ function App() {
   return (
     <BusanBakeriesProvider>
       <VisitedBakeriesProvider>
-        <RealBakeryPhotosProvider>
-          {/* 임시 로컬 프로필과 리뷰 저장소 (이 브라우저에만 저장돼요) */}
-          <ProfileProvider>
-            <ReviewsProvider>
+        {/* 임시 로컬 프로필과 리뷰 저장소 (이 브라우저에만 저장돼요) */}
+        <ProfileProvider>
+          <ReviewsProvider>
+            <RealBakeryPhotosProvider>
               <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: !prefersReducedMotion }}>
                 <HashRouter>
                   <Routes>
@@ -46,9 +46,9 @@ function App() {
                   </Routes>
                 </HashRouter>
               </ReactLenis>
-            </ReviewsProvider>
-          </ProfileProvider>
-        </RealBakeryPhotosProvider>
+            </RealBakeryPhotosProvider>
+          </ReviewsProvider>
+        </ProfileProvider>
       </VisitedBakeriesProvider>
     </BusanBakeriesProvider>
   )

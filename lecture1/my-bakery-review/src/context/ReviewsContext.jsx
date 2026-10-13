@@ -7,6 +7,7 @@ import { reviewRepository } from '../storage/reviewRepository'
 export const ReviewsProvider = ({ children }) => {
   const profileCtx = useContext(ProfileContext)
   const userId = profileCtx?.profile?.userId ?? null
+  const authorNickname = profileCtx?.profile?.nickname ?? ''
   const [reviews, setReviews] = useState([])
   const [loaded, setLoaded] = useState(false)
 
@@ -27,11 +28,11 @@ export const ReviewsProvider = ({ children }) => {
 
   const createReview = useCallback(
     async (input) => {
-      const created = await reviewRepository.create({ ...input, userId })
+      const created = await reviewRepository.create({ ...input, userId, authorNickname })
       await reload()
       return created
     },
-    [userId, reload],
+    [userId, authorNickname, reload],
   )
 
   const updateReview = useCallback(

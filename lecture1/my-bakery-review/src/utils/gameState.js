@@ -74,3 +74,16 @@ export const diffGameState = (before, after) => {
     levelAfter: after.progress.currentLevel,
   }
 }
+
+// 리뷰 목록에서 사용자(userId)마다 현재 레벨을 계산해요. 리뷰 카드의 작성자 레벨 표시에 써요.
+export const buildLevelsByUser = (reviews) => {
+  const grouped = new Map()
+  reviews.forEach((review) => {
+    grouped.set(review.userId, [...(grouped.get(review.userId) ?? []), review])
+  })
+  const levels = {}
+  grouped.forEach((userReviews, userId) => {
+    levels[userId] = buildGameState(userReviews).progress.currentLevel
+  })
+  return levels
+}

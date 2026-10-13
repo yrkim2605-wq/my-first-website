@@ -7,7 +7,7 @@ import PlaceIcon from '@mui/icons-material/Place'
 import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { HOVER_LIFT_SX } from '../../constants/motion'
-import { PARCHMENT_SX } from '../../constants/rpgStyles'
+import { JOURNAL_PAPER_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
 const IMAGE_HEIGHT_BY_SIZE = { lg: 220, default: 150, sm: 96 }
@@ -43,30 +43,11 @@ const PopularReviewCard = ({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        position: 'relative',
-        pl: '14px', // 왼쪽 제본 띠 자리
+        ...JOURNAL_PAPER_SX,
         textDecoration: 'none',
         color: 'inherit',
         overflow: 'hidden',
-        ...PARCHMENT_SX,
-        // 노트의 가로 줄
-        backgroundImage: `repeating-linear-gradient(180deg, transparent 0 27px, rgba(201,165,106,0.26) 27px 28px), ${PARCHMENT_SX.backgroundImage}`,
         borderRadius: RADIUS.lg,
-        // 가죽 제본 띠 + 고리 구멍
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 14,
-          backgroundColor: '#6b4423',
-          backgroundImage: 'radial-gradient(circle at 50% 50%, #f9edcb 3px, rgba(0,0,0,0.35) 3.5px, transparent 4.5px)',
-          backgroundSize: '14px 30px',
-          backgroundPosition: '0 12px',
-          borderRight: '2px solid #3e2713',
-          pointerEvents: 'none',
-        },
         ...HOVER_LIFT_SX,
         '@media (hover: hover)': {
           '&:hover': {

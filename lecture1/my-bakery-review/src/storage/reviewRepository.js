@@ -8,6 +8,7 @@ import { RepositoryError, createId, readJson, subscribeToKey, writeJson } from '
 //     id,                 // 리뷰 고유 ID (UUID)
 //     clientRequestId,    // 같은 제출이 두 번 들어와도 한 번만 저장하려고 쓰는 값
 //     userId,             // 작성한 프로필 (profileRepository의 userId)
+//     authorNickname,     // 저장 당시 닉네임 (화면 표시용 스냅샷)
 //     bakeryId,           // 빵집 ID (카카오 장소 ID는 문자열, 샘플 빵집은 숫자 → 항상 문자열로 저장)
 //     bakerySource,       // 'kakao' | 'sample'
 //     bakeryName,         // 저장 당시 빵집 이름 (카카오 검색 결과가 바뀌어도 기록이 남게)
@@ -69,7 +70,7 @@ export const reviewRepository = {
   },
 
   // 새 리뷰를 저장해요. 저장에 성공했을 때만 리뷰를 돌려줘요 (실패하면 오류를 던져요).
-  async create({ userId, bakeryId, bakerySource, bakeryName, districtId = null, rating, content, photo = null, clientRequestId }) {
+  async create({ userId, authorNickname, bakeryId, bakerySource, bakeryName, districtId = null, rating, content, photo = null, clientRequestId }) {
     if (!userId) throw new RepositoryError('NOT_SIGNED_IN', '리뷰를 남기려면 먼저 로그인해주세요.')
     const normalizedBakeryId = String(bakeryId)
     const state = readState()
@@ -87,6 +88,7 @@ export const reviewRepository = {
       id: createId(),
       clientRequestId: clientRequestId ?? null,
       userId,
+      authorNickname: String(authorNickname ?? ''),
       bakeryId: normalizedBakeryId,
       bakerySource: bakerySource === 'sample' ? 'sample' : 'kakao',
       bakeryName: String(bakeryName ?? ''),
