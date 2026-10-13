@@ -12,7 +12,7 @@ export const buildLocalRanking = (profiles, reviews) =>
         nickname: profile.nickname,
         createdAt: profile.createdAt,
         exp: game.exp,
-        reviewCount: game.stats.reviewCount,
+        reviewCount: game.stats.allReviewCount ?? game.stats.reviewCount,
         discoveredCount: game.stats.discoveredBakeryIds.size,
         levelIndex: game.progress.currentIndex,
         level: game.progress.currentLevel,

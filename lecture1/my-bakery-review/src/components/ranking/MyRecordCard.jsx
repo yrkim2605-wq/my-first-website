@@ -48,7 +48,7 @@ const MyRecordCard = () => {
           </Typography>
         </Box>
         <Typography sx={{ fontSize: '0.82rem', color: 'text.secondary', mt: 0.25 }}>
-          누적 EXP {game.exp} · 모험 일지 {game.stats.reviewCount}개 · 발견한 빵집 {discovery.discoveredCount}곳
+          누적 EXP {game.exp} · 모험 일지 {game.stats.allReviewCount ?? game.stats.reviewCount}개 · 발견한 빵집 {discovery.discoveredCount}곳
         </Typography>
       </Box>
       <Button component={Link} to="/mypage" size="small" sx={{ flexShrink: 0 }}>

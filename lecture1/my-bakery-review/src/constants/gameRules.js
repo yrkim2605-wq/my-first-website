@@ -11,6 +11,11 @@ export const EXP_RULES = {
   reviewPhoto: 10, // 사진을 붙인 리뷰의 추가 EXP
 }
 
+// 계정 모드(Supabase)의 하루 EXP 상한과 하루 작성 상한이에요. 진짜 기준은 서버(game_settings 표)이고, 이 값은
+// 서버 값을 못 읽었을 때의 기본값 · 저장 전 "예상 EXP" 미리보기용이에요. 서버 상한을 바꾸면 화면은 서버 값을 따라가요.
+export const DAILY_EXP_CAP = 100
+export const DAILY_REVIEW_LIMIT = 20
+
 // 퀘스트: 실제 저장된 리뷰로 완료 여부를 확인할 수 있는 것만 만들어요.
 // stat: gameState.computeStats가 계산하는 값의 이름, target: 완료에 필요한 값, bonusExp: 완료 보너스
 export const QUESTS = [

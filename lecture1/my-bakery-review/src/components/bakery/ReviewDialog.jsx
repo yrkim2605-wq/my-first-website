@@ -18,7 +18,8 @@ import { useReviews } from '../../hooks/useReviews'
 import { useGameState } from '../../hooks/useGameState'
 import { REVIEW_CONTENT_MAX } from '../../storage/reviewRepository'
 import { createId } from '../../storage/localStore'
-import { buildGameState, diffGameState } from '../../utils/gameState'
+import { buildGameState, diffGameState, predictNewReviewExp } from '../../utils/gameState'
+import { IS_ACCOUNT_MODE } from '../../lib/backend'
 import { resizeImageFile } from '../../utils/resizeImageFile'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
@@ -29,7 +30,7 @@ import { DISPLAY_FONT, RADIUS } from '../../theme'
 // - 부모는 이 창을 열 때마다 key를 바꿔서 새로 만들어요 (입력값이 이전 열기에서 남지 않게).
 const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onSaved }) => {
   const { profile } = useProfile()
-  const { createReview, updateReview } = useReviews()
+  const { createReview, updateReview, gameSettings } = useReviews()
   const game = useGameState()
   const isEdit = Boolean(existingReview)
 
@@ -41,12 +42,27 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
   const requestIdRef = useRef(createId())
 
   const bakerySource = isRealBakery ? 'kakao' : 'sample'
-  const canSubmit = Boolean(content.trim()) && rating >= 0.5 && !submitting
+  // 계정 모드: 예시 빵집은 DB에 없어서 저장할 수 없고, 하루 EXP 상한 · 작성 상한은 서버 규칙과 같게 미리 계산해요
+  const sampleBlocked = IS_ACCOUNT_MODE && !isRealBakery
+  const prediction =
+    IS_ACCOUNT_MODE && !isEdit && !sampleBlocked
+      ? predictNewReviewExp(game.myReviews, { hasPhoto: Boolean(photo), settings: gameSettings?.dailyExpCap != null ? gameSettings : undefined })
+      : null
+  const canSubmit = Boolean(content.trim()) && rating >= 0.5 && !submitting && !sampleBlocked && !prediction?.limitReached
 
   // 저장하면 받게 될 EXP를 미리 계산해서 보여줘요 (저장 전 / 후 상태 비교)
+  // 계정 모드: 고쳐 쓰기는 EXP가 변하지 않고, 새 일지는 하루 상한을 반영해요 (진짜 지급은 서버가 정해요)
   const draftReviews = (() => {
+    if (IS_ACCOUNT_MODE && (isEdit || sampleBlocked)) return game.myReviews
     if (isEdit) return game.myReviews.map((review) => (review.id === existingReview.id ? { ...review, photo } : review))
-    const draft = { id: 'draft', bakeryId: String(bakery.id), bakerySource, districtId: bakery.districtId ?? null, photo }
+    const draft = {
+      id: 'draft',
+      bakeryId: String(bakery.id),
+      bakerySource,
+      districtId: bakery.districtId ?? null,
+      photo,
+      ...(prediction && { expReview: prediction.expReview, expPhoto: prediction.expPhoto, createdAt: new Date().toISOString() }),
+    }
     return [draft, ...game.myReviews]
   })()
   const expPreview = diffGameState(game, buildGameState(draftReviews)).expGained
@@ -76,6 +92,9 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
             bakerySource,
             bakeryName: bakery.name,
             districtId: bakery.districtId ?? null,
+            bakeryLat: bakery.lat,
+            bakeryLng: bakery.lng,
+            bakeryAddress: bakery.address,
             rating,
             content,
             photo,
@@ -122,7 +141,9 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
           <Illustration name="knightCheer" width={120} sx={{ mx: 'auto', mb: 1.5 }} />
           <Typography sx={{ fontWeight: 700, mb: 0.75 }}>모험 일지를 쓰려면 모험가가 필요해요</Typography>
           <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', mb: 2, wordBreak: 'keep-all' }}>
-            닉네임만 정하면 바로 시작할 수 있어요. (이 브라우저에만 저장되는 임시 프로필이에요)
+            {IS_ACCOUNT_MODE
+              ? '이메일로 가입하고 인증을 마치면 시작할 수 있어요. 일지는 내 계정에 저장돼요.'
+              : '닉네임만 정하면 바로 시작할 수 있어요. (이 브라우저에만 저장되는 임시 프로필이에요)'}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Button component={Link} to="/signup" variant="contained">
@@ -202,7 +223,41 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
               </Box>
             )}
 
-            <LocalProfileNotice sx={{ mt: 2 }}>
+            {/* 계정 모드의 EXP 안내: 하루 상한 · 고쳐 쓰기 · 예시 빵집 */}
+            {sampleBlocked && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                예시 빵집에는 일지를 저장할 수 없어요. 지도에서 실제 빵집을 골라 주세요.
+              </Alert>
+            )}
+            {prediction?.limitReached && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                오늘은 일지를 너무 많이 썼어요 (하루 20개까지). 내일 다시 써 주세요.
+              </Alert>
+            )}
+            {prediction && !prediction.limitReached && !prediction.expReview && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                오늘의 EXP 한도를 모두 채워서 이 일지는 <b>EXP 없이</b> 저장돼요. 일지와 빵집 도감에는 그대로 기록돼요.
+              </Alert>
+            )}
+            {prediction?.expReview && photo && !prediction.expPhoto && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                오늘 남은 EXP가 모자라서 <b>사진 EXP는 받을 수 없어요</b>. 일지 EXP만 받아요.
+              </Alert>
+            )}
+            {IS_ACCOUNT_MODE && isEdit && (
+              <Typography sx={{ mt: 2, fontSize: '0.8rem', color: 'text.secondary', wordBreak: 'keep-all' }}>
+                고쳐 쓰기로는 EXP가 늘지도 줄지도 않아요. 사진 EXP는 처음 쓸 때 사진이 있었던 일지만 받아요.
+              </Typography>
+            )}
+
+            <LocalProfileNotice
+              sx={{ mt: 2 }}
+              accountChildren={
+                <>
+                  일지는 <b>내 계정에 저장</b>돼요. 다른 기기에서 로그인해도 볼 수 있고, 다른 모험가에게도 <b>공개</b>돼요.
+                </>
+              }
+            >
               일지는 <b>이 브라우저에만 저장</b>돼요. 다른 사람에게 공유되지 않고, 사이트 데이터를 지우면 사라져요.
             </LocalProfileNotice>
 

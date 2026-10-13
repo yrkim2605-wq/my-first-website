@@ -7,6 +7,7 @@ import Illustration from '../common/decor/Illustration'
 import Sparkle from '../common/decor/Sparkle'
 import { PARCHMENT_SX, WOOD_PLANK_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
+import { IS_ACCOUNT_MODE } from '../../lib/backend'
 
 const StatTile = ({ label, value }) => (
   <Box sx={{ flex: '1 1 0', minWidth: 76, textAlign: 'center', px: 1, py: 1, borderRadius: RADIUS.md, bgcolor: 'rgba(255,255,255,0.55)', border: '1px solid rgba(201,165,106,0.6)' }}>
@@ -70,7 +71,7 @@ const AdventurerStatusWindow = ({ game, discoveredCount, onOpenLevelBook }) => {
             {profile.nickname}
           </Typography>
           <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', mb: 2 }}>
-            {profile.createdAt.slice(0, 10)} 모험 시작 · 이 브라우저에 저장된 임시 프로필
+            {profile.createdAt.slice(0, 10)} 모험 시작 · {IS_ACCOUNT_MODE ? '내 계정에 저장된 프로필' : '이 브라우저에 저장된 임시 프로필'}
           </Typography>
 
           <XpProgressBar
@@ -83,7 +84,7 @@ const AdventurerStatusWindow = ({ game, discoveredCount, onOpenLevelBook }) => {
           />
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
-            <StatTile label="모험 일지" value={stats.reviewCount} />
+            <StatTile label="모험 일지" value={stats.allReviewCount ?? stats.reviewCount} />
             <StatTile label="발견한 빵집" value={discoveredCount} />
             <StatTile label="완료한 퀘스트" value={`${completedQuests}/${quests.length}`} />
             <StatTile label="누적 EXP" value={progress.exp} />

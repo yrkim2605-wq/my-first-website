@@ -107,7 +107,14 @@ const MyPage = () => {
           description="레벨, 퀘스트, 빵집 도감, 모험 일지를 모아봤어요."
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
-        <LocalProfileNotice sx={{ mb: 3 }}>
+        <LocalProfileNotice
+          sx={{ mb: 3 }}
+          accountChildren={
+            <>
+              일지 · EXP · 레벨 · 배지 · 도감은 <b>내 계정에 저장</b>돼서 다른 기기에서 로그인해도 같아요. EXP와 레벨은 서버가 검증한 일지로 계산해요. 방문 체크는 아직 계정에 연결되지 않았어요.
+            </>
+          }
+        >
           이 상태창의 기록은 <b>이 브라우저에만 저장</b>돼요. 다른 기기나 다른 사람과 공유되지 않고, 사이트 데이터를 지우면 사라져요.
         </LocalProfileNotice>
 

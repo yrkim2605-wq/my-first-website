@@ -1,0 +1,107 @@
+// register-bakery(빵집 등록 서버 함수)의 판단 로직 검증. 카카오 · Supabase는 가짜로 바꿔서 실제 서버를 부르지 않아요.
+// 실행: node supabase/tests/register-bakery.test.mjs   (Node의 TypeScript 지원으로 .ts를 그대로 불러와요)
+
+import { DISTRICT_CENTERS, distanceKm, findBakeryDocument, handleRequest, resolveDistrict, validateInput } from '../functions/register-bakery/index.ts'
+
+let passed = 0
+const failures = []
+const check = (name, ok, detail = '') => {
+  if (ok) passed += 1
+  else failures.push(`${name} ${detail}`)
+  console.log(`${ok ? '✅' : '❌'} ${name}${ok ? '' : ' ' + detail}`)
+}
+
+const good = { id: '12345678', name: '테스트 베이커리', districtId: 'haeundae', lat: 35.158, lng: 129.06 }
+
+check('올바른 입력 통과', validateInput(good).ok === true)
+check('ID 형식 오류 거부', validateInput({ ...good, id: 'abc' }).ok === false)
+check('빈 이름 거부', validateInput({ ...good, name: '  ' }).ok === false)
+check('클라이언트가 보낸 지역 값은 무시(결과에 없음)', validateInput(good).value.districtId === undefined)
+check('좌표 범위 밖 거부', validateInput({ ...good, lat: 10 }).ok === false)
+check('문자열 좌표 거부(NaN)', validateInput({ ...good, lat: 'x' }).ok === false)
+check('숫자 ID도 문자열로 받아 통과', validateInput({ ...good, id: 12345678 }).ok === true)
+
+check('거리 계산: 같은 점은 0', distanceKm(35, 129, 35, 129) === 0)
+check('서면 근처 좌표 → 서면', resolveDistrict(35.158, 129.06) === 'seomyeon')
+check('각 지역 중심은 자기 지역으로', Object.entries(DISTRICT_CENTERS).every(([id, c]) => resolveDistrict(c.lat, c.lng) === id))
+check('부산 밖(서울) 좌표는 null', resolveDistrict(37.5665, 126.978) === null)
+
+const docs = [
+  { id: '1', place_name: '카페', category_name: '음식점 > 카페' },
+  { id: '12345678', place_name: '진짜 베이커리', category_name: '음식점 > 간식 > 제과,베이커리', road_address_name: '부산 서구 1', x: '129.0601', y: '35.1581' },
+]
+check('같은 ID의 제과·베이커리를 찾아요', findBakeryDocument(docs, '12345678')?.place_name === '진짜 베이커리')
+check('ID가 같아도 카테고리가 제과가 아니면 거부', findBakeryDocument([{ id: '9', category_name: '음식점 > 카페' }], '9') === null)
+check('ID가 없으면 null', findBakeryDocument(docs, '999') === null)
+
+// handleRequest 가짜 환경
+const makeDeps = (over = {}) => {
+  const calls = { kakao: 0, upserts: [] }
+  const deps = {
+    getUser: async (jwt) => (jwt === 'good' ? { id: 'u1', emailConfirmed: true } : jwt === 'unverified' ? { id: 'u2', emailConfirmed: false } : null),
+    hasBakery: async () => false,
+    upsertBakery: async (row) => calls.upserts.push(row),
+    searchKakao: async () => {
+      calls.kakao += 1
+      return docs
+    },
+    ...over,
+  }
+  return { deps, calls }
+}
+const request = (body, token = 'good', method = 'POST') =>
+  new Request('http://x/register-bakery', { method, headers: token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : {}, body: method === 'GET' || body === undefined ? undefined : JSON.stringify(body) })
+const run = async (req, over) => {
+  const { deps, calls } = makeDeps(over)
+  const res = await handleRequest(req, deps)
+  return { status: res.status, body: await res.json(), calls }
+}
+
+{
+  const r = await run(request(good, null))
+  check('로그인 없이는 401', r.status === 401 && r.calls.kakao === 0)
+}
+{
+  const r = await run(request(good, 'bad'))
+  check('잘못된 토큰은 401', r.status === 401)
+}
+{
+  const r = await run(request(good, 'unverified'))
+  check('이메일 미인증은 403', r.status === 403 && r.body.error.code === 'EMAIL_NOT_VERIFIED')
+}
+{
+  const r = await run(request({ ...good, id: 'x' }))
+  check('잘못된 입력은 400이고 카카오를 부르지 않아요', r.status === 400 && r.calls.kakao === 0)
+}
+{
+  const r = await run(request(good, 'good', 'GET'))
+  check('POST가 아니면 405', r.status === 405)
+}
+{
+  const r = await run(request(good), { hasBakery: async () => true })
+  check('이미 등록된 빵집은 카카오를 다시 부르지 않고 성공', r.status === 200 && r.body.registered === false && r.calls.kakao === 0 && r.calls.upserts.length === 0)
+}
+{
+  const r = await run(request(good), { searchKakao: async () => [{ ...docs[1], x: '126.978', y: '37.5665' }] })
+  check('카카오가 알려준 좌표가 부산 밖이면 400, 등록하지 않아요', r.status === 400 && r.body.error.code === 'OUT_OF_AREA' && r.calls.upserts.length === 0)
+}
+{
+  const r = await run(request(good), { searchKakao: async () => { throw new Error('down') } })
+  check('카카오 장애는 502, 등록하지 않아요', r.status === 502 && r.calls.upserts.length === 0)
+}
+{
+  const r = await run(request({ ...good, id: '99999999' }))
+  check('카카오에 없는 빵집은 400, 등록하지 않아요', r.status === 400 && r.body.error.code === 'BAKERY_NOT_FOUND' && r.calls.upserts.length === 0)
+}
+{
+  const r = await run(request({ ...good, name: '내가 지어낸 이름' }))
+  const row = r.calls.upserts[0]
+  check('등록 성공(200)', r.status === 200 && r.body.registered === true)
+  check('이름 · 좌표 · 지역은 클라이언트 값(해운대 주장)이 아니라 카카오 좌표로 정해 저장', row.name === '진짜 베이커리' && row.lat === 35.1581 && row.lng === 129.0601 && row.address === '부산 서구 1' && row.district_id === 'seomyeon', JSON.stringify(row))
+}
+
+console.log(`\n통과 ${passed} · 실패 ${failures.length}`)
+if (failures.length) {
+  console.log(failures.join('\n'))
+  process.exit(1)
+}

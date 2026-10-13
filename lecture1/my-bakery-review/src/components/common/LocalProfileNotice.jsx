@@ -11,12 +11,13 @@ import { IS_ACCOUNT_MODE } from '../../lib/backend'
 // (예시 데이터를 설명하는 안내처럼 저장 방식과 상관없는 문구는 always를 줘서 그대로 보여줘요.)
 const ACCOUNT_MODE_TEXT = (
   <>
-    <b>계정 모드(개발 중)</b>예요. 로그인은 계정으로 하지만 리뷰 · EXP · 방문 체크를 계정에 저장하는 기능은 아직 연결되지 않아서,
-    지금은 이 화면의 기록이 <b>저장되지 않아요</b>. 이 브라우저에 있던 기존 기록은 지워지지 않고 그대로 남아 있어요.
+    <b>계정 모드(개발 중)</b>예요. 모험 일지 · EXP · 배지는 <b>내 계정에 저장</b>돼요. 방문 체크와 커뮤니티 글은 아직 연결되지 않아서
+    <b> 저장되지 않아요</b>. 이 브라우저에 있던 기존 기록은 지워지지 않고 그대로 남아 있어요.
   </>
 )
 
-const LocalProfileNotice = ({ children, always = false, sx }) => (
+// accountChildren: 계정 모드에서 이 화면에 맞는 문구를 따로 주고 싶을 때 (없으면 위의 기본 문구)
+const LocalProfileNotice = ({ children, accountChildren, always = false, sx }) => (
   <Box
     role="note"
     sx={{
@@ -33,7 +34,7 @@ const LocalProfileNotice = ({ children, always = false, sx }) => (
   >
     <InfoOutlinedIcon sx={{ fontSize: '1.1rem', mt: 0.15, color: 'secondary.dark', flexShrink: 0 }} />
     <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.6, color: 'text.primary', wordBreak: 'keep-all' }}>
-      {IS_ACCOUNT_MODE && !always ? ACCOUNT_MODE_TEXT : children ?? (
+      {IS_ACCOUNT_MODE && !always ? (accountChildren ?? ACCOUNT_MODE_TEXT) : children ?? (
         <>
           <b>이 브라우저에만 저장되는 임시 프로필</b>이에요. 비밀번호가 없고, 다른 사람이나 다른 기기와 기록이 공유되지 않아요.
           사이트 데이터를 지우면 기록도 함께 사라져요.

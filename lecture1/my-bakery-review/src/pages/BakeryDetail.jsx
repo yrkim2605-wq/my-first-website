@@ -30,7 +30,7 @@ import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
 import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { useProfile } from '../hooks/useProfile'
 import { useReviews } from '../hooks/useReviews'
-import { buildLevelsByUser } from '../utils/gameState'
+import { buildLevelsByUser, kstDate } from '../utils/gameState'
 import { getAuthorLevel } from '../utils/authorLevel'
 import WoodButton from '../components/common/WoodButton'
 import SectionHeading from '../components/common/SectionHeading'
@@ -58,7 +58,8 @@ const SAMPLE_REVIEW_HINT = {
   kind: 'sample',
 }
 
-const formatDate = (isoString) => isoString.slice(0, 10)
+// 한국 시간 기준 날짜 (서버 시각은 UTC라서 그대로 자르면 하루 어긋날 수 있어요)
+const formatDate = (isoString) => kstDate(isoString)
 
 const BakeryDetail = () => {
   const { id } = useParams()
@@ -66,7 +67,7 @@ const BakeryDetail = () => {
   const { visitedIds, toggleVisited, available: visitsAvailable } = useVisitedBakeries()
   const { photosByBakeryId } = useRealBakeryPhotos()
   const { profile } = useProfile()
-  const { reviews: allReviews, removeReview } = useReviews()
+  const { reviews: allReviews, removeReview, levelsByUserId } = useReviews()
 
   const mockBakery = BAKERIES.find((b) => String(b.id) === id)
   const realBakery = realBakeries.find((b) => String(b.id) === id)
@@ -83,7 +84,8 @@ const BakeryDetail = () => {
   const [toast, setToast] = useState(null)
 
   // 리뷰 작성자별 현재 레벨 (리뷰 카드의 레벨 칭호)
-  const levelsByUser = useMemo(() => buildLevelsByUser(allReviews), [allReviews])
+  // 계정 모드: 서버가 계산한 레벨 / 로컬 모드: 이 브라우저의 리뷰로 계산
+  const levelsByUser = useMemo(() => levelsByUserId ?? buildLevelsByUser(allReviews), [levelsByUserId, allReviews])
 
   if (!bakery) {
     if (realBakeriesLoading) {
@@ -148,8 +150,11 @@ const BakeryDetail = () => {
     if (diff.expGained > 0) {
       setReward({ mode, diff, after })
       setRewardOpen(true)
-    } else {
+    } else if (mode === 'update') {
       setToast({ severity: 'success', message: '일지를 고쳐 적었어요.' })
+    } else {
+      // 계정 모드: 하루 EXP 한도를 채운 뒤 쓴 일지는 저장은 되지만 EXP가 없어요
+      setToast({ severity: 'success', message: '일지를 남겼어요. 오늘의 EXP 한도를 채워서 이번 일지로는 EXP를 받지 않았어요.' })
     }
   }
 
@@ -404,7 +409,14 @@ const BakeryDetail = () => {
           description="이 빵집을 다녀간 모험가들의 일지예요."
           sx={{ mb: 2.5 }}
         />
-        <LocalProfileNotice sx={{ mb: 2.5 }}>
+        <LocalProfileNotice
+          sx={{ mb: 2.5 }}
+          accountChildren={
+            <>
+              일지는 <b>계정에 저장</b>되고 다른 모험가에게도 공개돼요. 레벨 칭호는 서버가 계산한 값이에요. ‘예시’ 표시가 붙은 글은 처음부터 들어 있던 샘플이에요.
+            </>
+          }
+        >
           내가 쓴 일지는 <b>이 브라우저에만 저장</b>돼요. 다른 사람과 공유되지 않아요. ‘예시’ 표시가 붙은 글은 처음부터 들어 있던 샘플이에요.
         </LocalProfileNotice>
 
