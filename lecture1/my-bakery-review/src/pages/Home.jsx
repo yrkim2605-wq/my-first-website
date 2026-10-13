@@ -212,9 +212,10 @@ const Home = () => {
       {!bakeriesError && (
         <Box sx={{ py: SECTION_PY }}>
           <SectionHeading
-            eyebrow="NEW IN BUSAN"
-            title="새로 등록된 빵집"
-            description="새로 문을 연 빵집을 가장 먼저 만나보세요."
+            variant="sign"
+            eyebrow="NEW DISCOVERIES"
+            title="새롭게 발견된 빵집"
+            description="새로 등록된 빵집을 가장 먼저 만나보세요."
             sx={{ mb: { xs: 4, md: 5 }, px: 2 }}
           />
           {bakeriesLoading ? (

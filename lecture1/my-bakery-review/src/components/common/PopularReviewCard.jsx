@@ -107,8 +107,9 @@ const PopularReviewCard = ({
       </Box>
 
       <Box sx={{ p: PADDING_BY_SIZE[size], flexGrow: 1, display: 'flex', flexDirection: 'column', transition: 'padding 0.35s ease' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 1, rowGap: 0.5, mb: 1 }}>
+          {/* 좁으면 별점이 아랫줄로 내려가서 닉네임이 잘리지 않아요 */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: '1 1 140px' }}>
             <Box sx={{ width: 46, height: 46, flexShrink: 0, display: 'grid', placeItems: 'center' }}>
               {avatarImage ? (
                 <Box

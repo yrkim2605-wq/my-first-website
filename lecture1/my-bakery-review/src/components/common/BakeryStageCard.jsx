@@ -35,6 +35,7 @@ const BakeryStageCard = ({
   height,
   photoSlot,
   highlighted = false, // 홈 지도에서 고른 빵집이면 선택 표시
+  discovery = false, // 탐험 도감의 "발견 카드" 모양: 양피지 카드 + 금색 NEW 리본 (새로 등록된 빵집용)
   quest = false, // 퀘스트 보드 모양: 양피지 카드 + QUEST 라벨 + [빵집 탐험하기] 표시 (보상 · 경험치 같은 건 보여주지 않아요)
 }) => {
   const { photosByBakeryId } = useRealBakeryPhotos()
@@ -64,7 +65,7 @@ const BakeryStageCard = ({
         overflow: 'hidden',
         border: '1px solid rgba(59,42,34,0.08)',
         boxShadow: 'none',
-        ...(quest && { ...PARCHMENT_SX, borderRadius: RADIUS.lg }),
+        ...((quest || discovery) && { ...PARCHMENT_SX, borderRadius: RADIUS.lg }),
         ...(highlighted && {
           borderColor: 'primary.main',
           boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
@@ -77,7 +78,7 @@ const BakeryStageCard = ({
             borderColor: 'rgba(123,45,59,0.35)',
             boxShadow: '0 14px 28px rgba(59,42,34,0.12)',
             // 퀘스트 카드는 금빛 테두리로 은은하게 강조해요
-            ...(quest && {
+            ...((quest || discovery) && {
               borderColor: 'gold.main',
               boxShadow: `inset 0 0 0 3px rgba(255,248,225,0.7), 0 0 0 3px rgba(226,176,74,0.5), 0 10px 22px rgba(59,42,34,0.16)`,
             }),
@@ -159,6 +160,14 @@ const BakeryStageCard = ({
               letterSpacing: '0.06em',
               bgcolor: 'terracotta.main',
               color: 'terracotta.contrastText',
+              // 발견 카드에서는 금색 리본처럼: 금색 바탕 + 나무색 글자 + 테두리
+              ...(discovery && {
+                bgcolor: 'gold.main',
+                color: 'wood.dark',
+                border: '2px solid #6b4423',
+                fontWeight: 800,
+                boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
+              }),
             }}
           />
         )}

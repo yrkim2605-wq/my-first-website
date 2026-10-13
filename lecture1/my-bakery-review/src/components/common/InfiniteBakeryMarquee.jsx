@@ -34,7 +34,7 @@ const InfiniteBakeryMarquee = ({ bakeries }) => {
       >
         {loopItems.map((bakery, i) => (
           <Box key={`${bakery.id}-${i}`} sx={{ flex: `0 0 ${CARD_WIDTH}px`, width: CARD_WIDTH }}>
-            <BakeryStageCard {...bakery} variant="default" />
+            <BakeryStageCard {...bakery} variant="default" discovery />
           </Box>
         ))}
       </Box>
