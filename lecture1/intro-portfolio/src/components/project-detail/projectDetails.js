@@ -191,7 +191,7 @@ export const PROJECT_DETAILS = {
       "'Doctor Joins Art, 의학과 예술의 만남'이라는 브랜드 가치를 실험실 무드의 과학적인 비주얼로 풀어낸 리디자인",
     rows: [
       { label: 'ROLE', lines: ['UX Analysis  ·  Web Design', 'Front-end Development'] },
-      { label: 'TOOL', lines: ['React  /  MUI  /  Vite'] },
+      { label: 'TOOL', lines: ['Figma  /  React  /  MUI  /  Vite'] },
       // 리디자인 사이트 저장소(dr-jart-website)의 첫 커밋 ~ 마지막 커밋
       { label: 'PERIOD', lines: ['2026.08.27 – 2026.09.08'] },
     ],
