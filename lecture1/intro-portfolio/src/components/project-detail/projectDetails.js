@@ -215,7 +215,7 @@ export const PROJECT_DETAILS = {
     caseStudy: {
       label: 'Problem & Direction',
       heading: ['SCIENCE', 'FOR YOUR SKIN'],
-      intro: "피부 고민을 과학적으로 해결하는 더마 브랜드 — 이 정체성이 사이트에서 먼저 보이도록 다시 설계했습니다.",
+      intro: '피부 고민을 과학적으로 해결하는 더마 브랜드라는 정체성이 사이트에서 먼저 보이도록 다시 설계했습니다.',
       problems: [
         { title: '브랜드 정체성 전달 부족', body: "'피부 고민을 과학적으로 해결하는 더마 브랜드'라는 정체성이 사이트에서 충분히 드러나지 않음" },
         { title: '과도한 콘텐츠로 이미지 분산', body: '신제품·베스트셀러·컬렉션·프로모션이 한꺼번에 놓여 브랜드의 핵심 이미지가 흩어짐' },
