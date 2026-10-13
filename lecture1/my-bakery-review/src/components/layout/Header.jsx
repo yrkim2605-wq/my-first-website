@@ -3,10 +3,11 @@ import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import logo from '../../assets/logo.webp'
 import HeaderLevelBadge from './HeaderLevelBadge'
 import WoodButton from '../common/WoodButton'
+import { useProfile } from '../../hooks/useProfile'
 import { COMMUNITY_CATEGORIES } from '../../constants/categories'
 import { RANKING_TABS } from '../../constants/ranking'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
@@ -85,6 +86,8 @@ const DROPDOWN_ITEM_SX = {
 }
 
 const Header = () => {
+  const navigate = useNavigate()
+  const { profile, signOut } = useProfile()
   const closeTimerRef = useRef(null)
   const [openMenuKey, setOpenMenuKey] = useState(null)
   const [scrolled, setScrolled] = useState(false)
@@ -225,9 +228,23 @@ const Header = () => {
 
         <Box sx={{ ml: { xs: 'auto', md: 0 }, display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <HeaderLevelBadge />
-          <WoodButton component={NavLink} to="/login" size="sm" showStar={false}>
-            로그인
-          </WoodButton>
+          {/* 임시 로컬 프로필: 로그아웃은 프로필과 기록을 지우지 않고 "지금 사용 중"만 해제해요 */}
+          {profile ? (
+            <WoodButton
+              size="sm"
+              showStar={false}
+              onClick={async () => {
+                await signOut()
+                navigate('/')
+              }}
+            >
+              로그아웃
+            </WoodButton>
+          ) : (
+            <WoodButton component={NavLink} to="/login" size="sm" showStar={false}>
+              로그인
+            </WoodButton>
+          )}
         </Box>
       </Toolbar>
     </AppBar>

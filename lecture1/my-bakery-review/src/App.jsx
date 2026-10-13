@@ -16,6 +16,8 @@ const Signup = lazy(() => import('./pages/Signup'))
 import { BusanBakeriesProvider } from './context/BusanBakeriesContext'
 import { VisitedBakeriesProvider } from './context/VisitedBakeriesContext'
 import { RealBakeryPhotosProvider } from './context/RealBakeryPhotosContext'
+import { ProfileProvider } from './context/ProfileContext'
+import { ReviewsProvider } from './context/ReviewsContext'
 
 function App() {
   // 움직임 줄이기 설정이면 부드러운 스크롤(Lenis)을 쓰지 않고 브라우저 기본 스크롤을 써요
@@ -25,22 +27,27 @@ function App() {
     <BusanBakeriesProvider>
       <VisitedBakeriesProvider>
         <RealBakeryPhotosProvider>
-          <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: !prefersReducedMotion }}>
-            <HashRouter>
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/community" element={<Community />} />
-                  <Route path="/community/:id" element={<CommunityPostDetail />} />
-                  <Route path="/mypage" element={<MyPage />} />
-                  <Route path="/ranking" element={<Ranking />} />
-                  <Route path="/bakery/:id" element={<BakeryDetail />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                </Route>
-              </Routes>
-            </HashRouter>
-          </ReactLenis>
+          {/* 임시 로컬 프로필과 리뷰 저장소 (이 브라우저에만 저장돼요) */}
+          <ProfileProvider>
+            <ReviewsProvider>
+              <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: !prefersReducedMotion }}>
+                <HashRouter>
+                  <Routes>
+                    <Route element={<Layout />}>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/community" element={<Community />} />
+                      <Route path="/community/:id" element={<CommunityPostDetail />} />
+                      <Route path="/mypage" element={<MyPage />} />
+                      <Route path="/ranking" element={<Ranking />} />
+                      <Route path="/bakery/:id" element={<BakeryDetail />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<Signup />} />
+                    </Route>
+                  </Routes>
+                </HashRouter>
+              </ReactLenis>
+            </ReviewsProvider>
+          </ProfileProvider>
         </RealBakeryPhotosProvider>
       </VisitedBakeriesProvider>
     </BusanBakeriesProvider>
