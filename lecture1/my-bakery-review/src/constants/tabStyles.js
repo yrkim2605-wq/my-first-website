@@ -2,7 +2,7 @@
 export const PAGE_TABS_SX = {
   width: '100%',
   minHeight: 44,
-  borderBottom: '1px solid rgba(59,42,34,0.12)',
+  borderBottom: '2px solid rgba(201,165,106,0.7)',
   '& .MuiTab-root': {
     minHeight: 44,
     minWidth: 0,
@@ -13,5 +13,5 @@ export const PAGE_TABS_SX = {
     color: 'text.secondary',
   },
   '& .MuiTab-root.Mui-selected': { color: 'primary.main' },
-  '& .MuiTabs-indicator': { height: 3, borderRadius: 999, bgcolor: 'primary.main' },
+  '& .MuiTabs-indicator': { height: 4, borderRadius: 999, bgcolor: 'gold.main' },
 }

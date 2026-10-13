@@ -14,12 +14,24 @@ const RankingListItem = ({ rank, emoji, avatarImage, avatarScale, primaryText, s
         gap: 1.75,
         py: 1.5,
         px: { xs: 1.5, sm: 2.5 },
-        borderBottom: '1px solid rgba(59,42,34,0.08)',
+        borderBottom: '1px solid rgba(201,165,106,0.5)',
         '&:last-of-type': { borderBottom: 'none' },
       }}
     >
       <Typography
-        sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '1.05rem', width: 24, textAlign: 'center', color: 'terracotta.main' }}
+        sx={{
+          fontFamily: DISPLAY_FONT,
+          fontWeight: 900,
+          fontSize: '0.95rem',
+          width: 30,
+          height: 30,
+          flexShrink: 0,
+          display: 'grid',
+          placeItems: 'center',
+          borderRadius: '8px',
+          bgcolor: 'wood.main',
+          color: 'gold.light',
+        }}
       >
         {rank}
       </Typography>
@@ -53,8 +65,8 @@ const RankingListItem = ({ rank, emoji, avatarImage, avatarScale, primaryText, s
                 px: 0.75,
                 py: 0.1,
                 borderRadius: RADIUS.pill,
-                bgcolor: 'butter.main',
-                color: 'butter.contrastText',
+                bgcolor: 'wood.main',
+                color: 'gold.light',
                 fontSize: '0.75rem',
                 fontWeight: 700,
                 lineHeight: 1.5,

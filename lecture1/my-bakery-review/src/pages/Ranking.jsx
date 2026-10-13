@@ -6,6 +6,9 @@ import Tab from '@mui/material/Tab'
 import RankingListItem from '../components/common/RankingListItem'
 import RankingPodium from '../components/common/RankingPodium'
 import SectionHeading from '../components/common/SectionHeading'
+import LocalProfileNotice from '../components/common/LocalProfileNotice'
+import MyRecordCard from '../components/ranking/MyRecordCard'
+import { PARCHMENT_SX } from '../constants/rpgStyles'
 import { MONTHLY_REVIEWERS, TOP_VISITORS, TOP_BAKERIES, TOP_LIKED_REVIEWS, RANKING_TABS } from '../constants/ranking'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERIES } from '../constants/bakeries'
@@ -107,9 +110,15 @@ const Ranking = () => {
           variant="sign"
           eyebrow="HALL OF FAME"
           title="이번 달 명예의 전당"
-          description="리뷰와 방문으로 쌓은 이번 달 순위예요."
+          description="모험가들의 순위 예시를 구경해 보세요."
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
+
+        {/* 순위표는 예시 데이터라는 점을 분명히 알려요. "내 기록"만 실제로 계산한 값이에요. */}
+        <LocalProfileNotice sx={{ mb: 2 }}>
+          아래 순위표는 <b>예시 데이터</b>예요. 서버가 없어서 다른 모험가들의 기록은 이 브라우저에 없어요. <b>‘내 기록’만 실제로 계산한 값</b>이에요.
+        </LocalProfileNotice>
+        <MyRecordCard />
 
         <Tabs
           value={activeTab}
@@ -133,8 +142,7 @@ const Ranking = () => {
               listStyle: 'none',
               m: 0,
               p: 0,
-              bgcolor: 'background.paper',
-              border: '1px solid rgba(59,42,34,0.08)',
+              ...PARCHMENT_SX,
               borderRadius: '18px',
               overflow: 'hidden',
             }}
