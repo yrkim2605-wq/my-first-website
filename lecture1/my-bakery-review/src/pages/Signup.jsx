@@ -36,7 +36,7 @@ const Signup = () => {
     <Container maxWidth="xs">
       <Box sx={{ py: { xs: 6, sm: 10 }, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Box component="img" src={logo} alt="빵덕후 레벨업" sx={{ width: { xs: 180, sm: 210 }, height: 'auto', mb: 1.5 }} />
-        <SectionHeading eyebrow="JOIN US" title="회원가입" description="닉네임을 만들고 빵덕후 레벨업을 시작해보세요" sx={{ mb: 4 }} />
+        <SectionHeading variant="sign" eyebrow="JOIN US" title="회원가입" description="닉네임을 만들고 빵덕후 레벨업을 시작해보세요" sx={{ mb: 4 }} />
 
         <WoodPanel variant="light" sx={{ p: 3, width: '100%' }}>
           <Box

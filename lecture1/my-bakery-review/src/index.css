@@ -23,18 +23,72 @@ body {
   flex-direction: column;
 }
 
-.wood-panel {
-  background: #332419;
+/* ── RPG 컨셉 패널 ──────────────────────────────────────────────
+   이미지 없이 CSS만으로 그려요 (가볍고, 모바일에서도 흐려지지 않아요).
+   색은 theme.js의 parchment · wood 팔레트와 같은 값이에요.
+   - .wood-panel-light : 양피지 패널 (퀘스트 보드, 상태창, 기록지)
+   - .wood-panel       : 나무 판자 (어두운 안내판)
+   - .wood-sign        : 나무 판자 + 가운데 정렬 제목판 (.wood-panel과 함께 써요) */
+.wood-panel-light {
+  position: relative;
+  background-color: #f9edcb;
+  background-image:
+    radial-gradient(ellipse at 12% 8%, rgba(255, 255, 255, 0.55), transparent 55%),
+    radial-gradient(ellipse at 90% 100%, rgba(201, 165, 106, 0.22), transparent 60%);
+  border: 2px solid #c9a56a;
   border-radius: 18px;
-  box-shadow: 0 2px 10px rgba(51, 36, 25, 0.12);
-  color: #fff8ec;
+  /* 안쪽 밝은 테두리(종이 가장자리) + 아래쪽 단단한 그림자 + 은은한 바닥 그림자 */
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 248, 225, 0.7),
+    0 3px 0 rgba(107, 68, 35, 0.22),
+    0 8px 18px rgba(51, 36, 25, 0.08);
+  color: #3b2a22;
 }
 
-.wood-panel-light {
-  background: #fbf6ea;
-  border: 1px solid rgba(46, 42, 37, 0.08);
+.wood-panel {
+  position: relative;
+  background-color: #6b4423;
+  /* 가로 나뭇결 + 위쪽에서 비치는 빛 */
+  background-image:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 11px),
+    linear-gradient(180deg, rgba(255, 220, 160, 0.14), transparent 45%);
+  border: 2px solid #3e2713;
   border-radius: 18px;
-  box-shadow: 0 2px 10px rgba(51, 36, 25, 0.05);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 220, 160, 0.25),
+    0 3px 0 rgba(33, 20, 10, 0.35);
+  color: #fbf6ea;
+}
+
+/* 판자 양쪽 위 모서리의 못 */
+.wood-panel::before,
+.wood-panel::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e9c98a, #8a6a3a);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+.wood-panel::before {
+  left: 12px;
+}
+.wood-panel::after {
+  right: 12px;
+}
+
+/* 제목판: 낮은 판자라서 못을 세로 가운데에 둬요 */
+.wood-sign {
+  display: inline-block;
+  border-radius: 14px;
+}
+.wood-sign::before,
+.wood-sign::after {
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 @keyframes pageFadeIn {

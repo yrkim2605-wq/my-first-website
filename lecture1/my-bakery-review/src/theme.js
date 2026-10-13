@@ -54,9 +54,26 @@ const theme = createTheme({
       main: '#F3DFAE',
       contrastText: '#6E4518',
     },
-    // 획득 배지 테두리, 검색창 테두리 등 금색 강조
+    // 획득 배지 테두리, 검색창 테두리, 경험치 바 등 금색 강조
     gold: {
       main: '#E2B04A',
+      light: '#F8D57A',
+      dark: '#B88626',
+    },
+    // RPG 컨셉: 양피지 패널 (퀘스트 보드 · 상태창 · 기록지의 바탕)
+    parchment: {
+      main: '#F9EDCB',
+      light: '#FDF6E0',
+      dark: '#E8D3A0',
+      edge: '#C9A56A', // 양피지 테두리
+      contrastText: '#3B2A22',
+    },
+    // RPG 컨셉: 나무 간판 · 판자 (제목판, 경험치 바 바탕)
+    wood: {
+      main: '#6B4423',
+      light: '#8A5A33',
+      dark: '#3E2713',
+      contrastText: '#FBF6EA',
     },
     // 상단 프로모션 띠, 검색 영역 등 넓은 강조 면
     highlight: {
@@ -108,6 +125,13 @@ const theme = createTheme({
             opacity: 0.85,
             transform: 'scale(0.97)',
             boxShadow: 'none',
+          },
+          // 게임 버튼: 와인색 채움 버튼은 아래쪽에 단단한 그림자가 있고, 누르면 눌려 들어가요.
+          '&.MuiButton-containedPrimary': {
+            boxShadow: '0 3px 0 #5A1F2A',
+            '&:hover': { boxShadow: '0 4px 0 #5A1F2A', opacity: 1, transform: 'translateY(-1px)' },
+            '&:active': { boxShadow: '0 1px 0 #5A1F2A', opacity: 1, transform: 'translateY(2px)' },
+            '&.Mui-disabled': { boxShadow: 'none' },
           },
         },
       },

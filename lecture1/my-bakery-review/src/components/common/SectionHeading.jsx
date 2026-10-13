@@ -4,8 +4,22 @@ import WavyDivider from './decor/WavyDivider'
 
 // 홈 섹션 제목: 작은 영문 라벨 → 세리프 제목 → 물결 선 → 한 줄 설명 (가운데 정렬)
 // tone="onColor"는 색 블록 위에 올릴 때 써요.
-const SectionHeading = ({ eyebrow, title, description, tone = 'default', sx }) => {
+// variant="sign"은 제목을 나무 간판 위에 올려요 (RPG 컨셉). 물결 선 대신 간판이 구분선 역할을 해요.
+const SectionHeading = ({ eyebrow, title, description, tone = 'default', variant = 'plain', sx }) => {
   const onColor = tone === 'onColor'
+  const isSign = variant === 'sign'
+
+  const titleNode = (
+    <Typography
+      variant="h2"
+      sx={{
+        fontSize: { xs: '1.7rem', sm: '2.1rem' },
+        color: isSign ? 'wood.contrastText' : onColor ? 'primary.contrastText' : 'primary.main',
+      }}
+    >
+      {title}
+    </Typography>
+  )
 
   return (
     <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', ...sx }}>
@@ -22,22 +36,23 @@ const SectionHeading = ({ eyebrow, title, description, tone = 'default', sx }) =
           {eyebrow}
         </Typography>
       )}
-      <Typography
-        variant="h2"
-        sx={{
-          fontSize: { xs: '1.7rem', sm: '2.1rem' },
-          color: onColor ? 'primary.contrastText' : 'primary.main',
-        }}
-      >
-        {title}
-      </Typography>
-      <WavyDivider sx={{ my: 1.5 }} />
+      {isSign ? (
+        <Box className="wood-panel wood-sign" sx={{ px: { xs: 4.5, sm: 6 }, py: { xs: 1, sm: 1.25 }, maxWidth: '100%' }}>
+          {titleNode}
+        </Box>
+      ) : (
+        <>
+          {titleNode}
+          <WavyDivider sx={{ my: 1.5 }} />
+        </>
+      )}
       {description && (
         <Typography
           sx={{
             fontSize: '0.95rem',
             color: onColor ? 'primary.contrastText' : 'text.secondary',
             opacity: onColor ? 0.85 : 1,
+            mt: isSign ? 1.5 : 0,
           }}
         >
           {description}
