@@ -12,10 +12,6 @@ const SLIDE_INTERVAL = 4000
 const CARD_HEIGHT = { xs: 460, sm: 480, md: 500 }
 const VISIBLE_COUNT = 3
 
-// 좌측 화살표 버튼(약 40px) + gap 만큼, 실제 카드가 시작되는 지점의 들여쓰기.
-// 제목 등 카드 행 바깥의 요소를 카드와 맞추려면 이 값만큼 왼쪽 여백을 추가로 준다.
-export const CAROUSEL_CARD_INSET = { xs: '48px', md: '56px' }
-
 const NAV_BUTTON_SX = {
   bgcolor: 'background.paper',
   boxShadow: '0 2px 8px rgba(46,42,37,0.15)',

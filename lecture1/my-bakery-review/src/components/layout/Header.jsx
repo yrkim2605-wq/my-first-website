@@ -4,9 +4,10 @@ import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import { NavLink } from 'react-router-dom'
-import mascotLogo from '../../assets/logo-mascot-photo.png'
+import mascotLogo from '../../assets/logo-mascot-photo.webp'
 import { COMMUNITY_CATEGORIES } from '../../constants/categories'
-import { RANKING_TABS } from '../../pages/Ranking'
+import { RANKING_TABS } from '../../constants/ranking'
+import { RADIUS } from '../../theme'
 
 const NAV_ENTRIES = [
   {
@@ -37,7 +38,7 @@ const NAV_ENTRIES = [
 const NAV_LINK_SX = {
   fontSize: '20px',
   fontWeight: 700,
-  color: '#205A41',
+  color: 'primary.main',
   textDecoration: 'none',
   transition: 'color 0.15s',
   '&.active': {
@@ -111,7 +112,7 @@ const Header = () => {
       elevation={0}
       sx={{
         top: 0,
-        bgcolor: '#FFFBF4',
+        bgcolor: 'background.paper',
         transition: 'box-shadow 0.3s ease',
         boxShadow: scrolled ? '0 6px 20px rgba(46,42,37,0.1)' : 'none',
       }}
@@ -167,8 +168,8 @@ const Header = () => {
                   px: 1.25,
                   py: 0.3,
                   borderRadius: 999,
-                  bgcolor: '#F3D9A8',
-                  color: '#7A4A16',
+                  bgcolor: 'butter.main',
+                  color: 'butter.contrastText',
                   fontFamily: '"OwnglyphParkDaHyun", cursive',
                   fontSize: '1.15rem',
                   lineHeight: 1.4,
@@ -193,7 +194,7 @@ const Header = () => {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                bgcolor: '#205A41',
+                bgcolor: 'primary.main',
                 transform: `translateX(${indicator.left - 4}px)`,
                 opacity: indicator.visible ? 1 : 0,
                 transition: 'transform 0.2s ease, opacity 0.15s ease',
@@ -242,7 +243,7 @@ const Header = () => {
                       bgcolor: 'rgba(255,253,246,0.55)',
                       backdropFilter: 'blur(4px)',
                       border: '1px solid rgba(46,42,37,0.08)',
-                      borderRadius: 1.5,
+                      borderRadius: RADIUS.md,
                       boxShadow: '0 12px 28px rgba(46,42,37,0.16)',
                       py: 1,
                       opacity: isOpen ? 1 : 0,

@@ -8,6 +8,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import { LEVELS } from '../../constants/levels'
+import { RADIUS } from '../../theme'
 
 const formatLevelCondition = (level) => {
   if (level.minVisits === 0 && level.minHearts === 0) return '가입 시 기본 지급'
@@ -35,7 +36,7 @@ const LevelBookDialog = ({ open, onClose, currentLevelId }) => {
                 justifyContent: 'space-between',
                 gap: 1.5,
                 p: 1.5,
-                borderRadius: 2,
+                borderRadius: RADIUS.md,
                 border: '1px solid rgba(46,42,37,0.08)',
                 bgcolor: level.id === currentLevelId ? 'rgba(32,90,65,0.06)' : 'background.paper',
               }}

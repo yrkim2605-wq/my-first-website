@@ -31,11 +31,11 @@ const ScrollToTopButton = () => {
         onClick={scrollToTop}
         aria-label="맨 위로"
         sx={{
-          bgcolor: '#FFE373',
-          color: '#205A41',
+          bgcolor: 'highlight.main',
+          color: 'primary.main',
           transition: 'background-color 0.4s ease, color 0.4s ease, transform 0.15s ease',
           '&:hover': {
-            bgcolor: '#205A41',
+            bgcolor: 'primary.main',
             color: '#F0EDE6',
             transform: 'translateY(-2px)',
           },

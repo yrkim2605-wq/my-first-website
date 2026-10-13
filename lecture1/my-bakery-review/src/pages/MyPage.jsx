@@ -16,10 +16,11 @@ import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
 import { getLevelProgress } from '../utils/levelUtils'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../constants/bakeryPhotos'
-import { useBusanBakeries } from '../context/BusanBakeriesContext'
-import { useVisitedBakeries } from '../context/VisitedBakeriesContext'
-import { useRealBakeryPhotos } from '../context/RealBakeryPhotosContext'
+import { useBusanBakeries } from '../hooks/useBusanBakeries'
+import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
+import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { HOVER_LIFT_TRANSITION } from '../constants/motion'
+import { RADIUS } from '../theme'
 
 const MyPage = () => {
   const [levelBookOpen, setLevelBookOpen] = useState(false)
@@ -157,7 +158,7 @@ const MyPage = () => {
                       width: 48,
                       height: 48,
                       flexShrink: 0,
-                      borderRadius: 2,
+                      borderRadius: RADIUS.round,
                       objectFit: 'cover',
                     }}
                   />
@@ -215,7 +216,7 @@ const MyPage = () => {
                           width: 48,
                           height: 48,
                           flexShrink: 0,
-                          borderRadius: 2,
+                          borderRadius: RADIUS.round,
                           objectFit: 'cover',
                         }}
                       />

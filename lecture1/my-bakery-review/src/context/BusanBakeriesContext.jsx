@@ -1,18 +1,17 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { searchBakeriesByKeyword } from '../api/kakaoLocal'
 import { DISTRICTS } from '../constants/districts'
-import defaultBakeryIcon from '../assets/section-icons/icon-default-bakery.png'
-import cafeStrawberryIcon from '../assets/section-icons/icon-cafe-strawberry.png'
-import croissantIcon from '../assets/section-icons/icon-croissant.png'
-import saltBreadIcon from '../assets/section-icons/icon-saltbread.png'
-import donutIcon from '../assets/section-icons/icon-donut.png'
-import bagelIcon from '../assets/section-icons/icon-bagel.png'
-import baguetteIcon from '../assets/section-icons/icon-baguette.png'
-import toastIcon from '../assets/section-icons/icon-toast.png'
-import fillerIconA from '../assets/section-icons/icon-filler-a.png'
-import fillerIconB from '../assets/section-icons/icon-filler-b.png'
-
-const BusanBakeriesContext = createContext(null)
+import defaultBakeryIcon from '../assets/section-icons/icon-default-bakery.webp'
+import cafeStrawberryIcon from '../assets/section-icons/icon-cafe-strawberry.webp'
+import croissantIcon from '../assets/section-icons/icon-croissant.webp'
+import saltBreadIcon from '../assets/section-icons/icon-saltbread.webp'
+import donutIcon from '../assets/section-icons/icon-donut.webp'
+import bagelIcon from '../assets/section-icons/icon-bagel.webp'
+import baguetteIcon from '../assets/section-icons/icon-baguette.webp'
+import toastIcon from '../assets/section-icons/icon-toast.webp'
+import fillerIconA from '../assets/section-icons/icon-filler-a.webp'
+import fillerIconB from '../assets/section-icons/icon-filler-b.webp'
+import { BusanBakeriesContext } from './contexts'
 
 // 카카오 API는 대표메뉴 정보를 안 줘서, 품목명으로 직접 검색해 걸리는 가게를
 // 그 품목의 대표메뉴로 간주한다. 아이콘은 전부 제공받은 스프라이트에서 자른 이미지만 쓴다(이모지 사용 안 함).
@@ -100,6 +99,14 @@ export const BusanBakeriesProvider = ({ children }) => {
   const [bakeries, setBakeries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  // 값이 바뀌면 아래 effect가 다시 실행돼서 빵집 정보를 새로 불러와요.
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const reload = () => {
+    setLoading(true)
+    setError(null)
+    setReloadKey((key) => key + 1)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -139,19 +146,11 @@ export const BusanBakeriesProvider = ({ children }) => {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [reloadKey])
 
   return (
-    <BusanBakeriesContext.Provider value={{ bakeries, loading, error }}>
+    <BusanBakeriesContext.Provider value={{ bakeries, loading, error, reload }}>
       {children}
     </BusanBakeriesContext.Provider>
   )
-}
-
-export const useBusanBakeries = () => {
-  const ctx = useContext(BusanBakeriesContext)
-  if (!ctx) {
-    throw new Error('useBusanBakeries는 BusanBakeriesProvider 안에서만 사용할 수 있어요.')
-  }
-  return ctx
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
@@ -24,6 +24,7 @@ import { MOCK_USER } from '../constants/userProfile'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { getPostAvatarEmoji, getPostPhotoBakeryId } from '../utils/communityPostMeta'
 import Reveal from '../components/common/Reveal'
+import { RADIUS } from '../theme'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
@@ -52,8 +53,8 @@ const CommentAuthor = ({ author, avatarEmoji, createdAt }) => {
                 px: 0.6,
                 py: 0.1,
                 borderRadius: 999,
-                bgcolor: '#F3D9A8',
-                color: '#7A4A16',
+                bgcolor: 'butter.main',
+                color: 'butter.contrastText',
                 fontSize: '0.6rem',
                 fontWeight: 800,
                 lineHeight: 1.4,
@@ -137,6 +138,7 @@ const CommunityPostDetail = () => {
   const { id } = useParams()
   const post = COMMUNITY_POSTS.find((p) => String(p.id) === id)
 
+  // 다른 글로 이동하면 Layout이 페이지를 새로 그려서, 아래 상태들은 글마다 처음 값으로 시작해요.
   const nextCommentId = useRef(0)
   const [liked, setLiked] = useState(false)
   const [comments, setComments] = useState(() => COMMUNITY_COMMENTS[post?.id] || [])
@@ -146,15 +148,6 @@ const CommunityPostDetail = () => {
   const [votes, setVotes] = useState({})
   const [editingId, setEditingId] = useState(null)
   const [editDraft, setEditDraft] = useState('')
-
-  useEffect(() => {
-    setComments(COMMUNITY_COMMENTS[post?.id] || [])
-    setReplyingToId(null)
-    setReplyDraft('')
-    setVotes({})
-    setEditingId(null)
-    setEditDraft('')
-  }, [post?.id])
 
   if (!post) {
     return <Navigate to="/community" replace />
@@ -279,7 +272,7 @@ const CommunityPostDetail = () => {
           sx={{
             width: '100%',
             height: { xs: 220, sm: 320 },
-            borderRadius: 3,
+            borderRadius: RADIUS.lg,
             overflow: 'hidden',
             mb: 3,
           }}
@@ -323,8 +316,8 @@ const CommunityPostDetail = () => {
                     px: 0.75,
                     py: 0.15,
                     borderRadius: 999,
-                    bgcolor: '#F3D9A8',
-                    color: '#7A4A16',
+                    bgcolor: 'butter.main',
+                    color: 'butter.contrastText',
                     fontSize: '0.65rem',
                     fontWeight: 800,
                     lineHeight: 1.4,
@@ -424,7 +417,7 @@ const CommunityPostDetail = () => {
               <Box
                 sx={{
                   p: 2,
-                  borderRadius: 3,
+                  borderRadius: RADIUS.lg,
                   border: '1px solid rgba(46,42,37,0.08)',
                   bgcolor: 'background.paper',
                 }}
@@ -519,7 +512,7 @@ const CommunityPostDetail = () => {
                         display: 'flex',
                         gap: 1,
                         p: 2,
-                        borderRadius: 3,
+                        borderRadius: RADIUS.lg,
                         border: '1px solid rgba(46,42,37,0.08)',
                         bgcolor: 'rgba(46,42,37,0.02)',
                       }}

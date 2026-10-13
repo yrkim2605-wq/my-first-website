@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
+import { RADIUS } from '../../theme'
 
 const RANK_STYLES = {
   1: {
@@ -94,7 +95,7 @@ const PodiumCard = ({ item }) => {
         alignItems: 'center',
         textAlign: 'center',
         p: item.rank === 1 ? 3 : 2.5,
-        borderRadius: 3,
+        borderRadius: RADIUS.lg,
         background: style.background,
         border: `1px solid ${style.border}`,
         boxShadow: style.shadow,
@@ -129,8 +130,8 @@ const PodiumCard = ({ item }) => {
             py: 0.2,
             mb: 1.5,
             borderRadius: 999,
-            bgcolor: '#F3D9A8',
-            color: '#7A4A16',
+            bgcolor: 'butter.main',
+            color: 'butter.contrastText',
             fontSize: '0.7rem',
             fontWeight: 800,
             maxWidth: '100%',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
@@ -14,13 +14,14 @@ import { getAuthorLevel } from '../utils/authorLevel'
 import { getPostAvatarEmoji, getPostPhotoBakeryId } from '../utils/communityPostMeta'
 
 const Community = () => {
-  const [searchParams] = useSearchParams()
-  const [selectedCategoryId, setSelectedCategoryId] = useState(searchParams.get('category') || 'all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedCategoryId = searchParams.get('category') || 'all'
   const [sortBy, setSortBy] = useState('heart')
 
-  useEffect(() => {
-    setSelectedCategoryId(searchParams.get('category') || 'all')
-  }, [searchParams])
+  // 선택한 카테고리는 주소(?category=)에만 저장해요. 헤더 메뉴로 들어와도, 칩을 눌러도 같은 값을 봐요.
+  const handleSelectCategory = (categoryId) => {
+    setSearchParams(categoryId === 'all' ? {} : { category: categoryId }, { replace: true })
+  }
 
   const filteredPosts =
     selectedCategoryId === 'all'
@@ -46,7 +47,7 @@ const Community = () => {
             label="전체"
             variant={selectedCategoryId === 'all' ? 'filled' : 'outlined'}
             color={selectedCategoryId === 'all' ? 'primary' : 'default'}
-            onClick={() => setSelectedCategoryId('all')}
+            onClick={() => handleSelectCategory('all')}
             sx={FILTER_CHIP_SX}
           />
           {COMMUNITY_CATEGORIES.map((category) => (
@@ -55,7 +56,7 @@ const Community = () => {
               label={category.label}
               variant={selectedCategoryId === category.id ? 'filled' : 'outlined'}
               color={selectedCategoryId === category.id ? 'primary' : 'default'}
-              onClick={() => setSelectedCategoryId(category.id)}
+              onClick={() => handleSelectCategory(category.id)}
               sx={FILTER_CHIP_SX}
             />
           ))}

@@ -67,7 +67,7 @@ const BadgeTile = ({ emoji, iconImage, name, description, earned }) => {
             fontWeight: 700,
             display: 'block',
             mt: 0.5,
-            color: earned ? '#7A4A16' : 'text.secondary',
+            color: earned ? 'butter.contrastText' : 'text.secondary',
           }}
         >
           {name}

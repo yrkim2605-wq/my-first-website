@@ -13,7 +13,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Link } from 'react-router-dom'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
-import { useRealBakeryPhotos } from '../../context/RealBakeryPhotosContext'
+import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { HOVER_LIFT_SX } from '../../constants/motion'
 
 const BakeryStageCard = ({

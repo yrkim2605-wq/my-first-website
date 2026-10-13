@@ -1,8 +1,8 @@
-import saltBreadManiaIcon from '../assets/badges/badge-salt-bread-mania.png'
-import croissantHunterIcon from '../assets/badges/badge-croissant-hunter.png'
-import strawberrySeasonIcon from '../assets/badges/badge-strawberry-season.png'
-import bread100Icon from '../assets/badges/badge-bread-100.png'
-import earlyBirdIcon from '../assets/badges/badge-early-bird.png'
+import saltBreadManiaIcon from '../assets/badges/badge-salt-bread-mania.webp'
+import croissantHunterIcon from '../assets/badges/badge-croissant-hunter.webp'
+import strawberrySeasonIcon from '../assets/badges/badge-strawberry-season.webp'
+import bread100Icon from '../assets/badges/badge-bread-100.webp'
+import earlyBirdIcon from '../assets/badges/badge-early-bird.webp'
 
 export const BADGES = [
   {

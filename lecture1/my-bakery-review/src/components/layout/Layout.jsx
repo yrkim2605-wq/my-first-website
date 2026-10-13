@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { Outlet, useLocation, Link } from 'react-router-dom'
@@ -16,7 +17,7 @@ const Layout = () => {
         to="/signup"
         sx={{
           height: 50,
-          bgcolor: '#FFE373',
+          bgcolor: 'highlight.main',
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
@@ -26,17 +27,17 @@ const Layout = () => {
           cursor: 'pointer',
           transition: 'background-color 0.2s ease',
           '&:hover': {
-            bgcolor: '#205A41',
+            bgcolor: 'primary.main',
           },
           '&:hover .promo-banner-text': {
-            color: '#FFE373',
+            color: 'highlight.main',
           },
         }}
       >
         <Typography
           className="promo-banner-text"
           sx={{
-            color: '#205A41',
+            color: 'primary.main',
             fontWeight: 700,
             fontSize: { xs: '0.75rem', sm: '0.9rem' },
             textAlign: 'center',
@@ -49,7 +50,10 @@ const Layout = () => {
       <Header />
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Box key={location.pathname} className="page-fade">
-          <Outlet />
+          {/* 페이지 파일을 불러오는 동안 푸터가 위로 튀지 않도록 빈 공간을 잡아둬요 */}
+          <Suspense fallback={<Box sx={{ minHeight: '60vh' }} />}>
+            <Outlet />
+          </Suspense>
         </Box>
       </Box>
       <Footer />

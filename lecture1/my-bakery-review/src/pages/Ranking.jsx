@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
@@ -9,7 +8,7 @@ import WoodPanel from '../components/common/WoodPanel'
 import RankingListItem from '../components/common/RankingListItem'
 import RankingPodium from '../components/common/RankingPodium'
 import Reveal from '../components/common/Reveal'
-import { MONTHLY_REVIEWERS, TOP_VISITORS, TOP_BAKERIES, TOP_LIKED_REVIEWS } from '../constants/ranking'
+import { MONTHLY_REVIEWERS, TOP_VISITORS, TOP_BAKERIES, TOP_LIKED_REVIEWS, RANKING_TABS } from '../constants/ranking'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERIES } from '../constants/bakeries'
 import { REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryReviews'
@@ -19,14 +18,6 @@ const TOP_REVIEWED_BAKERIES = [...BAKERIES]
   .sort((a, b) => (REVIEW_COUNT_BY_BAKERY_ID[b.id] || 0) - (REVIEW_COUNT_BY_BAKERY_ID[a.id] || 0))
   .slice(0, 10)
   .map((bakery, index) => ({ ...bakery, rank: index + 1 }))
-
-export const RANKING_TABS = [
-  { label: '이번달 리뷰왕' },
-  { label: '방문 많은 회원' },
-  { label: '인기빵집 TOP 10' },
-  { label: '리뷰 많은 빵집' },
-  { label: '좋아요 많은 리뷰' },
-]
 
 const getRankingItems = (tabIndex) => {
   if (tabIndex === 0) {
@@ -95,12 +86,13 @@ const parseTabParam = (value) => {
 }
 
 const Ranking = () => {
-  const [searchParams] = useSearchParams()
-  const [activeTab, setActiveTab] = useState(() => parseTabParam(searchParams.get('tab')))
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = parseTabParam(searchParams.get('tab'))
 
-  useEffect(() => {
-    setActiveTab(parseTabParam(searchParams.get('tab')))
-  }, [searchParams])
+  // 선택한 탭은 주소(?tab=)에만 저장해요. 헤더 메뉴로 들어와도, 탭을 눌러도 같은 값을 봐요.
+  const handleChangeTab = (_, value) => {
+    setSearchParams({ tab: String(value) }, { replace: true })
+  }
 
   const items = getRankingItems(activeTab)
   const podiumItems = items.slice(0, 3)
@@ -115,7 +107,7 @@ const Ranking = () => {
 
         <Tabs
           value={activeTab}
-          onChange={(_, value) => setActiveTab(value)}
+          onChange={handleChangeTab}
           variant="scrollable"
           scrollButtons="auto"
           sx={{ mb: 3 }}

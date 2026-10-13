@@ -60,7 +60,9 @@ jobs:
       - name: Build my-bakery-review
         working-directory: lecture1/my-bakery-review
         env:
-          VITE_KAKAO_REST_KEY: ${{ secrets.VITE_KAKAO_REST_KEY }}
+          # 카카오 JavaScript 키: 카카오 콘솔에 등록한 도메인에서만 동작해요.
+          # (REST 키는 빌드 결과에 그대로 노출되므로 쓰지 않아요)
+          VITE_KAKAO_JS_KEY: ${{ secrets.VITE_KAKAO_JS_KEY }}
         run: npm run build
 
       - name: Install intro-portfolio dependencies

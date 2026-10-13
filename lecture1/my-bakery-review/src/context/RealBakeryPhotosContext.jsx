@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { RealBakeryPhotosContext } from './contexts'
 
 const STORAGE_KEY = 'my-bakery-review:real-bakery-photos'
-const RealBakeryPhotosContext = createContext(null)
 
 const loadInitialPhotos = () => {
   try {
@@ -32,12 +32,4 @@ export const RealBakeryPhotosProvider = ({ children }) => {
       {children}
     </RealBakeryPhotosContext.Provider>
   )
-}
-
-export const useRealBakeryPhotos = () => {
-  const ctx = useContext(RealBakeryPhotosContext)
-  if (!ctx) {
-    throw new Error('useRealBakeryPhotos는 RealBakeryPhotosProvider 안에서만 사용할 수 있어요.')
-  }
-  return ctx
 }

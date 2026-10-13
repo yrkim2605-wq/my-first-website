@@ -5,7 +5,7 @@ import Box from '@mui/material/Box'
 import Avatar from '@mui/material/Avatar'
 import { Link } from 'react-router-dom'
 import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
-import { useRealBakeryPhotos } from '../../context/RealBakeryPhotosContext'
+import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { HOVER_LIFT_SX } from '../../constants/motion'
 
 const IMAGE_HEIGHT_BY_SIZE = { lg: 220, default: 150, sm: 96 }

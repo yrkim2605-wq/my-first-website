@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { VisitedBakeriesContext } from './contexts'
 
 const STORAGE_KEY = 'my-bakery-review:visited-real-bakery-ids'
-const VisitedBakeriesContext = createContext(null)
 
 const loadInitialIds = () => {
   try {
@@ -28,12 +28,4 @@ export const VisitedBakeriesProvider = ({ children }) => {
       {children}
     </VisitedBakeriesContext.Provider>
   )
-}
-
-export const useVisitedBakeries = () => {
-  const ctx = useContext(VisitedBakeriesContext)
-  if (!ctx) {
-    throw new Error('useVisitedBakeries는 VisitedBakeriesProvider 안에서만 사용할 수 있어요.')
-  }
-  return ctx
 }

@@ -1,3 +1,5 @@
+/* 헤더 로고 전용 폰트: 용량을 줄이려고 "빵덕후레벨업" 6글자만 남긴 서브셋 파일이에요.
+   다른 글자에 이 폰트를 쓰려면 원본 폰트로 서브셋을 다시 만들어야 해요. */
 @font-face {
   font-family: 'OwnglyphParkDaHyun';
   src: url('./assets/fonts/Ownglyph_ParkDaHyun.woff2') format('woff2');
@@ -5,12 +7,9 @@
   font-display: swap;
 }
 
+/* 색상은 src/theme.js 팔레트에서 관리해요. 여기에는 MUI 바깥에서 쓰는 값만 둬요. */
 :root {
-  --color-bread-orange: #332419;
-  --color-butter-yellow: #5c4433;
   --color-cream-bg: #f0ede6;
-  --color-pink: #d9afa0;
-  --color-brown-text: #2e2a25;
 }
 
 body {
@@ -26,7 +25,7 @@ body {
 
 .wood-panel {
   background: #332419;
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: 0 2px 10px rgba(51, 36, 25, 0.12);
   color: #fff8ec;
 }
@@ -34,7 +33,7 @@ body {
 .wood-panel-light {
   background: #fffbf4;
   border: 1px solid rgba(46, 42, 37, 0.08);
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: 0 2px 10px rgba(51, 36, 25, 0.05);
 }
 

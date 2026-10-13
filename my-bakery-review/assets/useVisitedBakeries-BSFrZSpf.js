@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CbXtAM7H.js";import{ft as t}from"./Container-BW0lNvTV.js";import{p as n}from"./index-DhnyadwL.js";var r=e(t(),1),i=()=>{let e=(0,r.useContext)(n);if(!e)throw Error(`useVisitedBakeries는 VisitedBakeriesProvider 안에서만 사용할 수 있어요.`);return e};export{i as t};

@@ -8,7 +8,7 @@ import Button from '@mui/material/Button'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
 import WoodPanel from '../components/common/WoodPanel'
-import mascotLogo from '../assets/logo-mascot-photo.png'
+import mascotLogo from '../assets/logo-mascot-photo.webp'
 
 const Login = () => {
   const navigate = useNavigate()

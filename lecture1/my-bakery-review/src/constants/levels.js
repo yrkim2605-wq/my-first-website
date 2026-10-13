@@ -1,8 +1,8 @@
-import rookieIcon from '../assets/levels/rank-badge-rookie.png'
-import explorerIcon from '../assets/levels/rank-badge-explorer.png'
-import expertIcon from '../assets/levels/rank-badge-expert.png'
-import masterIcon from '../assets/levels/rank-badge-master.png'
-import otakuIcon from '../assets/levels/rank-badge-otaku.png'
+import rookieIcon from '../assets/levels/rank-badge-rookie.webp'
+import explorerIcon from '../assets/levels/rank-badge-explorer.webp'
+import expertIcon from '../assets/levels/rank-badge-expert.webp'
+import masterIcon from '../assets/levels/rank-badge-master.webp'
+import otakuIcon from '../assets/levels/rank-badge-otaku.webp'
 
 export const LEVELS = [
   {

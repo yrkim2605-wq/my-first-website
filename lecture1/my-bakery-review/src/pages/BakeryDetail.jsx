@@ -22,14 +22,15 @@ import { DISTRICTS } from '../constants/districts'
 import { BAKERY_REVIEWS } from '../constants/bakeryReviews'
 import { MOCK_USER } from '../constants/userProfile'
 import { getAuthorLevel } from '../utils/authorLevel'
-import { useBusanBakeries } from '../context/BusanBakeriesContext'
-import { useVisitedBakeries } from '../context/VisitedBakeriesContext'
-import { useRealBakeryPhotos } from '../context/RealBakeryPhotosContext'
+import { useBusanBakeries } from '../hooks/useBusanBakeries'
+import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
+import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { resizeImageFile } from '../utils/resizeImageFile'
 import Reveal from '../components/common/Reveal'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined'
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto'
+import { RADIUS } from '../theme'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
@@ -153,10 +154,10 @@ const BakeryDetail = () => {
               sx={{
                 width: '100%',
                 height: { xs: 200, sm: 280 },
-                borderRadius: 3,
+                borderRadius: RADIUS.lg,
                 overflow: 'hidden',
                 mb: 3,
-                bgcolor: '#F3D9A8',
+                bgcolor: 'butter.main',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -171,7 +172,7 @@ const BakeryDetail = () => {
                   sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
-                <Typography variant="body2" sx={{ color: '#7A4A16', fontWeight: 600, textAlign: 'center', px: 2 }}>
+                <Typography variant="body2" sx={{ color: 'butter.contrastText', fontWeight: 600, textAlign: 'center', px: 2 }}>
                   아직 등록된 사진이 없어요. 리뷰 작성할 때 사진을 올려보세요!
                 </Typography>
               )}
@@ -290,7 +291,7 @@ const BakeryDetail = () => {
                     sx={{
                       position: 'relative',
                       p: 2.5,
-                      borderRadius: 3,
+                      borderRadius: RADIUS.lg,
                       border: '1px dashed rgba(46,42,37,0.25)',
                       bgcolor: 'rgba(46,42,37,0.03)',
                     }}
@@ -335,7 +336,7 @@ const BakeryDetail = () => {
               <Box
                 sx={{
                   p: 2.5,
-                  borderRadius: 3,
+                  borderRadius: RADIUS.lg,
                   border: '1px solid',
                   borderColor: 'rgba(46,42,37,0.08)',
                   bgcolor: 'background.paper',
@@ -416,7 +417,7 @@ const BakeryDetail = () => {
                     component="img"
                     src={draftPhoto}
                     alt=""
-                    sx={{ width: 96, height: 96, borderRadius: 2, objectFit: 'cover', display: 'block' }}
+                    sx={{ width: 96, height: 96, borderRadius: RADIUS.md, objectFit: 'cover', display: 'block' }}
                   />
                   <Button
                     onClick={() => setDraftPhoto(null)}

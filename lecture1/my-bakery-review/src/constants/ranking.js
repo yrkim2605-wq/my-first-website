@@ -37,3 +37,11 @@ export const TOP_LIKED_REVIEWS = [
   { rank: 5, bakeryName: '해운대 소금빵공방', author: '소금빵마스터', content: '평일 오전 8시 전에 가면 웨이팅 없이 살 수 있어요.', heartCount: 52 },
   { rank: 6, bakeryName: '전포 소금빵하우스', author: '치즈러버', content: '치즈가 실처럼 늘어나요. 신메뉴 강추합니다.', heartCount: 45 },
 ]
+
+export const RANKING_TABS = [
+  { label: '이번달 리뷰왕' },
+  { label: '방문 많은 회원' },
+  { label: '인기빵집 TOP 10' },
+  { label: '리뷰 많은 빵집' },
+  { label: '좋아요 많은 리뷰' },
+]

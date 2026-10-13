@@ -9,7 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment'
 import SearchIcon from '@mui/icons-material/Search'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import BakeryStageCard from '../components/common/BakeryStageCard'
-import PopularBakeryCarousel, { CAROUSEL_CARD_INSET } from '../components/common/PopularBakeryCarousel'
+import PopularBakeryCarousel from '../components/common/PopularBakeryCarousel'
 import PopularReviewCarousel from '../components/common/PopularReviewCarousel'
 import ScrollFillText from '../components/common/ScrollFillText'
 import InfiniteBakeryMarquee from '../components/common/InfiniteBakeryMarquee'
@@ -17,22 +17,24 @@ import HeroCarousel from '../components/common/HeroCarousel'
 import Reveal from '../components/common/Reveal'
 import RevealText from '../components/common/RevealText'
 import SectionDecor from '../components/common/SectionDecor'
+import StatusMessage from '../components/common/StatusMessage'
+import BakeryCardSkeleton from '../components/common/BakeryCardSkeleton'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERY_REVIEWS, REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryReviews'
 import { FILTER_CHIP_SX } from '../constants/chipStyles'
+import { CAROUSEL_CARD_INSET } from '../constants/carousel'
 import { getAuthorLevel } from '../utils/authorLevel'
-import { useBusanBakeries } from '../context/BusanBakeriesContext'
-import heroImage1 from '../assets/hero/bakery-1.jpg'
-import heroImage2 from '../assets/hero/bakery-2.jpg'
-import iconFire from '../assets/section-icons/icon-fire.png'
-import iconStar from '../assets/section-icons/icon-star.png'
-import iconCroissant from '../assets/section-icons/icon-croissant.png'
-import iconDefaultBakery from '../assets/section-icons/icon-default-bakery.png'
-import decoEggTart from '../assets/decorative/deco-egg-tart.jpg'
-import decoStrawberryChoux from '../assets/decorative/deco-strawberry-choux.jpg'
-import decoStrawberryCake from '../assets/decorative/deco-strawberry-cake.jpg'
-import decoCoconutBread from '../assets/decorative/deco-coconut-bread.jpg'
+import { useBusanBakeries } from '../hooks/useBusanBakeries'
+import heroImage1 from '../assets/hero/bakery-1.webp'
+import heroImage2 from '../assets/hero/bakery-2.webp'
+import iconFire from '../assets/section-icons/icon-fire.webp'
+import iconStar from '../assets/section-icons/icon-star.webp'
+import iconCroissant from '../assets/section-icons/icon-croissant.webp'
+import iconDefaultBakery from '../assets/section-icons/icon-default-bakery.webp'
+import decoEggTart from '../assets/decorative/deco-egg-tart.webp'
+import decoStrawberryChoux from '../assets/decorative/deco-strawberry-choux.webp'
+import decoStrawberryCake from '../assets/decorative/deco-strawberry-cake.webp'
 
 const HERO_IMAGES = [heroImage1, heroImage2]
 
@@ -41,7 +43,7 @@ const NEW_BAKERY_DECOR = [{ src: decoStrawberryChoux, size: 72, top: -104, right
 const ALL_BAKERY_DECOR = [{ src: decoStrawberryCake, size: 122, top: 140, left: 64, rotate: 7 }]
 
 const SECTION_TITLE_SX = {
-  color: '#205A41',
+  color: 'primary.main',
   fontWeight: 700,
   letterSpacing: '-0.01em',
   display: 'flex',
@@ -89,7 +91,12 @@ const POPULAR_REVIEWS = [...BAKERY_REVIEWS]
 const Home = () => {
   const [selectedDistrictId, setSelectedDistrictId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const { bakeries: realBakeries, loading: bakeriesLoading, error: bakeriesError } = useBusanBakeries()
+  const {
+    bakeries: realBakeries,
+    loading: bakeriesLoading,
+    error: bakeriesError,
+    reload: reloadBakeries,
+  } = useBusanBakeries()
 
   const selectedDistrict = DISTRICTS.find((d) => d.id === selectedDistrictId)
   const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -132,6 +139,20 @@ const Home = () => {
       b.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery))
     return matchesDistrict && matchesQuery
   })
+
+  const handleResetFilters = () => {
+    setSearchQuery('')
+    setSelectedDistrictId(null)
+  }
+
+  const bakeriesErrorMessage = (
+    <StatusMessage
+      title="빵집 정보를 불러오지 못했어요"
+      description="잠시 후 다시 시도해주세요."
+      actionLabel="다시 시도"
+      onAction={reloadBakeries}
+    />
+  )
 
   const renderBakeryCard = (bakery, { index = 0, variant = 'default' } = {}) => {
     const district = DISTRICTS.find((d) => d.id === bakery.districtId)
@@ -220,11 +241,15 @@ const Home = () => {
                 <RevealText text="오늘 인기 빵집" />
               </Typography>
               {bakeriesLoading && (
-                <Typography color="text.secondary">부산 빵집 정보를 불러오는 중이에요...</Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+                  {[0, 1, 2].map((i) => (
+                    <Box key={i} sx={{ display: { xs: i === 0 ? 'block' : 'none', md: 'block' } }}>
+                      <BakeryCardSkeleton />
+                    </Box>
+                  ))}
+                </Box>
               )}
-              {bakeriesError && (
-                <Typography color="error">빵집 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</Typography>
-              )}
+              {bakeriesError && bakeriesErrorMessage}
             </Box>
           </Box>
           {!bakeriesLoading && !bakeriesError && popularBakeries.length > 0 && (
@@ -248,32 +273,38 @@ const Home = () => {
         </Box>
       </Box>
 
-      <Box sx={{ position: 'relative', py: { xs: 8, sm: 10 } }}>
-        <Box sx={{ ...FULL_BLEED_SX, px: POPULAR_SECTION_PX }}>
-          <Box sx={{ position: 'relative' }}>
-            <SectionDecor stickers={NEW_BAKERY_DECOR} />
-            <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
-              <Box component="img" src={iconCroissant} alt="" sx={SECTION_ICON_PADDED_SX} />
-              <RevealText text="새로 등록된 빵집" />
-            </Typography>
-            {bakeriesLoading && (
-              <Typography color="text.secondary">부산 빵집 정보를 불러오는 중이에요...</Typography>
-            )}
-            {bakeriesError && (
-              <Typography color="error">빵집 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</Typography>
-            )}
+      {/* 오류일 때는 위 "오늘 인기 빵집"에서 한 번만 안내하고, 이 섹션은 숨겨요 */}
+      {!bakeriesError && (
+        <Box sx={{ position: 'relative', py: { xs: 8, sm: 10 } }}>
+          <Box sx={{ ...FULL_BLEED_SX, px: POPULAR_SECTION_PX }}>
+            <Box sx={{ position: 'relative' }}>
+              <SectionDecor stickers={NEW_BAKERY_DECOR} />
+              <Typography variant="h2" sx={{ ...SECTION_TITLE_SX, mb: 2 }}>
+                <Box component="img" src={iconCroissant} alt="" sx={SECTION_ICON_PADDED_SX} />
+                <RevealText text="새로 등록된 빵집" />
+              </Typography>
+              {bakeriesLoading && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+                  {[0, 1, 2, 3].map((i) => (
+                    <Box key={i} sx={{ display: { xs: i < 2 ? 'block' : 'none', md: 'block' } }}>
+                      <BakeryCardSkeleton />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
           </Box>
+          {!bakeriesLoading && (
+            <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', mt: 1 }}>
+              <InfiniteBakeryMarquee bakeries={marqueeBakeries} />
+            </Box>
+          )}
         </Box>
-        {!bakeriesLoading && !bakeriesError && (
-          <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', mt: 1 }}>
-            <InfiniteBakeryMarquee bakeries={marqueeBakeries} />
-          </Box>
-        )}
-      </Box>
+      )}
 
       <Box
         sx={{
-          bgcolor: '#F7F1E6',
+          bgcolor: 'background.default',
           width: '100vw',
           position: 'relative',
           left: '50%',
@@ -286,7 +317,7 @@ const Home = () => {
         <SectionDecor stickers={ALL_BAKERY_DECOR} />
         <Box
           sx={{
-            bgcolor: '#FFE373',
+            bgcolor: 'highlight.main',
             width: '100vw',
             position: 'relative',
             left: '50%',
@@ -312,15 +343,15 @@ const Home = () => {
                     backgroundColor: '#FFFDF6',
                     boxShadow: '0 2px 8px rgba(46,42,37,0.08)',
                     '& fieldset': {
-                      borderColor: '#E3B873',
+                      borderColor: 'gold.main',
                       borderWidth: 2,
                       transition: 'border-color 0.35s ease',
                     },
                     '&:hover fieldset': {
-                      borderColor: '#205A41',
+                      borderColor: 'primary.main',
                     },
                     '&.Mui-focused fieldset': {
-                      borderColor: '#205A41',
+                      borderColor: 'primary.main',
                       borderWidth: 2,
                     },
                   },
@@ -368,6 +399,15 @@ const Home = () => {
               ))}
             </Box>
 
+            {bakeriesError && bakeriesErrorMessage}
+            {!bakeriesLoading && !bakeriesError && filteredBakeries.length === 0 && (
+              <StatusMessage
+                title="조건에 맞는 빵집이 없어요"
+                description="다른 지역을 고르거나 검색어를 바꿔보세요."
+                actionLabel="검색 초기화"
+                onAction={handleResetFilters}
+              />
+            )}
             <Box
               sx={{
                 display: 'grid',
@@ -380,12 +420,8 @@ const Home = () => {
                 gap: 3,
               }}
             >
-              {bakeriesLoading && (
-                <Typography color="text.secondary">부산 빵집 정보를 불러오는 중이에요...</Typography>
-              )}
-              {bakeriesError && (
-                <Typography color="error">빵집 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</Typography>
-              )}
+              {bakeriesLoading &&
+                Array.from({ length: 8 }, (_, i) => <BakeryCardSkeleton key={i} />)}
               {!bakeriesLoading &&
                 !bakeriesError &&
                 filteredBakeries.map((bakery, index) => renderBakeryCard(bakery, { index: index % 8 }))}
