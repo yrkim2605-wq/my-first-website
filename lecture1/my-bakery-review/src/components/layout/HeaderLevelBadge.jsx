@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Popover from '@mui/material/Popover'
+import Popper from '@mui/material/Popper'
+import Fade from '@mui/material/Fade'
+import ClickAwayListener from '@mui/material/ClickAwayListener'
 import Button from '@mui/material/Button'
 import { NavLink } from 'react-router-dom'
 import { MOCK_USER } from '../../constants/userProfile'
@@ -30,18 +32,75 @@ const describeRemaining = ({ visitsNeeded, heartsNeeded }) =>
   [visitsNeeded > 0 && `방문 ${visitsNeeded}곳`, heartsNeeded > 0 && `하트 ${heartsNeeded}개`].filter(Boolean).join(' · ')
 
 // 헤더 오른쪽의 레벨 칩: 누르면(모바일은 탭) 레벨업 방법과 내 진행 상황을 보여주는 작은 안내창이 열려요
+// 안내창은 모달이 아니라 헤더 안에 붙는 Popper예요.
+// - 페이지 스크롤을 막지 않고 (body에 padding · overflow를 걸지 않아 화면이 밀리지 않아요)
+// - 헤더와 함께 움직여서 스크롤해도 복제되거나 엉뚱한 곳에 남지 않고
+// - 화면 가장자리에서 16px 안쪽으로 밀어 넣어 잘리지 않아요.
+// 열고 닫기
+// - 마우스: 올리면 열리고, 벗어나면 닫혀요. 올린 채 클릭하면 "고정"돼서 벗어나도 유지되고, 다시 클릭하면 닫혀요.
+// - 터치(모바일): 탭하면 열리고, 다시 탭하면 닫혀요.
+// - 바깥을 누르거나 Esc를 눌러도 닫혀요.
+const HOVER_CLOSE_DELAY = 180
+
 const HeaderLevelBadge = () => {
+  // 안내창이 붙을 버튼 (ref 콜백으로 상태에 담아요)
   const [anchorEl, setAnchorEl] = useState(null)
+  const closeTimerRef = useRef(null)
+  const pinnedRef = useRef(false) // 클릭으로 고정된 상태인지 (고정되면 마우스가 벗어나도 안 닫혀요)
+  const [open, setOpen] = useState(false)
   const progress = getLevelProgress(MOCK_USER.visitedBakeryIds.length, MOCK_USER.totalHearts)
   const { currentLevel, nextLevel } = progress
-  const open = Boolean(anchorEl)
+
+  const clearCloseTimer = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }
+
+  useEffect(() => clearCloseTimer, [])
+
+  // 마우스(펜 제외 터치)일 때만 호버로 열어요. 터치 기기는 탭으로만 열고 닫아요.
+  const handlePointerEnter = (event) => {
+    if (event.pointerType !== 'mouse') return
+    clearCloseTimer()
+    setOpen(true)
+  }
+  const handlePointerLeave = (event) => {
+    if (event.pointerType !== 'mouse' || pinnedRef.current) return
+    clearCloseTimer()
+    closeTimerRef.current = setTimeout(() => setOpen(false), HOVER_CLOSE_DELAY)
+  }
+  const handleClose = () => {
+    clearCloseTimer()
+    pinnedRef.current = false
+    setOpen(false)
+  }
+  const handleClick = () => {
+    clearCloseTimer()
+    if (open && !pinnedRef.current) {
+      pinnedRef.current = true // 호버로 열려 있던 안내창을 고정
+    } else if (open) {
+      handleClose()
+    } else {
+      pinnedRef.current = true
+      setOpen(true)
+    }
+  }
 
   return (
-    <>
+    <ClickAwayListener onClickAway={handleClose}>
+    <Box
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onKeyDown={(event) => event.key === 'Escape' && handleClose()}
+      sx={{ position: 'relative' }}
+    >
       <Box
+        ref={setAnchorEl}
         component="button"
         type="button"
-        onClick={(event) => setAnchorEl(event.currentTarget)}
+        onClick={handleClick}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`내 레벨 ${currentLevel.name}, 다음 레벨까지 ${progress.percent}%. 레벨업 방법 보기`}
@@ -88,27 +147,34 @@ const HeaderLevelBadge = () => {
         </Typography>
       </Box>
 
-      <Popover
+      <Popper
         open={open}
         anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{
-          paper: {
-            role: 'dialog',
-            'aria-label': '레벨업 안내',
-            sx: {
-              mt: 1,
-              width: 300,
-              maxWidth: 'calc(100vw - 32px)',
-              p: 2.25,
-              ...PARCHMENT_SX,
-              borderRadius: RADIUS.lg,
-            },
-          },
-        }}
+        placement="bottom-end"
+        transition
+        disablePortal
+        modifiers={[
+          { name: 'offset', options: { offset: [0, 10] } },
+          { name: 'preventOverflow', options: { padding: 16, altAxis: true } },
+          { name: 'flip', enabled: false },
+        ]}
+        sx={{ zIndex: 1300 }}
       >
+        {({ TransitionProps }) => (
+          <Fade {...TransitionProps} timeout={150}>
+            <Box
+              role="dialog"
+              aria-label="레벨업 안내"
+              sx={{
+                width: 300,
+                maxWidth: 'calc(100vw - 32px)',
+                maxHeight: 'calc(100vh - 110px)',
+                overflowY: 'auto',
+                p: 2.25,
+                ...PARCHMENT_SX,
+                borderRadius: RADIUS.lg,
+              }}
+            >
         <Typography sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '1.05rem', color: 'primary.main', mb: 0.75 }}>
           레벨업 하는 법
         </Typography>
@@ -168,7 +234,7 @@ const HeaderLevelBadge = () => {
         <Button
           component={NavLink}
           to="/mypage"
-          onClick={() => setAnchorEl(null)}
+          onClick={handleClose}
           variant="outlined"
           size="small"
           fullWidth
@@ -176,8 +242,12 @@ const HeaderLevelBadge = () => {
         >
           마이페이지에서 내 레벨 보기
         </Button>
-      </Popover>
-    </>
+            </Box>
+          </Fade>
+        )}
+      </Popper>
+    </Box>
+    </ClickAwayListener>
   )
 }
 
