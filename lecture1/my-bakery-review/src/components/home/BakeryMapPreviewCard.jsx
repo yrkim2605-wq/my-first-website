@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom'
 import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { DISTRICTS } from '../../constants/districts'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
+import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
 // 지도 Hero의 빵집 미리보기 카드 (마커 정보를 보여주는 유일한 카드예요)
@@ -30,10 +31,9 @@ const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose
         alignItems: isCompact ? 'center' : 'stretch',
         gap: isCompact ? 1.5 : 0,
         p: isCompact ? 1.25 : 1.5,
-        bgcolor: 'background.paper',
+        ...PARCHMENT_SX,
         borderRadius: RADIUS.lg,
-        border: '1px solid rgba(59,42,34,0.08)',
-        boxShadow: '0 10px 28px rgba(59,42,34,0.16)',
+        boxShadow: `${PARCHMENT_SX.boxShadow}, 0 10px 24px rgba(59,42,34,0.14)`,
         position: 'relative',
         ...sx,
       }}
@@ -50,10 +50,10 @@ const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose
             zIndex: 1,
             width: 32,
             height: 32,
-            bgcolor: 'background.paper',
-            color: 'text.secondary',
-            boxShadow: '0 2px 6px rgba(59,42,34,0.15)',
-            '&:hover': { bgcolor: 'butter.main', color: 'primary.main' },
+            bgcolor: 'parchment.light',
+            color: 'wood.main',
+            border: '2px solid #c9a56a',
+            '&:hover': { bgcolor: 'parchment.dark', color: 'primary.main' },
           }}
         >
           <CloseIcon sx={{ fontSize: '1.05rem' }} />

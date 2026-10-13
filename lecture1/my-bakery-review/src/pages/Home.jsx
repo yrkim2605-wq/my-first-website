@@ -13,6 +13,7 @@ import PopularBakeryCarousel from '../components/common/PopularBakeryCarousel'
 import PopularReviewCarousel from '../components/common/PopularReviewCarousel'
 import InfiniteBakeryMarquee from '../components/common/InfiniteBakeryMarquee'
 import SectionHeading from '../components/common/SectionHeading'
+import AdventureHero from '../components/home/AdventureHero'
 import BakeryMapHero from '../components/home/BakeryMapHero'
 import LevelUpTeaser from '../components/home/LevelUpTeaser'
 import ScallopEdge from '../components/common/decor/ScallopEdge'
@@ -142,7 +143,10 @@ const Home = () => {
 
   return (
     <>
-      {/* 첫 화면: 부산 빵집 지도 */}
+      {/* 첫 화면: 모험 시작 (타이틀 + 빵 기사) */}
+      <AdventureHero />
+
+      {/* 빵지순례 월드맵: 부산 빵집 지도 */}
       <BakeryMapHero
         bakeries={realBakeries}
         selectedId={mapSelectedId}

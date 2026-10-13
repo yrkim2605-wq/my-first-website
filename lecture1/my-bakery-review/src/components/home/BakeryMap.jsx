@@ -29,10 +29,10 @@ const ZOOM_BUTTON_SX = {
   display: 'grid',
   placeItems: 'center',
   border: 'none',
-  bgcolor: 'background.paper',
-  color: 'text.primary',
+  bgcolor: 'parchment.light',
+  color: 'wood.main',
   cursor: 'pointer',
-  '&:hover': { color: 'primary.main' },
+  '&:hover': { color: 'primary.main', bgcolor: 'parchment.main' },
   '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 },
 }
 
@@ -93,10 +93,10 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
           height: `${size}px`,
           lineHeight: `${size - 6}px`,
           borderRadius: '50%',
-          background: palette.background.paper,
-          border: `3px solid ${palette.primary.main}`,
-          boxShadow: '0 0 0 5px rgba(123,45,59,0.16), 0 4px 10px rgba(59,42,34,0.2)',
-          color: palette.primary.main,
+          background: palette.parchment.main,
+          border: `3px solid ${palette.wood.main}`,
+          boxShadow: '0 0 0 4px rgba(226,176,74,0.45), 0 3px 0 rgba(33,20,10,0.4)',
+          color: palette.wood.dark,
           textAlign: 'center',
           fontWeight: '700',
           fontSize: '13px',
@@ -266,9 +266,9 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
         sx={{
           position: 'relative',
           height: { xs: 320, sm: 380, md: 430 },
-          borderRadius: { xs: RADIUS.lg, md: '24px' },
+          borderRadius: { xs: '12px', md: '18px' },
           overflow: 'hidden',
-          border: '1px solid rgba(59,42,34,0.12)',
+          border: '2px solid #c9a56a',
           bgcolor: 'butter.main',
         }}
       >
@@ -317,8 +317,8 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
               borderRadius: '50%',
               background: palette.primary.main,
               color: palette.primary.contrastText,
-              border: `2px solid ${palette.background.paper}`,
-              boxShadow: '0 3px 8px rgba(59,42,34,0.3)',
+              border: `2px solid ${palette.gold.main}`,
+              boxShadow: '0 3px 0 rgba(33,20,10,0.45)',
               transformOrigin: '50% 120%',
               transition: 'transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
             },
@@ -339,7 +339,7 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
             '.bakery-marker:focus-visible': { outline: 'none' },
             '.bakery-marker.is-selected .bakery-marker__badge': {
               transform: 'scale(1.25)',
-              borderColor: palette.mustard.main,
+              borderColor: palette.gold.light,
               background: palette.primary.dark,
             },
             '.bakery-marker.is-selected .bakery-marker__badge::after': {
@@ -362,8 +362,9 @@ const BakeryMap = ({ bakeries, regionRequest, selectedId, onSelectBakery, loadin
               flexDirection: 'column',
               borderRadius: RADIUS.md,
               overflow: 'hidden',
-              boxShadow: '0 4px 12px rgba(59,42,34,0.15)',
-              '& > button + button': { borderTop: '1px solid rgba(59,42,34,0.1)' },
+              border: '2px solid #6b4423',
+              boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
+              '& > button + button': { borderTop: '2px solid #6b4423' },
             }}
           >
             <Box component="button" type="button" aria-label="지도 확대" onClick={() => handleZoom(-1)} sx={ZOOM_BUTTON_SX}>

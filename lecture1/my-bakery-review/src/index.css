@@ -137,3 +137,42 @@ body::before {
     animation: none;
   }
 }
+
+/* ── 가벼운 움직임 ──────────────────────────────────────────────
+   캐릭터가 둥실거리고, 별이 천천히 깜빡여요. 움직임 줄이기 설정을 켠 사람에게는 멈춰요. */
+@keyframes floatSoft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.float-soft {
+  animation: floatSoft 4.5s ease-in-out infinite;
+}
+
+.twinkle {
+  animation: twinkle 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-soft,
+  .twinkle {
+    animation: none;
+  }
+}
