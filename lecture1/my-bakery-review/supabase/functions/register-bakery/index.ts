@@ -10,6 +10,13 @@
 //   KAKAO_REST_API_KEY   카카오 개발자 콘솔의 "REST API 키" (JavaScript 키와 다른 키예요. 프런트 · .env에는 넣지 않아요)
 // 자동으로 들어오는 값: SUPABASE_URL, 서버 비밀 키(SUPABASE_SECRET_KEYS 또는 SUPABASE_SERVICE_ROLE_KEY)
 //
+// 보안 (Verify JWT를 꺼도 안전한 이유): 이 함수는 플랫폼의 JWT 검사에 기대지 않고 스스로 확인해요.
+//  1) Authorization의 토큰을 Supabase Auth 서버에 보내 "진짜 로그인한 사용자인지" 확인해요 (auth.getUser = 서명 · 만료 · 로그아웃 여부 확인).
+//     토큰이 없거나, publishable/anon 키처럼 사용자가 없는 토큰이거나, 위조 · 만료된 토큰이면 401이에요. 확인 서버에 문제가 있어도 "열어 주지 않아요"(실패 시 차단).
+//  2) 이메일 인증을 마치지 않은 사용자는 403이에요.
+//  3) 카카오 호출은 사용자당 호출 수를 제한해요(429). 이미 등록된 빵집은 카카오를 부르지 않아요.
+//  4) 요청 크기 제한, 입력 검증, 이름 · 좌표 · 지역은 카카오가 알려준 값으로만 저장해요. 서버 비밀 키 · 카카오 키는 응답 · 로그에 쓰지 않아요.
+//
 // 이 파일 하나로 배포할 수 있어요 (대시보드 편집기에 붙여넣기). 판단 로직은 아래 export 함수들이고,
 // supabase/tests/register-bakery.test.mjs가 Node로 검증해요.
 
@@ -81,9 +88,39 @@ export type Deps = {
   hasBakery: (id: string) => Promise<boolean>
   upsertBakery: (row: { id: string; name: string; district_id: string; address: string | null; lat: number; lng: number }) => Promise<void>
   searchKakao: (name: string, lat: number, lng: number) => Promise<any[]>
+  // 새 빵집을 확인하려고 카카오를 부르기 전에 확인해요 (사용자당 호출 수 제한). 없으면 제한하지 않아요.
+  allowLookup?: (userId: string) => boolean
+}
+
+export const MAX_BODY_BYTES = 4096
+
+// 단순한 호출 제한기: key(사용자)마다 windowMs 동안 limit번까지. (함수 실행 환경 하나 안에서만 세는 "최선의 노력" 제한이에요.)
+export const createRateLimiter = (limit: number, windowMs: number, now: () => number = () => Date.now()) => {
+  const hits = new Map<string, number[]>()
+  return (key: string) => {
+    const t = now()
+    const recent = (hits.get(key) ?? []).filter((time) => t - time < windowMs)
+    if (recent.length >= limit) {
+      hits.set(key, recent)
+      return false
+    }
+    recent.push(t)
+    hits.set(key, recent)
+    if (hits.size > 5000) hits.clear() // 메모리가 무한히 커지지 않게
+    return true
+  }
 }
 
 export const handleRequest = async (req: Request, deps: Deps): Promise<Response> => {
+  try {
+    return await processRequest(req, deps)
+  } catch {
+    // 예상하지 못한 오류는 자세한 내용을 숨기고, 브라우저가 읽을 수 있게 CORS가 붙은 500으로 돌려줘요
+    return rejection(500, 'INTERNAL', '서버에서 문제가 생겼어요. 잠시 후 다시 시도해 주세요.')
+  }
+}
+
+const processRequest = async (req: Request, deps: Deps): Promise<Response> => {
   if (req.method === 'OPTIONS') return json(200, { ok: true })
   if (req.method !== 'POST') return rejection(405, 'METHOD_NOT_ALLOWED', 'POST만 쓸 수 있어요.')
 
@@ -94,7 +131,9 @@ export const handleRequest = async (req: Request, deps: Deps): Promise<Response>
 
   let body: any
   try {
-    body = await req.json()
+    const raw = await req.text()
+    if (raw.length > MAX_BODY_BYTES) return rejection(413, 'TOO_LARGE', '요청이 너무 커요.')
+    body = JSON.parse(raw)
   } catch {
     return rejection(400, 'INVALID_INPUT', '요청 내용이 올바르지 않아요.')
   }
@@ -104,6 +143,10 @@ export const handleRequest = async (req: Request, deps: Deps): Promise<Response>
 
   // 이미 등록돼 있으면 카카오를 다시 부르지 않아요 (호출 수를 아끼고 남용을 줄여요)
   if (await deps.hasBakery(bakery.id)) return json(200, { ok: true, registered: false })
+
+  if (deps.allowLookup && !deps.allowLookup(user.id)) {
+    return rejection(429, 'RATE_LIMITED', '빵집 확인 요청이 너무 많아요. 잠시 후 다시 시도해 주세요.')
+  }
 
   let documents: any[]
   try {
@@ -132,6 +175,8 @@ export const handleRequest = async (req: Request, deps: Deps): Promise<Response>
 
 // ── Edge Function 실행부 (Deno에서만 동작해요. 테스트에서는 위의 handleRequest만 불러요) ──
 const startServer = () => {
+  // 사용자당 10분에 새 빵집 확인 20번까지 (일반 사용에는 충분하고, 무차별 요청은 막아요)
+  const allowLookup = createRateLimiter(20, 10 * 60 * 1000)
   const handler = async (req: Request) => {
     // npm: 가져오기는 Deno 전용이라 여기서만 불러와요
     const { createClient } = await import('npm:@supabase/supabase-js@2')
@@ -148,6 +193,7 @@ const startServer = () => {
 
     const admin = createClient(url, secretKey, { auth: { persistSession: false } })
     return handleRequest(req, {
+      allowLookup,
       getUser: async (jwt) => {
         const { data, error } = await admin.auth.getUser(jwt)
         if (error || !data.user) return null

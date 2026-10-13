@@ -115,6 +115,7 @@ export const createSupabaseReviewRepository = (getClient) => {
     const status = error.context?.status
     if (status === 404) throw new RepositoryError('FUNCTION_MISSING', messages.FUNCTION_MISSING)
     if (status === 401 || status === 403) throw new RepositoryError('SESSION_EXPIRED', messages.SESSION_EXPIRED)
+    if (status === 429) throw new RepositoryError('RATE_LIMITED', '빵집 확인 요청이 너무 많아요. 잠시 후 다시 시도해 주세요. (일지는 저장되지 않았어요)')
     if (status === 400 || status === 422) {
       throw new RepositoryError('BAKERY_REJECTED', detail?.error?.message || messages.BAKERY_REJECTED)
     }

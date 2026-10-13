@@ -1,7 +1,7 @@
 // register-bakery(빵집 등록 서버 함수)의 판단 로직 검증. 카카오 · Supabase는 가짜로 바꿔서 실제 서버를 부르지 않아요.
 // 실행: node supabase/tests/register-bakery.test.mjs   (Node의 TypeScript 지원으로 .ts를 그대로 불러와요)
 
-import { DISTRICT_CENTERS, distanceKm, findBakeryDocument, handleRequest, resolveDistrict, validateInput } from '../functions/register-bakery/index.ts'
+import { DISTRICT_CENTERS, createRateLimiter, distanceKm, findBakeryDocument, handleRequest, resolveDistrict, validateInput } from '../functions/register-bakery/index.ts'
 
 let passed = 0
 const failures = []
@@ -98,6 +98,93 @@ const run = async (req, over) => {
   const row = r.calls.upserts[0]
   check('등록 성공(200)', r.status === 200 && r.body.registered === true)
   check('이름 · 좌표 · 지역은 클라이언트 값(해운대 주장)이 아니라 카카오 좌표로 정해 저장', row.name === '진짜 베이커리' && row.lat === 35.1581 && row.lng === 129.0601 && row.address === '부산 서구 1' && row.district_id === 'seomyeon', JSON.stringify(row))
+}
+
+// ── 보안 점검: Verify JWT를 꺼도 안전한지 (이 함수가 스스로 막는지) ──
+{
+  // 인증이 안 된 요청은 인증 확인(getUser) 말고는 아무것도 건드리지 않아요
+  const touched = []
+  const spy = {
+    getUser: async (jwt) => (touched.push('getUser'), jwt === 'good' ? { id: 'u1', emailConfirmed: true } : null),
+    hasBakery: async () => (touched.push('hasBakery'), false),
+    upsertBakery: async () => touched.push('upsert'),
+    searchKakao: async () => (touched.push('kakao'), docs),
+  }
+  for (const token of [null, 'garbage', 'sb_publishable_xxxxxxxxxxxx', 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.sig']) {
+    const res = await handleRequest(request(good, token), spy)
+    check(`인증 안 된 요청 차단(401): ${token ? token.slice(0, 14) : '토큰 없음'}`, res.status === 401)
+  }
+  check('인증이 안 된 요청은 DB · 카카오를 전혀 건드리지 않아요', touched.every((name) => name === 'getUser'), touched.join(','))
+}
+{
+  const r = await run(request(good), {
+    getUser: async () => {
+      throw new Error('auth server down')
+    },
+  })
+  check('인증 확인 서버가 죽어도 열어 주지 않아요(실패 시 차단 401)', r.status === 401 && r.calls.kakao === 0 && r.calls.upserts.length === 0)
+}
+{
+  const failingUpsert = async () => {
+    throw new Error('db exploded: secret-detail')
+  }
+  const r = await run(request(good), { upsertBakery: failingUpsert })
+  const res = await handleRequest(request(good), makeDeps({ upsertBakery: failingUpsert }).deps)
+  const text = await res.text()
+  check('DB 오류는 500이고 내부 내용을 숨겨요', r.status === 500 && !text.includes('secret-detail') && !text.includes('exploded'))
+  check('오류 응답에도 CORS 헤더가 있어 브라우저가 읽을 수 있어요', res.headers.get('Access-Control-Allow-Origin') === '*')
+}
+{
+  const r = await run(request(good), {
+    hasBakery: async () => {
+      throw new Error('db down')
+    },
+  })
+  check('빵집 조회 중 오류도 500(내용 숨김)', r.status === 500 && r.body.error.code === 'INTERNAL')
+}
+{
+  const r = await run(request({ ...good, name: 'x'.repeat(5000) }))
+  check('너무 큰 요청은 413, 카카오를 부르지 않아요', r.status === 413 && r.calls.kakao === 0)
+}
+{
+  const r = await run(new Request('http://x', { method: 'POST', headers: { Authorization: 'Bearer good' }, body: '{not json' }))
+  check('JSON이 아닌 본문은 400', r.status === 400)
+}
+{
+  let asked = 0
+  const r = await run(request(good), { allowLookup: () => ((asked += 1), false) })
+  check('카카오 호출 한도를 넘으면 429, 호출하지 않아요', r.status === 429 && r.body.error.code === 'RATE_LIMITED' && r.calls.kakao === 0 && asked === 1)
+}
+{
+  let asked = 0
+  const r = await run(request(good), { hasBakery: async () => true, allowLookup: () => ((asked += 1), false) })
+  check('이미 등록된 빵집은 호출 한도를 쓰지 않아요', r.status === 200 && asked === 0)
+}
+{
+  let clock = 0
+  const allow = createRateLimiter(3, 1000, () => clock)
+  const results = [allow('a'), allow('a'), allow('a'), allow('a'), allow('b')]
+  clock = 1500
+  check('호출 제한기: 3번까지 허용, 4번째 거부, 다른 사용자는 별개', JSON.stringify(results) === '[true,true,true,false,true]')
+  check('호출 제한기: 시간이 지나면 다시 허용', allow('a') === true)
+}
+{
+  const res = await handleRequest(new Request('http://x', { method: 'OPTIONS' }), makeDeps().deps)
+  check('브라우저 사전 확인(OPTIONS)은 인증 없이 통과', res.status === 200 && res.headers.get('Access-Control-Allow-Headers').includes('authorization'))
+}
+{
+  // 응답에 비밀 값이 섞이지 않는지: 카카오 키를 가진 척하는 의존성으로 여러 응답을 모아 검사
+  const SECRET = 'KAKAO-SECRET-KEY-123'
+  const deps = makeDeps({
+    searchKakao: async () => {
+      throw new Error(`kakao failed with ${SECRET}`)
+    },
+  }).deps
+  const bodies = []
+  for (const req of [request(good, null), request(good, 'unverified'), request({ ...good, id: 'x' }), request(good), request({ ...good, id: '99999999' })]) {
+    bodies.push(await (await handleRequest(req, deps)).text())
+  }
+  check('어떤 응답에도 비밀 값이 들어가지 않아요', bodies.every((text) => !text.includes(SECRET)))
 }
 
 console.log(`\n통과 ${passed} · 실패 ${failures.length}`)
