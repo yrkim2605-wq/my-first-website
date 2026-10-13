@@ -7,7 +7,8 @@ import SceneFade from '../components/about-me/SceneFade';
 import BackButton from '../components/about-me/BackButton';
 import { ABOUT_SECTIONS } from '../components/about-me/aboutMeStyles';
 import SiteEffects from '../components/SiteEffects';
-import EdgeNav, { PAGE_LINKS } from '../components/EdgeNav';
+import EdgeNav from '../components/EdgeNav';
+import { PAGE_LINKS } from '../constants/pageLinks';
 import useSmoothScroll from '../hooks/useSmoothScroll';
 
 // 자기소개 페이지 — 세 번째 섹션의 "WHO AM I ?" 사각형을 누르면 열린다

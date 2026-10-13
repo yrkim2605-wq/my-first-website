@@ -305,6 +305,8 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         {sheet.src ? (
           <Box
             component="img"
+            // 첫 화면의 대표 이미지 — 다른 이미지보다 먼저 받는다
+            fetchPriority="high"
             src={sheet.src}
             alt={sheet.alt}
             sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
@@ -543,6 +545,8 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
           <Box
             key={image.src}
             component="img"
+            loading="lazy"
+            decoding="async"
             src={image.src}
             alt={image.alt}
             sx={{

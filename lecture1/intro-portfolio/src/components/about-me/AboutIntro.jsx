@@ -257,6 +257,8 @@ const AboutIntro = () => {
         >
           <Box
             component="img"
+            // 첫 화면의 주인공 그림 — 다른 이미지보다 먼저 받는다
+            fetchPriority="high"
             src={lazyAfternoon}
             alt="Lazy Afternoon — 침대 위에서 느긋하게 쉬는 캐릭터 일러스트"
             sx={{

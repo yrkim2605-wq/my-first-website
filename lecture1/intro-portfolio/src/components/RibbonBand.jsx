@@ -16,7 +16,7 @@ import appleslateKeyringThumb from '../assets/project-appleslate-keyring.webp';
 // link: 아래 Projects 섹션과 같은 주소 — 외부 사이트는 새 탭, 포트폴리오 안의 페이지는 화면이 어두워지며 넘어간다
 //   애플슬레이트 키링은 일러스트 상세 페이지의 굿즈 작업이라 그 페이지로 보낸다
 const PROJECT_CARDS = [
-  { image: drJartThumb, link: 'https://yrkim2605-wq.github.io/dr-jart-website/' },
+  { image: drJartThumb, link: `${import.meta.env.BASE_URL}project-drjart.html` },
   { image: aiInfluencerThumb, link: `${import.meta.env.BASE_URL}project-ai.html` },
   { image: illustrationThumb, link: `${import.meta.env.BASE_URL}project-illustration.html` },
   { image: appleslateKeyringThumb, link: `${import.meta.env.BASE_URL}project-illustration.html` },
@@ -85,38 +85,56 @@ const faceSx = {
   backfaceVisibility: 'hidden',
 };
 
-// 드래그로 직접 돌릴 수 있는 원기둥 — 손을 떼면 다시 저절로 돈다
-// angleRef: 지금 회전각(도) — 리렌더 없이 매 프레임 spinRef의 DOM에 직접 써서 가볍게 움직인다
+// 저절로 도는 회전 — 0 → 360도 (index.css의 ribbonSpin)
+// 매 프레임 JS로 돌리면 160개 조각의 스타일을 브라우저가 계속 다시 계산해 무거워서,
+// 가만히 돌 땐 CSS 애니메이션에 맡기고 끌 때만 JS가 각도를 직접 쓴다
+// angle에서 시작하도록 애니메이션 시간을 그만큼 앞당긴다(음수 delay)
+const spinAnimation = (angle) => {
+  const offset = ((((angle % 360) + 360) % 360) / 360) * SPIN_SECONDS;
+  return `ribbonSpin ${SPIN_SECONDS}s linear ${-offset}s infinite`;
+};
+
+// 드래그로 직접 돌릴 수 있는 원기둥 — 손을 떼면 그 자리에서 다시 저절로 돈다
 const useDragSpin = () => {
   const spinRef = useRef(null);
-  const angleRef = useRef(0);
   const draggingRef = useRef(false);
   const startXRef = useRef(0);
   const startAngleRef = useRef(0);
+  const angleRef = useRef(0); // 끄는 동안의 회전각(도)
+  const spinStartRef = useRef(0); // 지금 CSS 회전이 0도였던 시각 — 여기서 지금 각도를 계산한다
   const pressedLinkRef = useRef(null); // 누르기 시작한 카드의 주소 (카드 밖이면 null)
 
+  const startSpin = (angle) => {
+    const el = spinRef.current;
+    if (!el) return;
+    spinStartRef.current = performance.now() - (angle / 360) * SPIN_SECONDS * 1000;
+    el.style.transform = '';
+    el.style.animation = spinAnimation(angle);
+  };
+  const currentAngle = () => ((performance.now() - spinStartRef.current) / 1000) * (360 / SPIN_SECONDS);
+
   useEffect(() => {
-    let frame;
-    let last = performance.now();
-    const tick = (now) => {
-      const dt = (now - last) / 1000;
-      last = now;
-      if (!draggingRef.current) {
-        angleRef.current += (360 / SPIN_SECONDS) * dt;
-      }
-      if (spinRef.current) {
-        spinRef.current.style.transform = `rotateY(${angleRef.current}deg)`;
-      }
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    const el = spinRef.current;
+    if (!el) return undefined;
+    startSpin(0);
+    // 화면 밖에 있는 동안엔 회전을 멈춰 쉬게 한다
+    const observer = new IntersectionObserver(([entry]) => {
+      el.style.animationPlayState = entry.isIntersecting ? 'running' : 'paused';
+    });
+    observer.observe(el.parentElement);
+    return () => observer.disconnect();
   }, []);
 
   const onPointerDown = (event) => {
     draggingRef.current = true;
     startXRef.current = event.clientX;
-    startAngleRef.current = angleRef.current;
+    // 지금 보이는 각도를 붙잡고 CSS 회전을 멈춘 뒤, 끄는 동안엔 직접 돌린다
+    startAngleRef.current = currentAngle();
+    angleRef.current = startAngleRef.current;
+    if (spinRef.current) {
+      spinRef.current.style.animation = 'none';
+      spinRef.current.style.transform = `rotateY(${angleRef.current}deg)`;
+    }
     // 포인터를 붙잡으면 손을 뗄 때의 대상이 바깥 상자로 바뀌므로, 누른 카드는 지금 기억해 둔다
     pressedLinkRef.current = event.target.closest('[data-link]')?.dataset.link ?? null;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -126,8 +144,10 @@ const useDragSpin = () => {
     const dx = event.clientX - startXRef.current;
     if (Math.abs(dx) > CLICK_SLOP) pressedLinkRef.current = null; // 끌기 시작하면 클릭이 아니다
     angleRef.current = startAngleRef.current + dx * DRAG_SENSITIVITY;
+    if (spinRef.current) spinRef.current.style.transform = `rotateY(${angleRef.current}deg)`;
   };
   const endDrag = () => {
+    if (draggingRef.current) startSpin(angleRef.current); // 놓은 각도에서 다시 저절로 돈다
     draggingRef.current = false;
     pressedLinkRef.current = null;
   };
@@ -179,6 +199,7 @@ const RibbonBand = ({ sx = {} }) => {
               position: 'absolute',
               inset: 0,
               transformStyle: 'preserve-3d',
+              willChange: 'transform',
             }}
           >
             {SLICES.map((item) => (

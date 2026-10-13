@@ -115,7 +115,7 @@ const BeforeAfterSlider = ({ before, after, isActive = true, sx = {} }) => {
         }}
       >
         <Box sx={{ position: 'relative' }}>
-          <Box component="img" src={after.src} alt={after.alt} draggable={false} sx={{ display: 'block', width: '100%' }} />
+          <Box component="img" loading="lazy" decoding="async" src={after.src} alt={after.alt} draggable={false} sx={{ display: 'block', width: '100%' }} />
           {/* before 층 — after와 같은 높이로 깔고 경계까지만 보인다
               before 페이지가 더 짧아서, 끝난 뒤 남는 자리는 "여기서 끝" 판으로 채워 after가 비쳐 섞이지 않게 한다 */}
           <Box
@@ -129,7 +129,7 @@ const BeforeAfterSlider = ({ before, after, isActive = true, sx = {} }) => {
               transition: isHinting ? 'clip-path 0.6s cubic-bezier(0.65, 0, 0.35, 1)' : 'none',
             }}
           >
-            <Box component="img" src={before.src} alt={before.alt} draggable={false} sx={{ display: 'block', width: '100%' }} />
+            <Box component="img" loading="lazy" decoding="async" src={before.src} alt={before.alt} draggable={false} sx={{ display: 'block', width: '100%' }} />
             <Box
               aria-hidden
               sx={{

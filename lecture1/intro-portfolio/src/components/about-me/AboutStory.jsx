@@ -240,6 +240,8 @@ const AboutStory = () => {
         {/* 그림 — 마우스를 올리면 살짝 기울며 떠오른다 (모바일은 소개 글 바로 아래) */}
         <Box
           component="img"
+          loading="lazy"
+          decoding="async"
           src={rainyPopo}
           alt="RAINY — MY NAME IS POPO. 비 오는 날의 고양이 캐릭터 일러스트"
           sx={{

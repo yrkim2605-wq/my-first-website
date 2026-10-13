@@ -126,6 +126,8 @@ const ProjectDetailGallery = ({ project }) => {
         {/* 이미지 — 위에서 아래로 걷히듯 드러난다 (데스크톱은 오른쪽, 모바일은 목록 아래에 화면 너비로) */}
         <Box
           component="img"
+          loading="lazy"
+          decoding="async"
           src={gallery.image.src}
           alt={gallery.image.alt}
           sx={{

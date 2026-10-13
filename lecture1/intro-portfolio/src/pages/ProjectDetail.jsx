@@ -5,7 +5,8 @@ import ProjectDetailIntro from '../components/project-detail/ProjectDetailIntro'
 import ProjectDetailGallery from '../components/project-detail/ProjectDetailGallery';
 import SceneFade from '../components/about-me/SceneFade';
 import SiteEffects from '../components/SiteEffects';
-import EdgeNav, { PAGE_LINKS } from '../components/EdgeNav';
+import EdgeNav from '../components/EdgeNav';
+import { PAGE_LINKS } from '../constants/pageLinks';
 import useSmoothScroll from '../hooks/useSmoothScroll';
 import ProjectCaseStudy from '../components/project-detail/ProjectCaseStudy';
 import ProjectCompare from '../components/project-detail/ProjectCompare';

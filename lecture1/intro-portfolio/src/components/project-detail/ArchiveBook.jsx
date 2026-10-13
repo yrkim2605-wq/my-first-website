@@ -77,6 +77,8 @@ const BookPage = ({ page, index, side, imageSize, isZoomed, onZoomChange, u, sx 
       <>
         <Box
           component="img"
+          loading={index < 2 ? 'eager' : 'lazy'}
+          decoding="async"
           src={page.src}
           alt={page.alt}
           tabIndex={0}
