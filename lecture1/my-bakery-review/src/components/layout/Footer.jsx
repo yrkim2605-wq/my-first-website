@@ -67,6 +67,8 @@ const Footer = () => {
           ))}
         </Box>
 
+        {/* 가죽 박음질 같은 점선 구분선 */}
+        <Box aria-hidden="true" sx={{ maxWidth: 360, mx: 'auto', mb: 2, borderTop: '2px dashed rgba(226,176,74,0.45)' }} />
         <Typography sx={{ fontSize: '0.75rem', opacity: 0.6 }}>© 2026 빵덕후 레벨업</Typography>
       </Box>
     </Box>

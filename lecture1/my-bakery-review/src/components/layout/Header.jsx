@@ -9,6 +9,7 @@ import logo from '../../assets/logo.webp'
 import HeaderLevelBadge from './HeaderLevelBadge'
 import { COMMUNITY_CATEGORIES } from '../../constants/categories'
 import { RANKING_TABS } from '../../constants/ranking'
+import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { RADIUS } from '../../theme'
 
 const NAV_ENTRIES = [
@@ -113,11 +114,24 @@ const Header = () => {
       elevation={0}
       sx={{
         top: 0,
-        bgcolor: 'background.paper',
+        bgcolor: 'parchment.light',
         color: 'text.primary',
-        borderBottom: '1px solid',
-        borderColor: scrolled ? 'rgba(59,42,34,0.1)' : 'transparent',
-        transition: 'border-color 0.3s ease',
+        // 헤더 아래에 매달린 나무 몰딩 (가로 나뭇결 + 위쪽 빛). 스크롤하면 그림자가 생겨요.
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: -6,
+          height: 6,
+          pointerEvents: 'none',
+          backgroundColor: '#6b4423',
+          backgroundImage:
+            'repeating-linear-gradient(90deg, rgba(0,0,0,0.07) 0 2px, transparent 2px 9px), linear-gradient(180deg, rgba(255,220,160,0.3), transparent 60%)',
+          borderBottom: '2px solid #3e2713',
+          boxShadow: scrolled ? '0 6px 12px rgba(51,36,25,0.18)' : 'none',
+          transition: 'box-shadow 0.3s ease',
+        },
       }}
     >
       <Toolbar
@@ -187,10 +201,8 @@ const Header = () => {
                     left: '50%',
                     mt: 1.5,
                     minWidth: 190,
-                    bgcolor: 'background.paper',
-                    border: '1px solid rgba(59,42,34,0.1)',
+                    ...PARCHMENT_SX,
                     borderRadius: RADIUS.md,
-                    boxShadow: '0 12px 28px rgba(59,42,34,0.12)',
                     py: 1,
                     opacity: isOpen ? 1 : 0,
                     visibility: isOpen ? 'visible' : 'hidden',

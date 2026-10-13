@@ -7,6 +7,8 @@ import { NavLink } from 'react-router-dom'
 import { MOCK_USER } from '../../constants/userProfile'
 import { LEVELS } from '../../constants/levels'
 import { getLevelProgress } from '../../utils/levelUtils'
+import XpTrack from '../common/XpTrack'
+import { PARCHMENT_SX, WOOD_PLANK_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
 const Medal = ({ level, size }) =>
@@ -49,39 +51,39 @@ const HeaderLevelBadge = () => {
           alignItems: 'center',
           gap: 1,
           pl: 0.5,
-          pr: { xs: 1, sm: 1.5 },
+          pr: { xs: 1.25, sm: 1.75 },
           py: 0.5,
-          border: 'none',
+          ...WOOD_PLANK_SX,
           borderRadius: RADIUS.pill,
-          bgcolor: 'butter.main',
-          color: 'butter.contrastText',
           fontFamily: 'inherit',
           cursor: 'pointer',
-          transition: 'filter 0.15s ease',
-          '&:hover': { filter: 'brightness(0.96)' },
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          '&:hover': { transform: 'translateY(-1px)', boxShadow: 'inset 0 2px 0 rgba(255,220,160,0.25), 0 3px 0 rgba(33,20,10,0.35)' },
+          '&:active': { transform: 'translateY(1px)', boxShadow: 'inset 0 2px 0 rgba(255,220,160,0.25), 0 1px 0 rgba(33,20,10,0.35)' },
           '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
         }}
       >
-        <Box sx={{ width: 38, height: 38, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-          <Medal level={currentLevel} size={38} />
+        {/* 메달은 밝은 원 위에 올려요 (어두운 나무 위에서도 잘 보이게) */}
+        <Box
+          sx={{
+            width: 38,
+            height: 38,
+            display: 'grid',
+            placeItems: 'center',
+            flexShrink: 0,
+            borderRadius: RADIUS.round,
+            bgcolor: 'parchment.light',
+            border: '2px solid',
+            borderColor: 'gold.main',
+          }}
+        >
+          <Medal level={currentLevel} size={32} />
         </Box>
         <Typography component="span" sx={{ fontSize: '0.8rem', fontWeight: 700, display: { xs: 'none', sm: 'inline' } }}>
           {currentLevel.name}
         </Typography>
-        <Box
-          aria-hidden="true"
-          sx={{
-            display: { xs: 'none', md: 'block' },
-            width: 48,
-            height: 5,
-            borderRadius: RADIUS.pill,
-            bgcolor: 'rgba(110,69,24,0.18)',
-            overflow: 'hidden',
-          }}
-        >
-          <Box sx={{ width: `${progress.percent}%`, height: '100%', bgcolor: 'primary.main', borderRadius: RADIUS.pill }} />
-        </Box>
-        <Typography component="span" sx={{ fontSize: '0.75rem', fontWeight: 700 }}>
+        <XpTrack aria-hidden="true" size="sm" percent={progress.percent} sx={{ display: { xs: 'none', md: 'block' }, width: 56 }} />
+        <Typography component="span" sx={{ fontSize: '0.75rem', fontWeight: 800, color: 'gold.light' }}>
           {progress.percent}%
         </Typography>
       </Box>
@@ -101,9 +103,8 @@ const HeaderLevelBadge = () => {
               width: 300,
               maxWidth: 'calc(100vw - 32px)',
               p: 2.25,
-              bgcolor: 'background.paper',
+              ...PARCHMENT_SX,
               borderRadius: RADIUS.lg,
-              boxShadow: '0 14px 36px rgba(59,42,34,0.18)',
             },
           },
         }}
@@ -128,9 +129,7 @@ const HeaderLevelBadge = () => {
             </Typography>
             <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: 'primary.main' }}>{progress.percent}%</Typography>
           </Box>
-          <Box sx={{ height: 6, borderRadius: RADIUS.pill, bgcolor: 'background.paper', overflow: 'hidden' }}>
-            <Box sx={{ width: `${progress.percent}%`, height: '100%', bgcolor: 'primary.main', borderRadius: RADIUS.pill }} />
-          </Box>
+          <XpTrack size="sm" percent={progress.percent} />
           <Typography sx={{ fontSize: '0.75rem', color: 'butter.contrastText', mt: 0.75 }}>
             {progress.isMaxLevel ? '최고 레벨이에요!' : `다음 레벨까지 ${describeRemaining(progress)} 더 필요해요`}
           </Typography>
