@@ -4,6 +4,7 @@ import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
+import Alert from '@mui/material/Alert'
 import AdventurerStatusWindow from '../components/mypage/AdventurerStatusWindow'
 import QuestBoard from '../components/mypage/QuestBoard'
 import BakeryCollection from '../components/mypage/BakeryCollection'
@@ -60,11 +61,19 @@ const MyPage = () => {
   const [levelBookOpen, setLevelBookOpen] = useState(false)
   const game = useGameState()
   const discovery = useDiscovery()
-  const { visitedIds } = useVisitedBakeries()
+  const { visitedIds, visits, loadError: visitsError } = useVisitedBakeries()
   const { photosByBakeryId } = useRealBakeryPhotos()
 
   const badges = useMemo(() => evaluateBadges(game.myReviews, discovery.discoveredCount), [game.myReviews, discovery.discoveredCount])
-  const checkedBakeries = discovery.bakeries.filter((bakery) => visitedIds.includes(bakery.id))
+  // 체크한 빵집: 지금 지도 목록에 있는 빵집 + (계정 모드) 목록에는 없지만 내가 체크해 둔 빵집(서버에 저장된 이름으로 보여줘요)
+  const listedVisited = discovery.bakeries.filter((bakery) => visitedIds.includes(bakery.id))
+  const listedVisitedIds = new Set(listedVisited.map((bakery) => bakery.id))
+  const checkedBakeries = [
+    ...listedVisited,
+    ...visits
+      .filter((visit) => !listedVisitedIds.has(visit.bakeryId))
+      .map((visit) => ({ id: visit.bakeryId, name: visit.name, districtId: visit.districtId, address: visit.address })),
+  ]
 
   // 로그인하지 않았으면 상태창 대신 모험가 만들기 안내를 보여줘요
   if (!game.profile) {
@@ -111,7 +120,7 @@ const MyPage = () => {
           sx={{ mb: 3 }}
           accountChildren={
             <>
-              일지 · EXP · 레벨 · 배지 · 도감은 <b>내 계정에 저장</b>돼서 다른 기기에서 로그인해도 같아요. EXP와 레벨은 서버가 검증한 일지로 계산해요. 방문 체크는 아직 계정에 연결되지 않았어요.
+              일지 · EXP · 레벨 · 배지 · 도감 · 방문 체크는 <b>내 계정에 저장</b>돼서 다른 기기에서 로그인해도 같아요. EXP와 레벨은 서버가 검증한 일지로 계산하고, 방문 체크는 나만 보는 체크라서 EXP와 도감에 반영되지 않아요.
             </>
           }
         >
@@ -152,9 +161,14 @@ const MyPage = () => {
             {checkedBakeries.length}곳
           </Box>
         </Typography>
+        {visitsError && (
+          <Alert severity="error" sx={{ mb: 1.5 }}>
+            {visitsError}
+          </Alert>
+        )}
         {checkedBakeries.length === 0 ? (
           <Box sx={{ border: '2px dashed rgba(201,165,106,0.9)', borderRadius: RADIUS.lg, px: 3, py: 3.5, textAlign: 'center', color: 'text.secondary', fontSize: '0.9rem' }}>
-            빵집 상세 페이지의 ‘다녀왔어요’로 나만 보는 체크를 남길 수 있어요. (확인할 수 없어서 EXP와 도감에는 반영되지 않아요)
+            빵집 상세 페이지의 ‘다녀왔어요’로 나만 보는 체크를 남길 수 있어요. (실제 방문을 인증하지 않아서 EXP와 도감에는 반영되지 않아요)
           </Box>
         ) : (
           <Box component="ul" sx={{ ...PARCHMENT_SX, listStyle: 'none', m: 0, p: 0, borderRadius: RADIUS.lg, overflow: 'hidden' }}>

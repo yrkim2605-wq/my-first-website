@@ -16,6 +16,7 @@ const initial = () => ({
   ],
   bakeries: [],
   reviews: [],
+  visits: [],
   settings: { daily_exp_cap: 100, review_exp: 30, photo_exp: 10 },
   signedIn: true,
 })
@@ -113,6 +114,31 @@ export const createClient = () => {
       if (table === 'bakeries') return { data: db.bakeries.find((b) => b.id === q.filters.id) ?? null, error: null }
       if (table === 'game_settings') return { data: Object.entries(db.settings).map(([key, value]) => ({ key, value })), error: null }
       if (table === 'user_progress') return { data: db.profiles.map((p) => progressOf(db, p.id)).filter((p) => p.review_count > 0), error: null }
+      if (table === 'bakery_visits') {
+        db.visits ??= []
+        if (q.op === 'insert') {
+          if (failures.visit) {
+            const message = failures.visit
+            delete failures.visit
+            return { data: null, error: dbError(message, 'XX000') }
+          }
+          if (!db.bakeries.some((b) => b.id === q.payload.bakery_id)) return { data: null, error: dbError('fk', '23503') }
+          if (db.visits.some((v) => v.user_id === ME.id && v.bakery_id === q.payload.bakery_id)) return { data: null, error: dbError('dup', '23505') }
+          db.visits.push({ user_id: ME.id, bakery_id: q.payload.bakery_id, created_at: new Date().toISOString() })
+          save(db)
+          return { data: null, error: null }
+        }
+        if (q.op === 'delete') {
+          db.visits = db.visits.filter((v) => !(v.bakery_id === q.filters.bakery_id && v.user_id === q.filters.user_id))
+          save(db)
+          return { data: null, error: null }
+        }
+        const rows = db.visits
+          .filter((v) => v.user_id === q.filters.user_id)
+          .map((v) => ({ ...v, bakeries: db.bakeries.find((b) => b.id === v.bakery_id) ?? null }))
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+        return { data: rows, error: null }
+      }
       if (table !== 'reviews') return { data: [], error: null }
 
       if (q.op === 'insert') {

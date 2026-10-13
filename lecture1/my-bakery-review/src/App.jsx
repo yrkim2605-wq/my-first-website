@@ -29,9 +29,9 @@ function App() {
 
   return (
     <BusanBakeriesProvider>
-      <VisitedBakeriesProvider>
-        {/* 프로필과 리뷰 저장소: 로컬 모드는 이 브라우저에만, 계정 모드는 Supabase 계정으로 로그인해요 */}
-        <ProfileProvider>
+      {/* 프로필 · 방문 체크 · 리뷰 저장소: 로컬 모드는 이 브라우저에만, 계정 모드는 Supabase 계정에 저장해요 */}
+      <ProfileProvider>
+        <VisitedBakeriesProvider>
           <ReviewsProvider>
             <RealBakeryPhotosProvider>
               <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: !prefersReducedMotion }}>
@@ -52,8 +52,8 @@ function App() {
               </ReactLenis>
             </RealBakeryPhotosProvider>
           </ReviewsProvider>
-        </ProfileProvider>
-      </VisitedBakeriesProvider>
+        </VisitedBakeriesProvider>
+      </ProfileProvider>
     </BusanBakeriesProvider>
   )
 }

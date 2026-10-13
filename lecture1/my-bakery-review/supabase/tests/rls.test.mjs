@@ -204,7 +204,14 @@ check('B는 A의 방문 기록을 볼 수 없어요', (await as(B).q(`select * f
 check('로그인 없이는 방문 기록을 볼 수 없어요', (await as(null).q(`select * from public.bakery_visits`)).error !== null)
 const expWithVisit = await mineExp(A)
 check('방문 체크는 EXP에 영향이 없어요', expWithVisit.exp === 80, JSON.stringify(expWithVisit))
+check('B는 A의 방문 체크를 지울 수 없어요(0행)', (await as(B).q(`delete from public.bakery_visits where bakery_id='k9' returning bakery_id`)).rows.length === 0)
 check('방문 체크 취소', (await as(A).q(`delete from public.bakery_visits where bakery_id='k9' returning bakery_id`)).rows.length === 1)
+check('등록되지 않은 빵집은 방문 체크 불가(FK)', (await as(A).q(`insert into public.bakery_visits (bakery_id) values ('not-registered')`)).error !== null)
+check('이메일 미인증 사용자는 방문 체크 불가', (await as(C).q(`insert into public.bakery_visits (bakery_id) values ('k9')`)).error?.message.includes('EMAIL_NOT_VERIFIED') === true)
+check('남의 이름으로 방문 체크 불가(작성자는 서버가 로그인 사용자로 고정)', (await as(A).q(`insert into public.bakery_visits (user_id, bakery_id) values ($1,'k9')`, [B])).error !== null)
+await as(A).q(`insert into public.bakery_visits (bakery_id) values ('k9'), ('k10')`)
+check('방문 체크 여러 개를 남겨도 EXP · 도감 통계는 그대로', (await mineExp(A)).exp === 80 && (await as(A).q(`select discovered_count::int d from public.user_progress where user_id=$1`, [A])).rows[0].d === 2)
+await as(A).q(`delete from public.bakery_visits where user_id=$1`, [A])
 
 // ── 닉네임 변경 · 기타 ──
 check('내 닉네임은 바꿀 수 있어요', (await as(A).q(`update public.profiles set nickname='새빵덕후' where id=$1 returning id`, [A])).rows.length === 1)

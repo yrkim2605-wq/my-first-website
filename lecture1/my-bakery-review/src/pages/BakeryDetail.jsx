@@ -27,6 +27,7 @@ import { PARCHMENT_SX, WOOD_PLANK_SX } from '../constants/rpgStyles'
 import { getBakeryPhoto } from '../constants/bakeryPhotos'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
+import { IS_ACCOUNT_MODE } from '../lib/backend'
 import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { useProfile } from '../hooks/useProfile'
 import { useReviews } from '../hooks/useReviews'
@@ -64,7 +65,7 @@ const formatDate = (isoString) => kstDate(isoString)
 const BakeryDetail = () => {
   const { id } = useParams()
   const { bakeries: realBakeries, loading: realBakeriesLoading } = useBusanBakeries()
-  const { visitedIds, toggleVisited, available: visitsAvailable } = useVisitedBakeries()
+  const { visitedIds, toggleVisited, pendingIds } = useVisitedBakeries()
   const { photosByBakeryId } = useRealBakeryPhotos()
   const { profile } = useProfile()
   const { reviews: allReviews, removeReview, levelsByUserId } = useReviews()
@@ -139,6 +140,16 @@ const BakeryDetail = () => {
     ...storedReviews.filter((review) => review !== myReview).map(toStoredCard),
     ...sampleCards,
   ]
+
+  // 방문 체크: 나만 보는 체크예요. 계정 모드에서는 서버에 저장이 끝난 뒤에 표시가 바뀌고, 실패하면 이유를 알려요.
+  const visitPending = pendingIds.includes(bakery.id)
+  const handleToggleVisited = async () => {
+    try {
+      await toggleVisited(bakery)
+    } catch (error) {
+      setToast({ severity: 'error', message: error.message || '체크하지 못했어요. 잠시 후 다시 시도해 주세요.' })
+    }
+  }
 
   const toggleBookmark = () => setBookmarkedIds((prev) => ({ ...prev, [bakery.id]: !prev[bakery.id] }))
   const openDialog = () => setDialog((prev) => ({ open: true, session: prev.session + 1 }))
@@ -373,15 +384,14 @@ const BakeryDetail = () => {
             <WoodButton onClick={openDialog}>{myReview ? '내 일지 고쳐 쓰기' : '모험 일지 쓰기'}</WoodButton>
             {isRealBakery && (
               <Button
-                onClick={() => toggleVisited(bakery.id)}
-                disabled={!visitsAvailable}
-                title={visitsAvailable ? undefined : '계정 모드에서는 방문 체크의 계정 저장이 아직 연결되지 않았어요'}
+                onClick={handleToggleVisited}
+                disabled={visitPending}
                 variant={visited ? 'contained' : 'outlined'}
                 color="primary"
                 startIcon={visited ? <VerifiedIcon /> : <VerifiedOutlinedIcon />}
                 sx={{ borderRadius: RADIUS.pill }}
               >
-                {visited ? '다녀왔어요 ✓' : '다녀왔어요'}
+                {visitPending ? '저장하는 중…' : visited ? '다녀왔어요 ✓' : '다녀왔어요'}
               </Button>
             )}
             <Button
@@ -396,7 +406,7 @@ const BakeryDetail = () => {
           </Box>
           {isRealBakery && (
             <Typography sx={{ fontSize: '0.78rem', color: 'text.secondary', mt: 1.25 }}>
-              ‘다녀왔어요’는 나만 보는 체크예요 (확인할 수 없어서 EXP는 없어요). EXP는 모험 일지를 남길 때 쌓여요.
+              ‘다녀왔어요’는 <b>나만 보는 체크</b>예요{IS_ACCOUNT_MODE ? ' (내 계정에 저장돼서 다른 기기에서도 보여요)' : ''}. 실제 방문을 인증하지 않아서 EXP · 도감 · 퀘스트에는 반영되지 않아요. 도감과 EXP는 모험 일지를 남길 때 쌓여요.
             </Typography>
           )}
         </Box>
