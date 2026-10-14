@@ -17,7 +17,7 @@ const fetchCalls = []
 let fetchBehavior = () => Promise.reject(new TypeError('Failed to fetch'))
 globalThis.fetch = (url, init) => {
   fetchCalls.push({ url: String(url), init })
-  return fetchBehavior()
+  return fetchBehavior(String(url), init)
 }
 
 const store = {}
@@ -79,7 +79,7 @@ const makeFake = (state = {}) => {
     from,
     ...(s.noFunctionsUrl ? {} : { functionsUrl: new URL('https://x.supabase.co/functions/v1') }),
     ...(s.withKey ? { supabaseKey: 'sb_publishable_test_key' } : {}),
-    auth: { getSession: async () => ({ data: { session: s.session }, error: null }) },
+    auth: { getSession: async () => ({ data: { session: s.session && s.token ? { ...s.session, access_token: s.token } : s.session }, error: null }) },
     storage: { from: () => ({ getPublicUrl: (p) => ({ data: { publicUrl: 'https://cdn.test/' + p } }), upload: async () => ({ data: {}, error: null }), remove: async () => ({}) }) },
     functions: {
       invoke: async (name, options) => {
@@ -171,6 +171,35 @@ for (const [label, invokeError, expectedCode, pattern] of fnCases) {
   check('시간 초과(AbortError) → "응답이 너무 늦어요(25초)"', error?.code === 'FUNCTION_TIMEOUT' && /25초/.test(error.message), `${error?.code}`)
   check('빵집 확인 요청에는 25초 시간 제한을 걸어요', t.client.log.invokes[0].timeout === 25000)
   check('개발용 정보에 걸린 시간(ms)이 담겨요', typeof error.debug.elapsedMs === 'number' && error.debug.elapsedMs >= 0)
+  fetchBehavior = () => Promise.reject(new TypeError('Failed to fetch'))
+
+  // (가-5) 실제 로그인 토큰으로 어디까지 가는지 재기 (3 · 4단계)
+  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url')
+  const token = `${b64({ alg: 'ES256', typ: 'JWT' })}.${b64({ role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3000 })}.sig`
+  const withToken = (init) => String(init?.headers?.Authorization ?? '').includes(token)
+  const runToken = async (behavior) => {
+    fetchCalls.length = 0
+    fetchBehavior = behavior
+    const run = repoFor({ invokeError: fetchError(), withKey: true, token })
+    const err = await rejects(run.repo.create(baseInput))
+    return { err, run, calls: [...fetchCalls] }
+  }
+
+  // 토큰 GET부터 실패 → 토큰이 담긴 요청이 게이트웨이/브라우저에서 막힘
+  let r = await runToken((url, init) => (withToken(init) ? Promise.reject(new TypeError('Failed to fetch')) : Promise.resolve({ status: 401 })))
+  check('진단 3단계: 토큰 GET이 실패 → "로그인 토큰이 담긴 요청이 막혀요"', r.err?.code === 'FUNCTION_TOKEN_BLOCKED' && r.err.debug.probe.includes('토큰 GET 실패') && !r.calls.some((c) => c.init.method === 'POST' && withToken(c.init)), r.err?.code)
+
+  // 토큰 GET은 통과, 토큰 POST{}가 실패 → 서버가 로그인 확인 단계에서 응답을 못 줌
+  r = await runToken((url, init) => (withToken(init) && init.method === 'POST' ? Promise.reject(new TypeError('Failed to fetch')) : Promise.resolve({ status: withToken(init) ? 405 : 401 })))
+  check('진단 4단계: 토큰 POST{}가 실패 → "로그인 정보를 확인하는 단계에서 응답하지 못해요"', r.err?.code === 'FUNCTION_AUTH_NO_RESPONSE' && r.err.debug.probe.includes('토큰 GET→HTTP 405') && r.err.debug.probe.includes('토큰 POST{} 실패'), r.err?.code)
+
+  // 토큰 POST{}까지 정상(400) → 실제 등록 처리(카카오 · DB) 중에 끊김
+  r = await runToken((url, init) => Promise.resolve({ status: withToken(init) ? (init.method === 'GET' ? 405 : 400) : 401 }))
+  check('진단 4단계: 토큰 POST{}가 정상(400) → "빵집 확인 · 등록 처리 중에 응답이 끊겼어요(Logs 확인)"', r.err?.code === 'FUNCTION_PROCESS_FAILED' && /Logs/.test(r.err.message) && r.err.debug.probe.includes('토큰 POST{}→HTTP 400'), r.err?.code)
+  check('진단 정보에 토큰 종류와 남은 시간만 있고 토큰 값은 없어요', r.err.debug.probe.includes('토큰 알고리즘=ES256') && r.err.debug.probe.includes('역할=authenticated') && r.err.debug.probe.includes('만료까지=') && r.err.debug.probe.includes('초') && !JSON.stringify(r.err.debug).includes(token) && !JSON.stringify(logs).includes(token))
+  const tokenCalls = r.calls.filter((c) => withToken(c.init))
+  check('토큰을 쓰는 진단 요청은 GET 1번 + 빈 본문 POST 1번뿐이에요 (데이터를 바꾸는 요청 없음)', tokenCalls.length === 2 && tokenCalls[0].init.method === 'GET' && tokenCalls[1].init.method === 'POST' && tokenCalls[1].init.body === '{}' && r.run.client.log.inserts.length === 0)
+  check('진단 요청은 모두 같은 함수 주소(register-bakery)로만 가요', r.calls.every((c) => c.url === 'https://x.supabase.co/functions/v1/register-bakery'))
   fetchBehavior = () => Promise.reject(new TypeError('Failed to fetch'))
 
   // (다) 진단할 수 없으면(함수 주소를 모름) 예전의 일반 안내

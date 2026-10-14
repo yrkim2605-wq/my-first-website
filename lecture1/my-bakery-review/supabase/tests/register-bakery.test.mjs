@@ -77,6 +77,32 @@ const run = async (req, over) => {
   const r = await run(request(good, 'good', 'GET'))
   check('POST가 아니면 405', r.status === 405)
 }
+// ── 앱이 연결 오류를 진단할 때 보내는 요청이 데이터를 건드리지 않는지 ──
+{
+  const touched = []
+  const spyDeps = {
+    getUser: async (jwt) => (touched.push('getUser'), jwt === 'good' ? { id: 'u1', emailConfirmed: true } : null),
+    hasBakery: async () => (touched.push('hasBakery'), false),
+    upsertBakery: async () => touched.push('upsertBakery'),
+    searchKakao: async () => (touched.push('searchKakao'), docs),
+    allowLookup: () => (touched.push('allowLookup'), true),
+  }
+  const send = async (req) => {
+    touched.length = 0
+    const res = await handleRequest(req, spyDeps)
+    return { status: res.status, body: await res.json(), touched: [...touched] }
+  }
+  let r = await send(request(undefined, 'good', 'GET'))
+  check('진단 GET: 로그인 확인 전에 405로 끝나고 아무것도 호출하지 않아요', r.status === 405 && r.touched.length === 0)
+  r = await send(request({}, 'good'))
+  check('진단 POST {} (로그인 사용자): 로그인 확인 후 입력 검증(400)에서 끝나고 빵집 조회 · 카카오 · DB 등록을 하지 않아요', r.status === 400 && r.body.error.code === 'INVALID_INPUT' && r.touched.join(',') === 'getUser', r.touched.join(','))
+  r = await send(request({}, null))
+  check('진단 POST (로그인 없음): 401로 끝나고 아무것도 호출하지 않아요', r.status === 401 && r.touched.length === 0)
+  r = await send(request({}, 'sb_publishable_xxx'))
+  check('진단 POST (공개 키를 토큰처럼): 401, 로그인 확인만 하고 끝나요', r.status === 401 && r.touched.join(',') === 'getUser')
+  r = await send(new Request('http://x/register-bakery', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{}' }))
+  check('진단 단순 POST (헤더 없음): 401, 아무것도 호출하지 않아요', r.status === 401 && r.touched.length === 0)
+}
 {
   const r = await run(request(good), { hasBakery: async () => true })
   check('이미 등록된 빵집은 카카오를 다시 부르지 않고 성공', r.status === 200 && r.body.registered === false && r.calls.kakao === 0 && r.calls.upserts.length === 0)

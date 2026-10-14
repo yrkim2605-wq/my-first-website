@@ -34,6 +34,12 @@ export const messages = {
     '빵집 확인 서버는 응답하는데, 로그인 정보가 담긴 요청이 서버에 닿기 전에 막혔어요. 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 서버 관리자가 빵집 확인 함수의 접근(CORS) · 로그인 검사 설정을 확인해야 해요. (저장되지 않았어요)',
   FUNCTION_HEADERS_BLOCKED:
     '이 브라우저가 로그인 정보(인증 헤더)가 담긴 요청을 막았어요. 보안 프로그램 · 확장 프로그램 · 회사/학교 네트워크를 확인하거나, 시크릿 창이나 다른 네트워크(휴대폰 핫스팟)에서 시도해 보세요. (저장되지 않았어요)',
+  FUNCTION_TOKEN_BLOCKED:
+    '로그인 토큰이 담긴 요청이 서버 앞단이나 브라우저에서 막혀요. (공개 키만 담은 요청은 통과해요) 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 서버 관리자가 빵집 확인 함수의 Verify JWT · 로그인 키(JWT 서명 방식) 설정을 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_AUTH_NO_RESPONSE:
+    '서버가 로그인 정보를 확인하는 단계에서 응답하지 못해요. 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 Edge Functions Logs와 함수의 서버 비밀 키 설정을 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_PROCESS_FAILED:
+    '서버는 로그인과 요청 형식까지는 정상으로 받는데, 빵집을 확인하고 등록하는 중(카카오 확인 · DB 등록)에 응답이 끊겼어요. 서버 관리자가 Edge Functions → register-bakery → Logs에서 오류를 확인해야 해요. (저장되지 않았어요)',
   FUNCTION_NO_RESPONSE:
     '서버가 로그인한 사용자의 요청을 처리하다가 응답하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 Supabase → Edge Functions → register-bakery의 Logs(호출 기록)를 확인해야 해요. (저장되지 않았어요)',
   FUNCTION_TIMEOUT:
@@ -151,10 +157,66 @@ export const mapFunctionError = (error, status, detail, probe, elapsedMs) => {
   //  - 인증 헤더가 있는 요청(CORS 사전 확인이 필요한 요청)은 막히는지, 아니면 서버가 로그인 사용자의 요청을 처리하다 응답을 못 줬는지 가려요
   if (error?.context?.name === 'AbortError' || error?.cause?.name === 'AbortError') return fail('FUNCTION_TIMEOUT', messages.FUNCTION_TIMEOUT, debug)
   if (probe?.reachable === false) return fail('FUNCTION_NETWORK_BLOCKED', messages.FUNCTION_NETWORK_BLOCKED, debug)
+  // 실제 로그인 토큰으로 "어디까지 가는지" 잰 결과가 있으면 가장 정확해요 (probe의 3 · 4단계)
+  if (probe?.reachable === true && probe.tokenGetOk === false) return fail('FUNCTION_TOKEN_BLOCKED', messages.FUNCTION_TOKEN_BLOCKED, debug)
+  if (probe?.reachable === true && probe.tokenGetOk === true && probe.tokenPostOk === false) return fail('FUNCTION_AUTH_NO_RESPONSE', messages.FUNCTION_AUTH_NO_RESPONSE, debug)
+  if (probe?.reachable === true && probe.tokenPostOk === true) return fail('FUNCTION_PROCESS_FAILED', messages.FUNCTION_PROCESS_FAILED, debug)
   if (probe?.reachable === true && probe.headersOk === false) return fail('FUNCTION_HEADERS_BLOCKED', messages.FUNCTION_HEADERS_BLOCKED, debug)
   if (probe?.reachable === true && probe.headersOk === true) return fail('FUNCTION_NO_RESPONSE', messages.FUNCTION_NO_RESPONSE, debug)
   if (probe?.reachable === true) return fail('FUNCTION_REQUEST_BLOCKED', messages.FUNCTION_REQUEST_BLOCKED, debug)
   return fail('FUNCTION_UNREACHABLE', messages.FUNCTION_UNREACHABLE, debug)
+}
+
+// 로그인 토큰(JWT)의 "종류와 남은 시간"만 읽어요. 토큰 값 자체는 어디에도 남기지 않아요.
+const decodeBase64Url = (part) => {
+  let text = part.split('-').join('+').split('_').join('/')
+  while (text.length % 4 !== 0) text += '='
+  return JSON.parse(atob(text))
+}
+export const describeToken = (token) => {
+  try {
+    const [headerPart, payloadPart] = String(token).split('.')
+    const header = decodeBase64Url(headerPart)
+    const payload = decodeBase64Url(payloadPart)
+    const secondsLeft = typeof payload.exp === 'number' ? Math.round(payload.exp - Date.now() / 1000) : null
+    return `토큰 알고리즘=${header.alg} 역할=${payload.role ?? '없음'} 만료까지=${secondsLeft === null ? '알 수 없음' : secondsLeft + '초'}`
+  } catch {
+    return '토큰 형식을 읽지 못함'
+  }
+}
+
+// 3 · 4단계: 실제 로그인 토큰으로 어디까지 가는지 재요. 둘 다 데이터를 바꾸지 않아요.
+//  3) GET  → 함수는 인증 확인 "전에" 405로 끝내요 (게이트웨이 · 사전 요청(CORS) · 토큰 통과 여부만 확인)
+//  4) POST {} → 로그인 확인과 본문 읽기까지 간 뒤, 입력 검증에서 400으로 끝내요 (빵집 조회 · 카카오 · DB 등록 전 단계)
+const probeWithUserToken = async (client, url, publicKey, baseNote, signal) => {
+  const token = await client.auth
+    ?.getSession?.()
+    .then((session) => session?.data?.session?.access_token ?? null)
+    .catch(() => null)
+  if (!token) return { reachable: true, headersOk: true, note: `${baseNote} / 로그인 토큰을 찾지 못함` }
+  const headers = { apikey: publicKey, Authorization: `Bearer ${token}` }
+  const notes = [baseNote, describeToken(token)]
+  let tokenGetOk
+  let tokenPostOk
+  try {
+    const response = await fetch(url, { method: 'GET', headers, signal })
+    tokenGetOk = true
+    notes.push(`토큰 GET→HTTP ${response.status}`)
+  } catch (getError) {
+    tokenGetOk = false
+    notes.push(`토큰 GET 실패(${getError?.name}: ${String(getError?.message ?? '').slice(0, 80)})`)
+  }
+  if (tokenGetOk) {
+    try {
+      const response = await fetch(url, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: '{}', signal })
+      tokenPostOk = true
+      notes.push(`토큰 POST{}→HTTP ${response.status}`)
+    } catch (postError) {
+      tokenPostOk = false
+      notes.push(`토큰 POST{} 실패(${postError?.name}: ${String(postError?.message ?? '').slice(0, 80)})`)
+    }
+  }
+  return { reachable: true, headersOk: true, tokenGetOk, tokenPostOk, note: notes.join(' / ') }
 }
 
 // 서버 함수에 닿는지 확인하는 가벼운 진단 (연결 오류가 났을 때만 써요).
@@ -185,7 +247,8 @@ export const probeFunctionServer = async (client) => {
         body: '{}',
         signal: controller?.signal,
       })
-      return { reachable: true, headersOk: true, note: `${simpleNote} / 인증 헤더 요청도 응답함(HTTP ${response.status})` }
+      const headerNote = `${simpleNote} / 인증 헤더 요청도 응답함(HTTP ${response.status})`
+      return await probeWithUserToken(client, url, publicKey, headerNote, controller?.signal)
     } catch (headerError) {
       return { reachable: true, headersOk: false, note: `${simpleNote} / 인증 헤더 요청은 실패(${headerError?.name}: ${String(headerError?.message ?? '').slice(0, 100)})` }
     }
