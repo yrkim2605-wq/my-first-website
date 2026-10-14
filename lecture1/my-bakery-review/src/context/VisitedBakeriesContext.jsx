@@ -84,8 +84,8 @@ export const VisitedBakeriesProvider = ({ children }) => {
   )
 
   const value = useMemo(
-    () => ({ visitedIds, visits, toggleVisited, pendingIds, loading, loadError, isAccountMode: IS_ACCOUNT_MODE }),
-    [visitedIds, visits, toggleVisited, pendingIds, loading, loadError],
+    () => ({ visitedIds, visits, toggleVisited, pendingIds, loading, loadError, reload, isAccountMode: IS_ACCOUNT_MODE }),
+    [visitedIds, visits, toggleVisited, pendingIds, loading, loadError, reload],
   )
 
   return <VisitedBakeriesContext.Provider value={value}>{children}</VisitedBakeriesContext.Provider>

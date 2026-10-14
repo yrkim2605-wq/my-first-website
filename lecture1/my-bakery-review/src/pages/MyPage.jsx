@@ -14,6 +14,7 @@ import LevelBookDialog from '../components/common/LevelBookDialog'
 import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import StatusMessage from '../components/common/StatusMessage'
+import LocalImportCard from '../components/mypage/LocalImportCard'
 import WoodButton from '../components/common/WoodButton'
 import Illustration from '../components/common/decor/Illustration'
 import { DISTRICTS } from '../constants/districts'
@@ -148,6 +149,9 @@ const MyPage = () => {
         >
           이 상태창의 기록은 <b>이 브라우저에만 저장</b>돼요. 다른 기기나 다른 사람과 공유되지 않고, 사이트 데이터를 지우면 사라져요.
         </LocalProfileNotice>
+
+        {/* 계정 모드에서 이 브라우저에 예전 기록이 남아 있으면 가져오기 카드가 나와요 (그 밖에는 아무것도 안 보여요) */}
+        <LocalImportCard />
 
         <AdventurerStatusWindow game={game} discoveredCount={discovery.discoveredCount} onOpenLevelBook={() => setLevelBookOpen(true)} />
 
