@@ -17,3 +17,8 @@ as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$
 create role anon nologin;
 create role authenticated nologin;
 grant usage on schema auth to anon, authenticated;
+
+-- 서버 함수(Edge Function)가 서버 비밀 키로 쓰는 역할. 진짜 Supabase처럼 RLS는 건너뛰지만(bypassrls) 표 권한은 따로 받아야 해요.
+-- 이 시험 환경에서는 자동 권한이 없어서, 마이그레이션이 직접 준 권한만 가져요.
+create role service_role nologin bypassrls;
+grant usage on schema auth to service_role;
