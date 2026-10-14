@@ -10,6 +10,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBackIosNew'
 import SectionHeading from '../components/common/SectionHeading'
 import StatusMessage from '../components/common/StatusMessage'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
+import PostPhotoPicker from '../components/community/PostPhotoPicker'
+import PhotoUploadFailedNotice from '../components/community/PhotoUploadFailedNotice'
+import { preparePostPhoto } from '../utils/preparePostPhoto'
+import { resolvePhotoValue } from '../utils/postPhotoValue'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { PARCHMENT_SX } from '../constants/rpgStyles'
 import { useProfile } from '../hooks/useProfile'
@@ -19,32 +23,70 @@ import { DISPLAY_FONT, RADIUS } from '../theme'
 
 // 계정 모드의 글쓰기 · 글 고치기 화면이에요. (/community/write, /community/:id/edit)
 //  - 로그인(이메일 인증 완료)한 사용자만 쓸 수 있고, 고치기는 내 글만 열려요 (서버 권한으로도 막혀요).
-//  - 사진 첨부는 아직 없어요. 저장에 성공한 뒤에만 글 화면으로 이동하고, 실패하면 쓰던 내용을 그대로 두고 이유를 알려요.
+//  - 사진은 글 1개에 1장(선택). 고른 사진은 JPEG 800px로 줄여서(1MB 이하) 올려요. 고치기에서는 사진을 바꾸거나 뺄 수 있어요.
+//  - 저장에 성공한 뒤에만 글 화면으로 이동하고, 실패하면 쓰던 내용(제목 · 본문 · 카테고리 · 고른 사진)을 그대로 두고 이유를 알려요.
+//  - 사진 올리기만 실패하면 "다시 시도"와 "사진 없이 글만 저장" 중에서 고를 수 있어요.
 
 const FIELD_SX = { '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.55)' } }
 
 // 쓰는 칸들. 처음 값(initial)으로 시작하고, 이 컴포넌트는 글 정보를 다 불러온 뒤에 그려져요.
-const PostEditor = ({ mode, initial, cancelTo, onSubmit }) => {
+const PostEditor = ({ mode, initial, initialPhotoUrl = null, cancelTo, onSubmit }) => {
   const [categoryId, setCategoryId] = useState(initial.categoryId)
   const [title, setTitle] = useState(initial.title)
   const [content, setContent] = useState(initial.content)
   const [isSaving, setIsSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
 
-  const canSubmit = Boolean(categoryId && title.trim() && content.trim()) && !isSaving
+  // 사진: 새로 고른 사진(data URL) / 고치기에서 기존 사진을 뺄지
+  const [newPhoto, setNewPhoto] = useState(null)
+  const [removeExisting, setRemoveExisting] = useState(false)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoError, setPhotoError] = useState(null)
+  const [photoUploadFailed, setPhotoUploadFailed] = useState(false)
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    if (!canSubmit) return
+  const canSubmit = Boolean(categoryId && title.trim() && content.trim()) && !isSaving && !photoBusy
+  const previewUrl = newPhoto ?? (removeExisting ? null : initialPhotoUrl)
+
+  const handlePickPhoto = async (file) => {
+    setPhotoBusy(true)
+    setPhotoError(null)
+    setPhotoUploadFailed(false)
+    try {
+      setNewPhoto(await preparePostPhoto(file)) // 항상 JPEG 800px, 1MB 이하로 줄여요
+      setRemoveExisting(false)
+    } catch (error) {
+      setPhotoError(error.message) // 고르지 못해도 쓰던 글과 기존 사진은 그대로예요
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
+
+  const handleRemovePhoto = () => {
+    setPhotoError(null)
+    setPhotoUploadFailed(false)
+    if (newPhoto) setNewPhoto(null) // 새로 고른 사진을 빼면 (고치기라면) 기존 사진으로 돌아가요
+    else setRemoveExisting(true)
+  }
+
+
+  const submit = async ({ skipPhoto = false } = {}) => {
     setIsSaving(true)
     setErrorMessage(null)
+    setPhotoUploadFailed(false)
     try {
-      await onSubmit({ categoryId, title, content })
+      await onSubmit({ categoryId, title, content, photo: resolvePhotoValue({ mode, newPhoto, removeExisting, skipPhoto }) })
       // 성공하면 화면이 이동해요
     } catch (error) {
       setErrorMessage(error.message) // 쓰던 내용은 그대로 남겨요
+      setPhotoUploadFailed(error.code === 'PHOTO_FAILED')
       setIsSaving(false)
     }
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    if (!canSubmit) return
+    submit()
   }
 
   return (
@@ -143,7 +185,23 @@ const PostEditor = ({ mode, initial, cancelTo, onSubmit }) => {
         sx={FIELD_SX}
       />
 
-      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      <PostPhotoPicker previewUrl={previewUrl} busy={photoBusy} disabled={isSaving} errorMessage={photoError} onPick={handlePickPhoto} onRemove={handleRemovePhoto} />
+
+      {photoUploadFailed ? (
+        // 사진 올리기만 실패한 경우: 쓰던 글은 그대로 두고 다시 시도하거나 사진 없이 저장할 수 있어요
+        <PhotoUploadFailedNotice
+          message={errorMessage}
+          mode={mode}
+          busy={isSaving}
+          onRetry={() => submit()}
+          onSkipPhoto={() => {
+            setNewPhoto(null)
+            submit({ skipPhoto: true })
+          }}
+        />
+      ) : (
+        errorMessage && <Alert severity="error">{errorMessage}</Alert>
+      )}
 
       <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         <Button component={Link} to={cancelTo} color="inherit" variant="outlined" disabled={isSaving}>
@@ -231,7 +289,7 @@ const CommunityPostForm = () => {
           sx={{ mb: 3 }}
           accountChildren={
             <>
-              글은 <b>{profile.nickname}</b> 닉네임으로 모두에게 공개돼요. 사진 첨부는 아직 없고, 하루에 글 10개까지 쓸 수 있어요. 글은 EXP에
+              글은 <b>{profile.nickname}</b> 닉네임으로 모두에게 공개돼요. 사진은 글 1개에 1장까지 붙일 수 있고, 하루에 글 10개까지 쓸 수 있어요. 글은 EXP에
               반영되지 않아요.
             </>
           }
@@ -265,10 +323,13 @@ const CommunityPostForm = () => {
       key={loaded.post.id}
       mode="edit"
       initial={{ categoryId: loaded.post.categoryId, title: loaded.post.title, content: loaded.post.content }}
+      initialPhotoUrl={loaded.post.photoUrl}
       cancelTo={`/community/${id}`}
       onSubmit={async (values) => {
-        await communityRepository.updatePost(id, values)
-        navigate(`/community/${id}`, { replace: true })
+        const result = await communityRepository.updatePost(id, values)
+        // 옛 사진 파일을 서버에서 지우지 못했다면 글 화면에서 알려줘요 (글은 이미 고쳐졌어요)
+        const notice = result?.photoCleanup === 'failed' ? `글은 고쳤지만 옛 사진 파일 1개를 서버에서 지우지 못했어요. (남은 파일: ${result.orphanPath})` : null
+        navigate(`/community/${id}`, { replace: true, state: notice ? { notice } : null })
       }}
     />,
   )

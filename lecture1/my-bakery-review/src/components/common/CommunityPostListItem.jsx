@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
@@ -23,8 +24,10 @@ const CommunityPostListItem = ({
   createdAt,
   photoBakeryId,
   placeholderEmoji,
+  photoUrl = null, // 글에 붙인 사진의 공개 주소 (없으면 아래의 이모지/예시 사진 그대로)
   isSample = false,
 }) => {
+  const [photoFailed, setPhotoFailed] = useState(false) // 사진을 못 불러오면(파일이 지워졌을 때 등) 이모지로 돌아가요
   const photoSrc = BAKERY_PHOTO_BY_ID[photoBakeryId] || DEFAULT_BAKERY_PHOTO
   const thumbnailSx = {
     width: { xs: 80, sm: 132 },
@@ -144,8 +147,10 @@ const CommunityPostListItem = ({
         </Box>
       </Box>
 
-      {/* 실제 글은 사진이 없어서 가짜 빵집 사진 대신 카테고리 이모지를 아치에 담아요 */}
-      {placeholderEmoji ? (
+      {/* 사진을 붙인 글은 그 사진을, 사진이 없는 실제 글은 가짜 빵집 사진 대신 카테고리 이모지를 아치에 담아요 */}
+      {photoUrl && !photoFailed ? (
+        <Box component="img" src={photoUrl} alt="" loading="lazy" onError={() => setPhotoFailed(true)} sx={{ ...thumbnailSx, objectFit: 'cover', border: '2px solid rgba(201,165,106,0.7)' }} />
+      ) : placeholderEmoji ? (
         <Box
           aria-hidden="true"
           sx={{

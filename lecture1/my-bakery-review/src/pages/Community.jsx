@@ -11,6 +11,9 @@ import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import WoodButton from '../components/common/WoodButton'
 import LoadMoreFooter from '../components/common/LoadMoreFooter'
+import LeftoverPhotosNotice from '../components/community/LeftoverPhotosNotice'
+import { useNavigationNotice } from '../hooks/useNavigationNotice'
+import Alert from '@mui/material/Alert'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_POSTS } from '../constants/communityPosts'
 import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
@@ -38,6 +41,10 @@ const Community = () => {
   // 예시 글은 좋아요순이 보기 좋고, 실제 글은 새 글이 먼저 보이는 최신순이 자연스러워요
   const [sortBy, setSortBy] = useState(IS_ACCOUNT_MODE ? 'latest' : 'heart')
   const [retryCount, setRetryCount] = useState(0)
+  const [navNotice, dismissNavNotice] = useNavigationNotice() // 글 삭제 뒤 "사진 파일을 못 지웠어요" 같은 안내
+  // 정리하지 못해 서버에 남은 내 사진 파일 (이 브라우저에 기록된 것) — 있으면 알려주고 다시 정리할 수 있어요
+  const [leftoverPhotos, setLeftoverPhotos] = useState([])
+  const [cleaningUp, setCleaningUp] = useState(false)
 
   const isKnownCategory = CATEGORY_TABS.some((c) => c.id === selectedCategoryId)
   const userId = profile?.userId ?? null
@@ -68,6 +75,21 @@ const Community = () => {
       isCancelled = true
     }
   }, [requestKey, sortBy])
+
+  useEffect(() => {
+    if (!IS_ACCOUNT_MODE || !userId) return undefined
+    let isCancelled = false
+    communityRepository.listLeftoverPhotos().then((items) => !isCancelled && setLeftoverPhotos(items))
+    return () => {
+      isCancelled = true
+    }
+  }, [userId, navNotice])
+
+  const handleRetryCleanup = async () => {
+    setCleaningUp(true)
+    setLeftoverPhotos(await communityRepository.retryPhotoCleanup())
+    setCleaningUp(false)
+  }
 
   const isLoading = IS_ACCOUNT_MODE && result.key !== requestKey
   const loadErrorMessage = IS_ACCOUNT_MODE && !isLoading ? result.errorMessage : null
@@ -118,13 +140,20 @@ const Community = () => {
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
 
+        {navNotice && (
+          <Alert severity="warning" onClose={dismissNavNotice} sx={{ mb: 2 }}>
+            {navNotice}
+          </Alert>
+        )}
+        {IS_ACCOUNT_MODE && <LeftoverPhotosNotice items={leftoverPhotos} busy={cleaningUp} onRetry={handleRetryCleanup} sx={{ mb: 2 }} />}
+
         {IS_ACCOUNT_MODE ? (
           <LocalProfileNotice
             sx={{ mb: 3 }}
             accountChildren={
               <>
                 여기 글은 가입한 모험가들이 남긴 <b>실제 글</b>이에요. 글 · 댓글 · 좋아요는 계정에 저장되고 <b>EXP에는 반영되지 않아요</b>.
-                글쓰기에 사진 첨부는 아직 없어요.
+                글 1개에 사진을 1장 붙일 수 있어요.
               </>
             }
           />
@@ -248,6 +277,7 @@ const Community = () => {
                       commentCount={post.commentCount}
                       createdAt={formatPostDate(post.createdAt)}
                       placeholderEmoji={category?.emoji ?? '🍞'}
+                      photoUrl={post.photoUrl}
                     />
                   ) : (
                     <CommunityPostListItem

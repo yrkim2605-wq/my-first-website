@@ -24,6 +24,7 @@ import { formatPostDate, isEdited, levelFromIndex } from '../utils/communityForm
 import AuthorInfo from '../components/common/AuthorInfo'
 import StatusMessage from '../components/common/StatusMessage'
 import Reveal from '../components/common/Reveal'
+import { useNavigationNotice } from '../hooks/useNavigationNotice'
 import { RADIUS } from '../theme'
 
 // 계정 모드의 글 상세예요: 서버에 저장된 실제 글 · 댓글 · 좋아요를 보여줘요.
@@ -103,6 +104,8 @@ const AccountPostDetail = () => {
   const [replyingToId, setReplyingToId] = useState(null)
   const [replyDraft, setReplyDraft] = useState('')
   const [confirmTarget, setConfirmTarget] = useState(null) // { type: 'post' | 'comment', id }
+  const [photoFailed, setPhotoFailed] = useState(false) // 사진을 못 불러오면 이모지로 돌아가요
+  const [navNotice, dismissNavNotice] = useNavigationNotice() // 글 고치기 뒤 "옛 사진 파일을 못 지웠어요" 같은 안내
 
   const fetchAll = useCallback(() => Promise.all([communityRepository.getPost(id), communityRepository.listComments(id)]), [id])
 
@@ -176,8 +179,12 @@ const AccountPostDetail = () => {
     setConfirmTarget(null)
     if (!target) return
     if (target.type === 'post') {
-      const ok = await runAction(() => communityRepository.deletePost(post.id))
-      if (ok) navigate('/community', { replace: true })
+      let deleted = null
+      const ok = await runAction(async () => {
+        deleted = await communityRepository.deletePost(post.id)
+      })
+      // 글은 지워졌는데 사진 파일 정리에 실패했다면, 목록 화면에서 남은 파일을 알려줘요
+      if (ok) navigate('/community', { replace: true, state: deleted?.photoCleanup === 'failed' ? { notice: `글은 지웠지만 사진 파일 1개를 서버에서 지우지 못했어요. (남은 파일: ${deleted.orphanPath})` } : null })
       return
     }
     await runAction(async () => {
@@ -249,8 +256,33 @@ const AccountPostDetail = () => {
       <Box sx={{ py: { xs: 5, sm: 8 } }}>
         {backLink}
 
+        {navNotice && (
+          <Alert severity="warning" onClose={dismissNavNotice} sx={{ mb: 2 }}>
+            {navNotice}
+          </Alert>
+        )}
+
         <Reveal>
-          {/* 실제 글에는 사진이 없어서 카테고리 이모지를 아치에 담아요 */}
+          {/* 사진을 붙인 글은 그 사진을 아치에 담고, 사진이 없는 글은 카테고리 이모지를 아치에 담아요 */}
+          {post.photoUrl && !photoFailed ? (
+            <Box
+              component="img"
+              src={post.photoUrl}
+              alt={`${post.title} 사진`}
+              onError={() => setPhotoFailed(true)}
+              sx={{
+                display: 'block',
+                width: '100%',
+                height: { xs: 240, sm: 340 },
+                objectFit: 'cover',
+                // 위쪽이 둥근 아치 모양 (기존 디자인과 같아요)
+                borderRadius: '999px 999px 18px 18px',
+                border: '3px solid #c9a56a',
+                boxShadow: '0 3px 0 rgba(107,68,35,0.25)',
+                mb: 3,
+              }}
+            />
+          ) : (
           <Box
             aria-hidden="true"
             sx={{
@@ -269,6 +301,7 @@ const AccountPostDetail = () => {
           >
             {category?.emoji ?? '🍞'}
           </Box>
+          )}
         </Reveal>
 
         <Reveal delay={0.05}>
