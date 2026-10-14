@@ -210,6 +210,7 @@ const BakeryDetail = () => {
           sx={{
             display: 'inline-flex',
             alignItems: 'center',
+            '@media (pointer: coarse)': { minHeight: 44 },
             gap: 0.75,
             color: 'text.secondary',
             textDecoration: 'none',

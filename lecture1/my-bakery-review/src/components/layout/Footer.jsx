@@ -62,6 +62,10 @@ const Footer = () => {
               to={link.to}
               end
               sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                '@media (pointer: coarse)': { minHeight: 44, minWidth: 44 },
                 color: 'inherit',
                 fontSize: '0.85rem',
                 fontWeight: 600,

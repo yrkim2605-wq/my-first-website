@@ -27,6 +27,7 @@ const TOAST_ICON =
 const ZOOM_BUTTON_SX = {
   width: 36,
   height: 36,
+  '@media (pointer: coarse)': { width: 44, height: 44 },
   display: 'grid',
   placeItems: 'center',
   border: 'none',

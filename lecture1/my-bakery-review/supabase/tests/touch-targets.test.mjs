@@ -58,7 +58,15 @@ const read = (f) => fs.readFileSync(f, 'utf8').replace(/\r\n/g, '\n')
   const root = theme.components.MuiButton.styleOverrides.root
   check('테마: 터치 기기(pointer: coarse)에서 MUI 버튼 최소 높이 · 너비 44px', root['@media (pointer: coarse)']?.minHeight === 44 && root['@media (pointer: coarse)']?.minWidth === 44, JSON.stringify(root['@media (pointer: coarse)']))
   check('테마: 마우스 기기에서는 기존 크기(40px) 그대로 — 데스크톱 모양은 바뀌지 않아요', root.minHeight === 40)
+  // 브라우저 점검(Edge, 터치 모드)에서 44px 미만으로 나왔던 곳: 아이콘 버튼 · 눌러지는 칩 · 입력칸
+  const coarse = (node) => node?.['@media (pointer: coarse)']
+  check('테마: 터치 기기에서 아이콘 버튼도 44px (비밀번호 보기 · 캐러셀 일시 정지 · 지도 버튼)', coarse(theme.components.MuiIconButton.styleOverrides.root)?.minHeight === 44 && coarse(theme.components.MuiIconButton.styleOverrides.root)?.minWidth === 44)
+  check('테마: 터치 기기에서 입력칸(작은 크기 포함) 높이 44px', coarse(theme.components.MuiOutlinedInput?.styleOverrides?.root)?.minHeight === 44)
+  check('테마: 터치 기기에서 눌러지는 칩(지역 필터 · 카카오맵 링크) 높이 44px', coarse(theme.components.MuiChip.styleOverrides.root['&.MuiChip-clickable'])?.minHeight === 44)
   await server.close()
+  const coarseRule = "'@media (pointer: coarse)': { minHeight: 44"
+  check('헤더 메뉴 · 푸터 링크 · 홈 지역 버튼 · 상세 돌아가기 링크도 터치 기기에서 44px', ['components/layout/Header.jsx', 'components/layout/Footer.jsx', 'components/home/BakeryMapHero.jsx', 'pages/BakeryDetail.jsx'].every((f) => read(path.join(srcDir, f)).includes(coarseRule)))
+  check('지도 확대 · 축소 버튼, 커뮤니티 탭도 터치 기기에서 44px', read(path.join(srcDir, 'components/home/BakeryMap.jsx')).includes("'@media (pointer: coarse)': { width: 44, height: 44 }") && read(path.join(srcDir, 'constants/tabStyles.js')).includes("'@media (pointer: coarse)': { minWidth: 44 }"))
   check('나무 간판 버튼(작은 크기)도 터치 기기에서 44px', /'@media \(pointer: coarse\)': \{ minHeight: 44 \}/.test(read(path.join(srcDir, 'components/common/WoodButton.jsx'))))
 }
 

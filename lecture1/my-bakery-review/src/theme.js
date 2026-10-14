@@ -162,6 +162,8 @@ const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
+          // 손가락(터치) 기기에서는 아이콘 버튼도 최소 44px예요
+          '@media (pointer: coarse)': { minHeight: 44, minWidth: 44 },
           transition: 'transform 0.15s ease, background-color 0.15s ease',
           '&:hover': {
             transform: 'translateY(-1px)',
@@ -172,9 +174,19 @@ const theme = createTheme({
         },
       },
     },
+    // 입력칸(작은 크기 포함)도 터치 기기에서는 높이 44px 이상이에요
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          '@media (pointer: coarse)': { minHeight: 44 },
+        },
+      },
+    },
     MuiChip: {
       styleOverrides: {
         root: {
+          // 눌러서 쓰는 칩(지역 필터, 카카오맵 링크 등)은 터치 기기에서 높이 44px 이상이에요
+          '&.MuiChip-clickable': { '@media (pointer: coarse)': { minHeight: 44 } },
           fontWeight: 600,
           borderRadius: 999,
           transition: 'transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease',

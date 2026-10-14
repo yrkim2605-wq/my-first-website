@@ -6,6 +6,7 @@ export const PAGE_TABS_SX = {
   '& .MuiTab-root': {
     minHeight: 44,
     minWidth: 0,
+    '@media (pointer: coarse)': { minWidth: 44 },
     px: 0,
     mr: 3,
     fontSize: '0.95rem',

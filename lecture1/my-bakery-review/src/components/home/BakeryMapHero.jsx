@@ -61,6 +61,7 @@ const BakeryMapHero = ({ bakeries, selectedId, onSelectBakery, loading, error, o
                   flexShrink: 0,
                   px: 2.25,
                   py: 0.9,
+                  '@media (pointer: coarse)': { minHeight: 44 },
                   borderRadius: '12px',
                   // 선택한 지역은 어두운 나무 팻말, 나머지는 양피지 팻말
                   ...(selected

@@ -44,8 +44,11 @@ const WAVE_UNDERLINE =
 
 const NAV_LINK_SX = {
   position: 'relative',
-  display: 'inline-block',
+  display: 'inline-flex',
+  alignItems: 'center',
   py: 0.75,
+  // 손가락(터치) 기기에서는 메뉴 한 칸이 최소 44px예요
+  '@media (pointer: coarse)': { minHeight: 44, minWidth: 44, justifyContent: 'center' },
   fontSize: { xs: '0.95rem', sm: '1rem' },
   fontWeight: 700,
   color: 'text.primary',
