@@ -124,25 +124,41 @@ const makeMarker = (fresh = false) => {
 }
 const repoFor = (state, { marker = makeMarker() } = {}) => {
   const { client, authError } = makeClient(state)
-  return { client, authError, marker, repo: createAccountRepository(async () => client, { getRedirectUrl: () => 'https://example.test/app/', recoveryMarker: marker }) }
+  return { client, authError, marker, repo: createAccountRepository(async () => client, { getRedirectUrl: () => 'https://example.test/app/', recoveryMarker: marker, termsVersion: 'test-v1', now: () => new Date('2026-10-14T01:02:03Z') }) }
 }
 
 // ── 입력 검증 ──
 check('이메일 형식이 아니면 거부', (await rejects(Promise.resolve().then(() => validateSignUpInput({ email: 'abc', password: '12345678', nickname: '빵덕후' }))))?.code === 'INVALID_EMAIL')
 check('비밀번호 8자 미만 거부', (await rejects(Promise.resolve().then(() => validateSignUpInput({ email: 'a@b.co', password: '1234567', nickname: '빵덕후' }))))?.code === 'WEAK_PASSWORD')
 check('닉네임 특수문자/길이 거부', (await rejects(Promise.resolve().then(() => validateSignUpInput({ email: 'a@b.co', password: '12345678', nickname: '빵<b>' }))))?.code === 'INVALID_NICKNAME')
-check('올바른 입력은 이메일을 소문자로 정리', validateSignUpInput({ email: ' A@B.Co ', password: '12345678', nickname: ' 빵덕후 ' }).email === 'a@b.co')
+check('올바른 입력은 이메일을 소문자로 정리', validateSignUpInput({ email: ' A@B.Co ', password: '12345678', nickname: ' 빵덕후 ', agreedToTerms: true }).email === 'a@b.co')
+
+// ── 가입 동의 ──
+check('동의하지 않으면 가입 거부', (await rejects(Promise.resolve().then(() => validateSignUpInput({ email: 'a@b.co', password: '12345678', nickname: '빵덕후' }))))?.code === 'TERMS_REQUIRED')
+check('동의가 false여도 거부', (await rejects(Promise.resolve().then(() => validateSignUpInput({ email: 'a@b.co', password: '12345678', nickname: '빵덕후', agreedToTerms: false }))))?.code === 'TERMS_REQUIRED')
+check('"true" 문자열 같은 값은 동의로 보지 않아요', (await rejects(Promise.resolve().then(() => validateSignUpInput({ email: 'a@b.co', password: '12345678', nickname: '빵덕후', agreedToTerms: 'true' }))))?.code === 'TERMS_REQUIRED')
+{
+  const { repo, client } = repoFor({})
+  await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후' }))
+  check('동의하지 않으면 서버에 가입 요청을 보내지 않아요', !client.calls.some(([name]) => name === 'signUp'))
+}
+{
+  const { repo, client } = repoFor({})
+  await repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후', agreedToTerms: true })
+  const sent = client.calls.find(([name]) => name === 'signUp')[1]
+  check('가입할 때 동의한 문서 버전 · 시각이 계정 정보에 기록돼요', sent.options.data.terms_version === 'test-v1' && sent.options.data.terms_agreed_at === '2026-10-14T01:02:03.000Z')
+}
 
 // ── 회원가입 ──
 {
   const { repo, client } = repoFor({ nicknameAvailable: false })
-  const error = await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후' }))
+  const error = await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후', agreedToTerms: true }))
   check('닉네임 중복이면 가입 요청을 보내지 않아요', error?.code === 'NICKNAME_TAKEN' && !client.calls.some(([name]) => name === 'signUp'))
 }
 {
   const secret = 'Sup3rSecret!pw'
   const { repo, client } = repoFor({})
-  const result = await repo.signUp({ email: 'A@B.co', password: secret, nickname: '빵덕후' })
+  const result = await repo.signUp({ email: 'A@B.co', password: secret, nickname: '빵덕후', agreedToTerms: true })
   const sent = client.calls.find(([name]) => name === 'signUp')[1]
   check('가입 성공 → 인증 메일 안내 상태(로그인 아님)', result.needsVerification === true && result.email === 'a@b.co')
   check('가입 요청에 닉네임 · 메일 링크 주소가 들어가요', sent.options.data.nickname === '빵덕후' && sent.options.emailRedirectTo === 'https://example.test/app/')
@@ -150,7 +166,7 @@ check('올바른 입력은 이메일을 소문자로 정리', validateSignUpInpu
 }
 {
   const { repo } = repoFor({ existingEmail: true })
-  check('이미 가입된 이메일 안내', (await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후' })))?.code === 'EMAIL_TAKEN')
+  check('이미 가입된 이메일 안내', (await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후', agreedToTerms: true })))?.code === 'EMAIL_TAKEN')
 }
 for (const [label, state, expected] of [
   ['약한 비밀번호', (a) => ({ signUpError: a('weak_password') }), 'WEAK_PASSWORD'],
@@ -161,12 +177,12 @@ for (const [label, state, expected] of [
 ]) {
   const { authError } = makeClient()
   const { repo } = repoFor(state(authError))
-  const error = await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후' }))
+  const error = await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후', agreedToTerms: true }))
   check(`가입 오류 안내: ${label}`, error?.code === expected && /[가-힣]/.test(error.message), String(error?.code))
 }
 {
   const { repo } = repoFor({ networkDown: true })
-  const error = await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후' }))
+  const error = await rejects(repo.signUp({ email: 'a@b.co', password: 'password123', nickname: '빵덕후', agreedToTerms: true }))
   check('서버 연결 실패 → 오류 안내(저장 안 됨 문구)', error?.code === 'NETWORK' && error.message === AUTH_NETWORK_MESSAGE)
 }
 

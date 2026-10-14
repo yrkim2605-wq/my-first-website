@@ -13,6 +13,8 @@ const FOOTER_LINKS = [
   { to: '/community', label: '커뮤니티' },
   { to: '/ranking', label: '명예의 전당' },
   { to: '/mypage', label: '내 모험가' },
+  { to: '/terms', label: '이용약관' },
+  { to: '/privacy', label: '개인정보처리방침' },
 ]
 
 const Footer = () => {

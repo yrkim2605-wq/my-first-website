@@ -6,12 +6,13 @@ import { messageForCallbackError } from '../storage/authMessages'
 import { takeAuthCallbackError } from '../lib/authCallback'
 import { getBackendConfigProblem, IS_ACCOUNT_MODE } from '../lib/backend'
 import { getAuthRedirectUrl, getSupabase } from '../lib/supabaseClient'
+import { LEGAL_VERSION } from '../constants/legalInfo'
 
 // 지금 사용 중인 프로필을 들고 있어요. 저장 방식은 VITE_DATA_BACKEND로 정해져요.
 //  - local(기본): 이 브라우저 안에서만 쓰는 임시 닉네임 프로필 (진짜 로그인이 아니에요)
 //  - supabase   : 이메일 인증을 마친 계정으로 로그인 (비밀번호는 Supabase가 보관해요)
 // 계정 모드에서 연결이 안 되면 로컬로 대신 처리하지 않고, backendProblem으로 이유를 보여줘요.
-const accountRepository = IS_ACCOUNT_MODE ? createAccountRepository(getSupabase, { getRedirectUrl: getAuthRedirectUrl }) : null
+const accountRepository = IS_ACCOUNT_MODE ? createAccountRepository(getSupabase, { getRedirectUrl: getAuthRedirectUrl, termsVersion: LEGAL_VERSION }) : null
 
 const notAvailable = () => Promise.reject(new Error('이 기능은 계정 모드에서만 쓸 수 있어요.'))
 

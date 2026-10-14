@@ -15,7 +15,7 @@ export const NICKNAME_RULE_TEXT = '2~12자, 한글 · 영문 · 숫자 · 밑줄
 export const PASSWORD_MIN = 8
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export const validateSignUpInput = ({ email, password, nickname }) => {
+export const validateSignUpInput = ({ email, password, nickname, agreedToTerms }) => {
   const cleanEmail = String(email ?? '').trim().toLowerCase()
   const cleanNickname = String(nickname ?? '').trim()
   if (!EMAIL_PATTERN.test(cleanEmail)) throw new RepositoryError('INVALID_EMAIL', '이메일 주소를 정확히 입력해 주세요.')
@@ -23,6 +23,7 @@ export const validateSignUpInput = ({ email, password, nickname }) => {
     throw new RepositoryError('WEAK_PASSWORD', `비밀번호는 ${PASSWORD_MIN}자 이상으로 입력해 주세요.`)
   }
   if (!NICKNAME_PATTERN.test(cleanNickname)) throw new RepositoryError('INVALID_NICKNAME', `닉네임은 ${NICKNAME_RULE_TEXT}`)
+  if (agreedToTerms !== true) throw new RepositoryError('TERMS_REQUIRED', '이용약관과 개인정보처리방침에 동의해야 가입할 수 있어요.')
   return { email: cleanEmail, password, nickname: cleanNickname }
 }
 
@@ -83,7 +84,7 @@ export const toDeleteAccountError = async (error) => {
 }
 const looksLikeNetwork = (error) => error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(String(error?.message ?? ''))
 
-export const createAccountRepository = (getClient, { getRedirectUrl = () => undefined, recoveryMarker = defaultRecoveryMarker } = {}) => {
+export const createAccountRepository = (getClient, { getRedirectUrl = () => undefined, recoveryMarker = defaultRecoveryMarker, termsVersion = '', now = () => new Date() } = {}) => {
   // 로그인한 사용자의 공개 프로필(닉네임)을 가져와요. 없으면 null.
   const loadProfile = async (client, user) => {
     const { data, error } = await client.from('profiles').select('id, nickname, created_at').eq('id', user.id).maybeSingle()
@@ -121,7 +122,8 @@ export const createAccountRepository = (getClient, { getRedirectUrl = () => unde
         const { data, error } = await client.auth.signUp({
           email,
           password,
-          options: { data: { nickname }, emailRedirectTo: getRedirectUrl() },
+          // 동의한 문서 버전과 시각을 계정 정보(user_metadata)에 기록해요. (서버 규칙이 아니라 기록용이에요)
+          options: { data: { nickname, terms_version: termsVersion, terms_agreed_at: now().toISOString() }, emailRedirectTo: getRedirectUrl() },
         })
         if (error) throw error
         // 이미 가입된 이메일이면 보안상 오류 대신 "identities가 빈 사용자"가 와요

@@ -5,6 +5,9 @@ import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
+import Checkbox from '@mui/material/Checkbox'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Typography from '@mui/material/Typography'
 import AuthPanel from '../components/common/AuthPanel'
 import SectionHeading from '../components/common/SectionHeading'
 import EmailVerificationPanel from '../components/auth/EmailVerificationPanel'
@@ -27,12 +30,13 @@ const AccountSignup = () => {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [sentTo, setSentTo] = useState(null)
+  const [agreed, setAgreed] = useState(false) // 이용약관 · 개인정보처리방침 동의
 
   const emailValid = EMAIL_PATTERN.test(email.trim())
   const nicknameValid = NICKNAME_PATTERN.test(nickname.trim())
   const passwordValid = password.length >= PASSWORD_MIN
   const passwordsMatch = password === passwordConfirm
-  const canSubmit = emailValid && nicknameValid && passwordValid && passwordsMatch && nicknameCheck !== 'taken' && !submitting && !backendProblem
+  const canSubmit = emailValid && nicknameValid && passwordValid && passwordsMatch && nicknameCheck !== 'taken' && agreed && !submitting && !backendProblem
 
   // 닉네임 입력칸을 벗어나면 서버에 중복을 미리 물어봐요 (가입할 때 한 번 더 확인해요)
   const checkNickname = async () => {
@@ -61,7 +65,7 @@ const AccountSignup = () => {
     setSubmitting(true)
     setError(null)
     try {
-      const result = await accountSignUp({ email, password, nickname })
+      const result = await accountSignUp({ email, password, nickname, agreedToTerms: agreed })
       setSentTo(result.email)
     } catch (caught) {
       setError(caught)
@@ -137,6 +141,24 @@ const AccountSignup = () => {
                 error={Boolean(passwordConfirm) && !passwordsMatch}
                 helperText={passwordConfirm && !passwordsMatch ? '비밀번호가 서로 달라요.' : ' '}
                 autoComplete="new-password"
+              />
+
+              <FormControlLabel
+                sx={{ alignItems: 'flex-start', m: 0, '& .MuiCheckbox-root': { p: 1, mt: -0.5, ml: -1 } }}
+                control={<Checkbox checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />}
+                label={
+                  <Typography component="span" sx={{ fontSize: '0.85rem', lineHeight: 1.6, wordBreak: 'keep-all', '& a': { color: 'primary.main', fontWeight: 700 } }}>
+                    <b>(필수)</b>{' '}
+                    <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                      이용약관
+                    </Link>
+                    과{' '}
+                    <Link to="/privacy" target="_blank" rel="noopener noreferrer">
+                      개인정보처리방침
+                    </Link>
+                    을 읽었고 동의해요.
+                  </Typography>
+                }
               />
 
               {error && <Alert severity="error">{error.message}</Alert>}
