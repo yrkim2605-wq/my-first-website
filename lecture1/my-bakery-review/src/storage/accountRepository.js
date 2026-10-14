@@ -32,7 +32,36 @@ const normalizeEmail = (email) => {
   return clean
 }
 
-export const createAccountRepository = (getClient, { getRedirectUrl = () => undefined } = {}) => {
+// "비밀번호 재설정 메일을 요청했어요"라는 표식. 메일 링크(PKCE)는 요청한 브라우저에서만 열려서, 이 브라우저에 남긴 표식으로
+// "이 ?code= 는 재설정 링크"라고 알아봐요. 1시간이 지나면 무효예요. (토큰이 아니라 시각만 저장해요)
+const RECOVERY_MARKER_KEY = 'my-bakery-review:password-reset-requested'
+export const RECOVERY_WINDOW_MS = 60 * 60 * 1000
+const defaultRecoveryMarker = {
+  set: () => {
+    try {
+      localStorage.setItem(RECOVERY_MARKER_KEY, String(Date.now()))
+    } catch {
+      // 저장이 막혀 있으면 재설정 링크를 알아보지 못할 수 있어요
+    }
+  },
+  isFresh: () => {
+    try {
+      const at = Number(localStorage.getItem(RECOVERY_MARKER_KEY))
+      return Number.isFinite(at) && at > 0 && Date.now() - at < RECOVERY_WINDOW_MS
+    } catch {
+      return false
+    }
+  },
+  clear: () => {
+    try {
+      localStorage.removeItem(RECOVERY_MARKER_KEY)
+    } catch {
+      // 지우지 못해도 1시간 뒤에는 무효예요
+    }
+  },
+}
+
+export const createAccountRepository = (getClient, { getRedirectUrl = () => undefined, recoveryMarker = defaultRecoveryMarker } = {}) => {
   // 로그인한 사용자의 공개 프로필(닉네임)을 가져와요. 없으면 null.
   const loadProfile = async (client, user) => {
     const { data, error } = await client.from('profiles').select('id, nickname, created_at').eq('id', user.id).maybeSingle()
@@ -118,6 +147,51 @@ export const createAccountRepository = (getClient, { getRedirectUrl = () => unde
       }
     },
 
+    // 비밀번호 재설정 메일 보내기. 가입된 이메일인지는 알려주지 않아요 (없는 이메일이어도 똑같이 성공처럼 보여요).
+    async requestPasswordReset(email) {
+      const clean = normalizeEmail(email)
+      try {
+        const client = await getClient()
+        const { error } = await client.auth.resetPasswordForEmail(clean, { redirectTo: getRedirectUrl() })
+        if (error) throw error
+        recoveryMarker.set()
+      } catch (error) {
+        throw toAuthError(error)
+      }
+    },
+
+    // 재설정 링크로 들어온 상태인지: 표식이 살아 있고 로그인 세션(메일 링크로 만들어진)이 있을 때만 true
+    async hasRecoverySession() {
+      if (!recoveryMarker.isFresh()) return false
+      try {
+        const client = await getClient()
+        const { data, error } = await client.auth.getSession()
+        if (error) return false
+        return Boolean(data.session?.user)
+      } catch {
+        return false
+      }
+    },
+
+    // 새 비밀번호 저장. 성공하면 모든 기기에서 로그아웃해요 (비밀번호가 새어 나간 경우를 막으려고).
+    async updatePassword(newPassword) {
+      if (String(newPassword ?? '').length < PASSWORD_MIN) {
+        throw new RepositoryError('WEAK_PASSWORD', `비밀번호는 ${PASSWORD_MIN}자 이상으로 입력해 주세요.`)
+      }
+      if (!recoveryMarker.isFresh()) {
+        throw new RepositoryError('LINK_EXPIRED', '재설정 링크가 만료되었거나 이미 사용됐어요. 비밀번호 찾기를 다시 진행해 주세요.')
+      }
+      try {
+        const client = await getClient()
+        const { error } = await client.auth.updateUser({ password: newPassword })
+        if (error) throw error
+        recoveryMarker.clear()
+        await client.auth.signOut({ scope: 'global' })
+      } catch (error) {
+        throw toAuthError(error)
+      }
+    },
+
     // 지금 로그인된 프로필 (없으면 null). 인증이 안 된 세션은 로그인으로 인정하지 않아요.
     async getCurrent() {
       try {
@@ -142,6 +216,12 @@ export const createAccountRepository = (getClient, { getRedirectUrl = () => unde
         const { error } = await client.auth.initialize()
         if (error) {
           return { severity: 'info', message: '이메일 인증은 끝났을 수 있어요. 이 화면에서 로그인해 주세요. (다른 브라우저에서 링크를 열면 자동 로그인은 되지 않아요)' }
+        }
+        // 비밀번호 재설정 링크: 요청 표식이 있고, 서버가 기록한 재설정 메일 발송 시각이 1시간 안일 때만 (인증 메일 링크와 구별)
+        if (recoveryMarker.isFresh()) {
+          const { data } = await client.auth.getSession()
+          const sentAt = Date.parse(data.session?.user?.recovery_sent_at ?? '')
+          if (Number.isFinite(sentAt) && Date.now() - sentAt < RECOVERY_WINDOW_MS) return { severity: 'info', recovery: true, message: '' }
         }
         return { severity: 'success', message: '이메일 인증이 완료됐어요! 환영해요.' }
       } catch (error) {

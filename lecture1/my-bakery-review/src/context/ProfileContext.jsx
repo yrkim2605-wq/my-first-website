@@ -52,7 +52,8 @@ export const ProfileProvider = ({ children }) => {
       if (IS_ACCOUNT_MODE && !getBackendConfigProblem()) {
         try {
           const notice = await accountRepository.finishRedirect()
-          if (notice) setAuthNotice(notice)
+          if (notice?.recovery) window.location.hash = '#/reset-password' // 비밀번호 재설정 링크로 들어왔어요
+          else if (notice) setAuthNotice(notice)
         } catch (error) {
           setBackendProblem(error.message)
         }
@@ -86,6 +87,12 @@ export const ProfileProvider = ({ children }) => {
     return found
   }, [])
   const resendVerification = useCallback((email) => accountRepository.resendVerification(email), [])
+  const requestPasswordReset = useCallback((email) => accountRepository.requestPasswordReset(email), [])
+  const hasRecoverySession = useCallback(() => accountRepository.hasRecoverySession(), [])
+  const updatePassword = useCallback(async (newPassword) => {
+    await accountRepository.updatePassword(newPassword)
+    setProfile(null) // 모든 기기에서 로그아웃됐어요
+  }, [])
   const isNicknameAvailable = useCallback((nickname) => accountRepository.isNicknameAvailable(nickname), [])
 
   const signOut = useCallback(async () => {
@@ -111,8 +118,11 @@ export const ProfileProvider = ({ children }) => {
       accountSignIn: IS_ACCOUNT_MODE ? accountSignIn : notAvailable,
       resendVerification: IS_ACCOUNT_MODE ? resendVerification : notAvailable,
       isNicknameAvailable: IS_ACCOUNT_MODE ? isNicknameAvailable : notAvailable,
+      requestPasswordReset: IS_ACCOUNT_MODE ? requestPasswordReset : notAvailable,
+      hasRecoverySession: IS_ACCOUNT_MODE ? hasRecoverySession : notAvailable,
+      updatePassword: IS_ACCOUNT_MODE ? updatePassword : notAvailable,
     }),
-    [profile, ready, backendProblem, authNotice, clearAuthNotice, signUp, signIn, signOut, accountSignUp, accountSignIn, resendVerification, isNicknameAvailable],
+    [profile, ready, backendProblem, authNotice, clearAuthNotice, signUp, signIn, signOut, accountSignUp, accountSignIn, resendVerification, isNicknameAvailable, requestPasswordReset, hasRecoverySession, updatePassword],
   )
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

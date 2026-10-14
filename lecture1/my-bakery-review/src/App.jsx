@@ -19,6 +19,8 @@ const Signup = lazy(() => import('./pages/Signup'))
 // 계정 모드(VITE_DATA_BACKEND=supabase)에서는 이메일 로그인 · 가입 화면을 써요
 const AccountLogin = lazy(() => import('./pages/AccountLogin'))
 const AccountSignup = lazy(() => import('./pages/AccountSignup'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 import { IS_ACCOUNT_MODE } from './lib/backend'
 import { BusanBakeriesProvider } from './context/BusanBakeriesContext'
 import { VisitedBakeriesProvider } from './context/VisitedBakeriesContext'
@@ -61,6 +63,8 @@ function App() {
                       <Route path="/bakery/:id" element={<BakeryDetail />} />
                       <Route path="/login" element={IS_ACCOUNT_MODE ? <AccountLogin /> : <Login />} />
                       <Route path="/signup" element={IS_ACCOUNT_MODE ? <AccountSignup /> : <Signup />} />
+                      {IS_ACCOUNT_MODE && <Route path="/forgot-password" element={<ForgotPassword />} />}
+                      {IS_ACCOUNT_MODE && <Route path="/reset-password" element={<ResetPassword />} />}
                     </Route>
                   </Routes>
                 </HashRouter>

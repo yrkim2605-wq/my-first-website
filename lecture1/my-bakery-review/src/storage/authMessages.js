@@ -18,6 +18,8 @@ const BY_CODE = {
   over_request_rate_limit: ['REQUEST_RATE_LIMIT', '요청이 너무 많아요. 잠시 후 다시 시도해 주세요.'],
   otp_expired: ['LINK_EXPIRED', '인증 링크가 만료되었거나 이미 사용됐어요. 인증 메일을 다시 받아 주세요.'],
   flow_state_not_found: ['LINK_EXPIRED', '인증 링크가 만료되었거나 이미 사용됐어요. 인증 메일을 다시 받아 주세요.'],
+  same_password: ['SAME_PASSWORD', '이전과 다른 비밀번호를 입력해 주세요.'],
+  session_not_found: ['LINK_EXPIRED', '재설정 링크가 만료되었거나 이미 사용됐어요. 비밀번호 찾기를 다시 진행해 주세요.'],
   user_banned: ['USER_BANNED', '이용이 제한된 계정이에요.'],
 }
 

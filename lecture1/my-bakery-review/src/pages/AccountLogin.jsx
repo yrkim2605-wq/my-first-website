@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -16,6 +16,7 @@ import { useProfile } from '../hooks/useProfile'
 // 계정(이메일 + 비밀번호) 로그인 화면. 계정 모드(VITE_DATA_BACKEND=supabase)에서만 쓰여요.
 const AccountLogin = () => {
   const navigate = useNavigate()
+  const passwordChanged = Boolean(useLocation().state?.passwordChanged)
   const { profile, accountSignIn, backendProblem, authNotice, clearAuthNotice } = useProfile()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -53,6 +54,11 @@ const AccountLogin = () => {
             {backendProblem}
           </Alert>
         )}
+        {passwordChanged && (
+          <Alert severity="success" sx={{ mb: 2, width: '100%' }}>
+            비밀번호를 바꿨어요. 새 비밀번호로 로그인해 주세요. (다른 기기에서는 로그아웃됐어요)
+          </Alert>
+        )}
         {authNotice && (
           <Alert severity={authNotice.severity} onClose={clearAuthNotice} sx={{ mb: 2, width: '100%' }}>
             {authNotice.message}
@@ -86,6 +92,9 @@ const AccountLogin = () => {
 
             <Button type="submit" variant="contained" size="large" fullWidth disabled={!canSubmit}>
               {submitting ? '로그인 중…' : '로그인'}
+            </Button>
+            <Button component={Link} to="/forgot-password" size="small" sx={{ alignSelf: 'center', minHeight: 44 }}>
+              비밀번호를 잊으셨나요?
             </Button>
             <Button component={Link} to="/signup" variant="outlined" size="large" fullWidth>
               새 모험가 만들기 (회원가입)

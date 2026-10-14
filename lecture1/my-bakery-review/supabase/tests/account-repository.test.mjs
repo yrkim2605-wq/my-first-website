@@ -75,16 +75,29 @@ const makeClient = (state = {}) => {
         if (state.signInError) return { data: {}, error: state.signInError }
         return { data: { user: { id: 'u1', email: args.email, email_confirmed_at: state.unverified ? null : '2026-10-14' } }, error: null }
       },
-      signOut: async () => {
-        record('signOut', [])
+      signOut: async (options) => {
+        record('signOut', options ?? {})
         return { error: null }
       },
       resend: async (args) => {
         record('resend', args)
         return { error: state.resendError ?? null }
       },
+      resetPasswordForEmail: async (email, options) => {
+        record('resetPasswordForEmail', [email, options])
+        if (state.networkDown) throw new TypeError('Failed to fetch')
+        return { data: {}, error: state.resetError ?? null }
+      },
+      updateUser: async (attrs) => {
+        record('updateUser', attrs)
+        return { data: {}, error: state.updateError ?? null }
+      },
       getSession: async () => ({
-        data: { session: state.noSession ? null : { user: { id: 'u1', email: 'a@b.co', email_confirmed_at: state.unverified ? null : '2026-10-14' } } },
+        data: {
+          session: state.noSession
+            ? null
+            : { user: { id: 'u1', email: 'a@b.co', email_confirmed_at: state.unverified ? null : '2026-10-14', recovery_sent_at: state.recoverySentAt } },
+        },
         error: null,
       }),
       initialize: async () => ({ error: state.initError ?? null }),
@@ -93,9 +106,14 @@ const makeClient = (state = {}) => {
   }
   return { client, authError }
 }
-const repoFor = (state) => {
+// 재설정 표식은 메모리에 두고 시험해요 (진짜 localStorage에는 쓰지 않아요)
+const makeMarker = (fresh = false) => {
+  const marker = { fresh, set: () => (marker.fresh = true), isFresh: () => marker.fresh, clear: () => (marker.fresh = false) }
+  return marker
+}
+const repoFor = (state, { marker = makeMarker() } = {}) => {
   const { client, authError } = makeClient(state)
-  return { client, authError, repo: createAccountRepository(async () => client, { getRedirectUrl: () => 'https://example.test/app/' }) }
+  return { client, authError, marker, repo: createAccountRepository(async () => client, { getRedirectUrl: () => 'https://example.test/app/', recoveryMarker: marker }) }
 }
 
 // ── 입력 검증 ──
@@ -205,6 +223,62 @@ check('재발송 이메일 형식 오류', (await rejects(repoFor({}).repo.resen
 }
 check('링크 만료 코드 안내', /만료/.test(messageForCallbackError('otp_expired')))
 check('알 수 없는 링크 오류도 안내', /다시 받아/.test(messageForCallbackError('???')))
+
+// ── 비밀번호 찾기 · 재설정 ──
+{
+  const { repo, client, marker } = repoFor({})
+  await repo.requestPasswordReset(' A@B.co ')
+  const [email, options] = client.calls.find(([name]) => name === 'resetPasswordForEmail')[1]
+  check('재설정 메일 요청: 이메일 정리 + 돌아올 주소 전달 + 요청 표식 남김', email === 'a@b.co' && options.redirectTo === 'https://example.test/app/' && marker.fresh === true)
+}
+check('재설정 요청 이메일 형식 오류', (await rejects(repoFor({}).repo.requestPasswordReset('abc')))?.code === 'INVALID_EMAIL')
+{
+  const { repo, marker } = repoFor({ resetError: Object.assign(new Error('x'), { code: 'over_email_send_rate_limit' }) })
+  check('재설정 메일 한도 초과 안내 + 표식은 남기지 않아요', (await rejects(repo.requestPasswordReset('a@b.co')))?.code === 'EMAIL_RATE_LIMIT' && marker.fresh === false)
+}
+check('재설정 요청 네트워크 오류 안내', (await rejects(repoFor({ networkDown: true }).repo.requestPasswordReset('a@b.co')))?.code === 'NETWORK')
+{
+  currentUrl = 'http://localhost:5173/my-first-website/my-bakery-review/?code=abc123#/'
+  const recent = new Date(Date.now() - 60 * 1000).toISOString()
+  const notice = await repoFor({ recoverySentAt: recent }, { marker: makeMarker(true) }).repo.finishRedirect()
+  check('재설정 링크로 돌아오면 recovery로 알려줘요', notice?.recovery === true)
+}
+{
+  currentUrl = 'http://localhost:5173/my-first-website/my-bakery-review/?code=abc123#/'
+  const notice = await repoFor({ recoverySentAt: new Date().toISOString() }, { marker: makeMarker(false) }).repo.finishRedirect()
+  check('요청 표식이 없으면(다른 사람의 링크 등) 재설정으로 보지 않아요', !notice?.recovery && notice?.severity === 'success')
+}
+{
+  currentUrl = 'http://localhost:5173/my-first-website/my-bakery-review/?code=abc123#/'
+  const old = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  const notice = await repoFor({ recoverySentAt: old }, { marker: makeMarker(true) }).repo.finishRedirect()
+  check('재설정 메일 발송 시각이 1시간 넘었으면 재설정으로 보지 않아요 (인증 메일 링크와 구별)', !notice?.recovery)
+}
+check('표식 + 세션이 있어야 재설정 화면 허용', (await repoFor({}, { marker: makeMarker(true) }).repo.hasRecoverySession()) === true)
+check('표식이 없으면 재설정 화면 거부', (await repoFor({}, { marker: makeMarker(false) }).repo.hasRecoverySession()) === false)
+check('세션이 없으면 재설정 화면 거부', (await repoFor({ noSession: true }, { marker: makeMarker(true) }).repo.hasRecoverySession()) === false)
+{
+  const { repo, client, marker } = repoFor({}, { marker: makeMarker(true) })
+  await repo.updatePassword('newPassword1')
+  const names = client.calls.map(([name]) => name)
+  const signOut = client.calls.find(([name]) => name === 'signOut')
+  check('비밀번호 변경 → 모든 기기 로그아웃 + 표식 삭제', names.includes('updateUser') && signOut[1].scope === 'global' && marker.fresh === false)
+}
+{
+  const { repo, client } = repoFor({}, { marker: makeMarker(true) })
+  const error = await rejects(repo.updatePassword('1234567'))
+  check('8자 미만이면 서버에 보내지 않아요', error?.code === 'WEAK_PASSWORD' && !client.calls.some(([name]) => name === 'updateUser'))
+}
+{
+  const { repo, client } = repoFor({}, { marker: makeMarker(false) })
+  const error = await rejects(repo.updatePassword('newPassword1'))
+  check('표식이 없으면 비밀번호를 바꾸지 않아요 (이미 로그인한 사람이 우연히 호출해도)', error?.code === 'LINK_EXPIRED' && !client.calls.some(([name]) => name === 'updateUser'))
+}
+{
+  const { repo, marker } = repoFor({ updateError: Object.assign(new Error('x'), { code: 'same_password' }) }, { marker: makeMarker(true) })
+  const error = await rejects(repo.updatePassword('samePassword1'))
+  check('이전과 같은 비밀번호 안내 + 표식은 유지(다시 시도 가능)', error?.code === 'SAME_PASSWORD' && marker.fresh === true)
+}
 
 // ── 비밀 키 방어 / 로컬 몰래 저장 없음 ──
 const jwt = (role) => `h.${Buffer.from(JSON.stringify({ role })).toString('base64url')}.s`
