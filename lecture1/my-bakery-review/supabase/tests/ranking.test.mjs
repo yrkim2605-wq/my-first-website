@@ -12,7 +12,7 @@ if (!pgliteDir) throw new Error('PGLITE_DIR 환경변수에 pglite가 설치된 
 const { PGlite } = await import(pathToFileURL(path.join(pgliteDir, 'node_modules/@electric-sql/pglite/dist/index.js')).href)
 
 const sql = (file) => fs.readFileSync(path.join(here, file), 'utf8')
-const MIGRATIONS = ['../migrations/0001_schema.sql', '../migrations/0002_rls.sql', '../migrations/0004_community.sql']
+const MIGRATIONS = ['../migrations/0001_schema.sql', '../migrations/0002_rls.sql', '../migrations/0004_community.sql', '../migrations/0006_review_content.sql']
 const RANKING_SQL = sql('../migrations/0005_rankings.sql')
 
 let passed = 0
@@ -81,7 +81,7 @@ for (const [i, id] of EXTRA.entries()) await setSignup(id, 10 + i)
 const districts = ['haeundae', 'seomyeon', 'nampodong', 'gwangalli', 'dongnae']
 for (let i = 1; i <= 31; i += 1) await admin(`insert into public.bakeries (id, name, district_id) values ($1, $2, $3)`, [`k${i}`, `테스트빵집${i}`, districts[i % 5]])
 
-const review = (u, bakery, rating) => as(u).q(`insert into public.reviews (bakery_id, rating, content) values ($1, $2, '맛있어요') returning id`, [bakery, rating])
+const review = (u, bakery, rating) => as(u).q(`insert into public.reviews (bakery_id, rating, content) values ($1, $2, '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다') returning id`, [bakery, rating])
 // A: k1 k2 k3 / B: k1 k2 k3 k4 / C: k1 k2 k3  (k1 4점 · k2 5점 · k3 3점 · k4 5점)
 const reviewIds = {}
 const SEED_REVIEWS = [

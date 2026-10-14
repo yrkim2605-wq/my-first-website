@@ -22,6 +22,7 @@ const read = (file) => fs.readFileSync(path.join(here, file), 'utf8')
 await db.exec(read('supabase_stub.sql'))
 await db.exec(read('../migrations/0001_schema.sql'))
 await db.exec(read('../migrations/0002_rls.sql'))
+await db.exec(read('../migrations/0006_review_content.sql'))
 
 const admin = async (text, params = []) => (await db.query(text, params)).rows
 const asUser = async (userId, text, params = []) => {
@@ -71,7 +72,7 @@ for (let u = 0; u < USERS; u += 1) {
 
     const insert = await asUser(
       userId,
-      `insert into public.reviews (bakery_id, rating, content, photo_path) values ($1, 4, '내용', $2) returning exp_review, exp_photo`,
+      `insert into public.reviews (bakery_id, rating, content, photo_path) values ($1, 4, '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다', $2) returning exp_review, exp_photo`,
       [bakeryId, hasPhoto ? `${userId}/${bakeryId}.jpg` : null],
     )
     if (insert.error) {

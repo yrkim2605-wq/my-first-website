@@ -22,6 +22,7 @@ await db.exec(sql('supabase_stub.sql'))
 await db.exec(sql('../migrations/0001_schema.sql'))
 await db.exec(sql('../migrations/0002_rls.sql'))
 await db.exec(sql('../migrations/0004_community.sql'))
+await db.exec(sql('../migrations/0006_review_content.sql')) // 리뷰 내용 글자 수 검사 (20자 이상)
 
 let passed = 0
 const failures = []
@@ -75,7 +76,7 @@ for (let i = 1; i <= 25; i += 1) {
 check('클라이언트는 빵집을 직접 등록할 수 없어요', (await as(A).q(`insert into public.bakeries (id, name, district_id) values ('fake','가짜','haeundae')`)).error !== null)
 
 // ── 리뷰: 작성 · EXP 서버 계산 ──
-const ins = (u, bakery, extra = '') => as(u).q(`insert into public.reviews (bakery_id, rating, content, photo_path ${extra}) values ($1, 4.5, '맛있어요 소금빵', null ${extra ? ', true' : ''})`, [bakery])
+const ins = (u, bakery, extra = '') => as(u).q(`insert into public.reviews (bakery_id, rating, content, photo_path ${extra}) values ($1, 4.5, '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다', null ${extra ? ', true' : ''})`, [bakery])
 check('유효한 빵집에 리뷰 작성', (await ins(A, 'k1')).error === null)
 check('등록되지 않은 빵집 ID는 거부', (await ins(A, 'not-registered')).error !== null)
 check('같은 빵집 두 번째 리뷰 거부(EXP 중복 방지)', (await ins(A, 'k1')).error !== null)
@@ -87,17 +88,17 @@ check('리뷰 1개 = 30 + 첫 리뷰 퀘스트 20 = 50 EXP', (await mineExp(A)).
 
 // 클라이언트가 EXP 칸을 직접 쓰려고 해도 막혀요
 check('exp_review 컬럼을 직접 넣을 수 없어요(권한 없음)',
-  (await as(A).q(`insert into public.reviews (bakery_id, rating, content, exp_review) values ('k3', 5, 'x', true)`)).error !== null)
+  (await as(A).q(`insert into public.reviews (bakery_id, rating, content, exp_review) values ('k3', 5, '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다', true)`)).error !== null)
 check('exp_review를 수정할 수 없어요',
   (await as(A).q(`update public.reviews set exp_review = false where user_id = $1`, [A])).error !== null)
 check('user_id를 바꿔 남의 리뷰로 만들 수 없어요',
   (await as(A).q(`update public.reviews set user_id = $1 where user_id = $2`, [B, A])).error !== null)
 check('작성자를 속여서 B 명의로 insert해도 거부',
-  (await as(A).q(`insert into public.reviews (user_id, bakery_id, rating, content) values ($1,'k4',5,'x')`, [B])).error !== null)
+  (await as(A).q(`insert into public.reviews (user_id, bakery_id, rating, content) values ($1,'k4',5,'맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다')`, [B])).error !== null)
 
 // ── 수정은 EXP를 늘리지 않아요 / 삭제하면 회수돼요 ──
 const before = (await mineExp(A)).exp
-await as(A).q(`update public.reviews set content = '수정한 내용', rating = 5 where user_id = $1`, [A])
+await as(A).q(`update public.reviews set content = '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 수정', rating = 5 where user_id = $1`, [A])
 check('리뷰 수정만으로 EXP가 늘지 않아요', (await mineExp(A)).exp === before)
 await as(A).q(`update public.reviews set photo_path = $1 || '/p.jpg' where user_id = $1`, [A])
 check('작성 후 사진을 붙여도 사진 EXP는 없어요', (await mineExp(A)).exp === before)
@@ -107,16 +108,16 @@ check('삭제하면 EXP가 회수돼요(0)', (await mineExp(A)).exp === 0, JSON.
 
 // ── 남의 리뷰는 못 고치고 못 지워요 ──
 await ins(B, 'k5')
-check('A는 B의 리뷰를 수정할 수 없어요(0행)', (await as(A).q(`update public.reviews set content='해킹' where user_id=$1 returning id`, [B])).rows.length === 0)
+check('A는 B의 리뷰를 수정할 수 없어요(0행)', (await as(A).q(`update public.reviews set content='맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 해킹' where user_id=$1 returning id`, [B])).rows.length === 0)
 check('A는 B의 리뷰를 삭제할 수 없어요(0행)', (await as(A).q(`delete from public.reviews where user_id=$1 returning id`, [B])).rows.length === 0)
 check('로그인 없이도 공개 리뷰는 읽을 수 있어요', (await as(null).q(`select count(*)::int n from public.reviews`)).rows[0].n === 1)
 
 // ── 사진 EXP: 작성할 때 사진이 있어야 + 지우면 사라져요 ──
 await as(B).q(`delete from public.reviews where user_id=$1`, [B])
-await as(B).q(`insert into public.reviews (bakery_id, rating, content, photo_path) values ('k6', 4, '사진 리뷰', $1 || '/a.jpg')`, [B])
+await as(B).q(`insert into public.reviews (bakery_id, rating, content, photo_path) values ('k6', 4, '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 사진', $1 || '/a.jpg')`, [B])
 check('작성 때 사진이 있으면 사진 EXP +10 (30+10+20=60)', (await mineExp(B)).exp === 60, JSON.stringify(await mineExp(B)))
 check('다른 사람 폴더의 사진 경로는 거부',
-  (await as(B).q(`insert into public.reviews (bakery_id, rating, content, photo_path) values ('k7', 4, 'x', $1 || '/a.jpg')`, [A])).error !== null)
+  (await as(B).q(`insert into public.reviews (bakery_id, rating, content, photo_path) values ('k7', 4, '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다', $1 || '/a.jpg')`, [A])).error !== null)
 await as(B).q(`update public.reviews set photo_path = null where user_id=$1`, [B])
 check('사진을 지우면 사진 EXP도 회수(50)', (await mineExp(B)).exp === 50, JSON.stringify(await mineExp(B)))
 await as(B).q(`delete from public.reviews where user_id=$1`, [B])
@@ -133,7 +134,7 @@ check('도감은 EXP 상한과 별개로 20곳', (await as(A).q(`select discover
 await as(A).q(`delete from public.reviews where user_id=$1`, [A])
 
 // ── 상한 안에서 사진 EXP가 모자랄 때 · 상한을 바꾸면 반영 · 삭제하면 다시 받을 수 있음 ──
-const photoIns = (u, bakery) => as(u).q(`insert into public.reviews (bakery_id, rating, content, photo_path) values ($1, 4, '사진', $2 || '/p.jpg')`, [bakery, u])
+const photoIns = (u, bakery) => as(u).q(`insert into public.reviews (bakery_id, rating, content, photo_path) values ($1, 4, '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 사진', $2 || '/p.jpg')`, [bakery, u])
 const expFlags = async (u) => (await as(u).q(`select bakery_id, exp_review, exp_photo from public.reviews where user_id=$1 order by created_at`, [u])).rows
 await ins(B, 'k11'); await ins(B, 'k12')      // 30 + 30 = 60 사용 → 남은 40
 await photoIns(B, 'k13')                      // 30 + 사진 10 = 40 → 딱 맞음
