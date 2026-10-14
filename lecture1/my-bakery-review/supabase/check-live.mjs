@@ -54,7 +54,7 @@ const get = async (pathAndQuery, extra = {}) => {
 const count = async (name) => {
   const res = await fetch(`${base}/rest/v1/${name}?select=*&limit=1`, { headers: { ...headers, Prefer: 'count=exact' } })
   const total = Number((res.headers.get('content-range') ?? '').split('/')[1])
-  return res.status === 200 && Number.isFinite(total) ? total : null
+  return (res.status === 200 || res.status === 206) && Number.isFinite(total) ? total : null
 }
 
 // ① 마이그레이션 적용 여부
@@ -93,6 +93,22 @@ if (counts.reviews > 0) {
   report(counts.ranking_bakeries > 0 ? 'ok' : 'fail', '리뷰 많은 빵집에 반영됨', `${counts.ranking_bakeries}곳`)
   const top = await get('ranking_exp?select=rank,nickname,exp,level_index,review_count&order=rank.asc&limit=3')
   if (top.status === 200) console.log(`   EXP 순위 상위: ${top.body.map((r) => `${r.rank}위 ${r.nickname}(EXP ${r.exp}, 일지 ${r.review_count})`).join(' / ') || '없음'}`)
+  // 빵집 평균 별점: 서버 집계(ranking_bakeries)가 reviews 표의 별점으로 직접 계산한 값과 같은지 (앱의 빵집 별점 표시가 읽는 값이에요)
+  const allReviews = await get('reviews?select=bakery_id,rating&limit=1000')
+  const bakeryStats = await get('ranking_bakeries?select=bakery_id,bakery_name,review_count,avg_rating&limit=1000')
+  if (allReviews.status === 200 && bakeryStats.status === 200 && counts.reviews <= 1000) {
+    const grouped = {}
+    for (const row of allReviews.body) (grouped[row.bakery_id] ??= []).push(Math.round(Number(row.rating) * 2))
+    const wrong = []
+    for (const stat of bakeryStats.body) {
+      const halves = grouped[stat.bakery_id] ?? []
+      const n = halves.length
+      const expected = n === 0 ? null : Math.floor((10 * halves.reduce((a, b) => a + b, 0) + n) / (2 * n)) / 10
+      if (expected === null || Number(stat.avg_rating) !== expected || Number(stat.review_count) !== n) wrong.push(stat.bakery_name)
+    }
+    report(wrong.length === 0 && bakeryStats.body.length === Object.keys(grouped).length ? 'ok' : 'fail', '빵집 평균 별점 · 리뷰 개수가 reviews 표의 별점과 일치', wrong.length ? `불일치: ${wrong.join(', ')}` : `${bakeryStats.body.length}곳 모두 일치`)
+    console.log(`   빵집별: ${bakeryStats.body.map((b) => `${b.bakery_name} ${Number(b.avg_rating).toFixed(1)}점(${b.review_count}개)`).join(' / ') || '없음'}`)
+  }
   const ranks = await get('ranking_exp?select=rank&order=rank.asc&limit=50')
   report(ranks.status === 200 && ranks.body.every((r, i) => Number(r.rank) === i + 1) ? 'ok' : 'fail', '순위 번호가 1부터 겹치지 않고 이어짐')
 } else {
