@@ -20,6 +20,7 @@ export const LEGAL_INFO = {
   minimumAge: '', // 가입 가능한 최소 나이 (예: 만 14세 이상 가입 제한 여부)
   logRetention: '', // 접속 기록 · 서버 로그 보관 기간 (Supabase 설정 확인 후)
   backupRetention: '', // 백업본에 탈퇴한 사용자의 정보가 남는 기간
+  reportRetention: '', // 처리가 끝난 신고 기록을 보관하는 기간
   jurisdiction: '', // 분쟁이 생겼을 때의 관할 법원
 }
 
@@ -34,6 +35,7 @@ export const LEGAL_INFO_LABELS = {
   minimumAge: '가입 가능 최소 나이',
   logRetention: '접속 기록 보관 기간',
   backupRetention: '백업 보관 기간',
+  reportRetention: '신고 기록 보관 기간',
   jurisdiction: '관할 법원',
 }
 

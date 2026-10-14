@@ -7,6 +7,8 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import EditIcon from '@mui/icons-material/EditOutlined'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined'
 import AuthorInfo from '../common/AuthorInfo'
+import ReportButton from '../common/ReportButton'
+import { useProfile } from '../../hooks/useProfile'
 import { JOURNAL_PAPER_SX } from '../../constants/rpgStyles'
 import { RADIUS } from '../../theme'
 
@@ -20,9 +22,12 @@ import { RADIUS } from '../../theme'
 const PHOTO_COLUMN_WIDTH = 224
 
 const ReviewJournalCard = ({ card, onEdit, onDelete }) => {
+  const { profile, isAccountMode } = useProfile()
   const hasPhoto = Boolean(card.photo)
   const hasTag = card.isMine || card.kind === 'sample'
-  const hasFooter = card.kind === 'sample' || card.isMine
+  // 실제 사용자가 쓴 일지(예시 글은 DB에 없어요)를 로그인한 다른 사용자가 볼 때만 신고 버튼이 있어요
+  const canReport = card.kind === 'local' && !card.isMine && isAccountMode && Boolean(profile)
+  const hasFooter = card.kind === 'sample' || card.isMine || canReport
 
   return (
     <Box
@@ -75,6 +80,7 @@ const ReviewJournalCard = ({ card, onEdit, onDelete }) => {
             ) : (
               <span />
             )}
+            {canReport && <ReportButton targetType="review" targetId={card.id} sx={{ ml: 'auto', mr: -1 }} />}
             {card.isMine && (
               <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto', mr: -1 }}>
                 <Button size="small" startIcon={<EditIcon />} onClick={onEdit} sx={{ minHeight: 44 }}>

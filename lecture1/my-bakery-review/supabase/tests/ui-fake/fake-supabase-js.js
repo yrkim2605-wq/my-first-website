@@ -21,6 +21,8 @@ const initial = () => ({
   visits: [],
   settings: { daily_exp_cap: 100, review_exp: 30, photo_exp: 10 },
   signedIn: true,
+  isAdmin: false,
+  reports: [],
 })
 
 const load = () => {
@@ -72,6 +74,14 @@ if (typeof window !== 'undefined') {
       save(db)
       return n
     },
+    // 신고 시험: 운영자로 바꾸기 / 신고 목록 보기
+    setAdmin: (value) => {
+      const db = load()
+      db.isAdmin = Boolean(value)
+      save(db)
+      location.reload()
+    },
+    reports: () => load().reports ?? [],
     setSignedIn: (value) => {
       const db = load()
       db.signedIn = Boolean(value)
@@ -81,7 +91,7 @@ if (typeof window !== 'undefined') {
     seedOther: (bakeryId, content = '다른 모험가의 후기') => {
       const db = load()
       if (!db.bakeries.some((b) => b.id === bakeryId)) db.bakeries.push({ id: bakeryId, name: `빵집${bakeryId}`, district_id: 'seomyeon' })
-      db.reviews.push({ id: `o-${bakeryId}`, user_id: 'u-other', bakery_id: bakeryId, rating: 5, content, photo_path: null, exp_review: true, exp_photo: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      db.reviews.push({ id: crypto.randomUUID(), user_id: 'u-other', bakery_id: bakeryId, rating: 5, content, photo_path: null, exp_review: true, exp_photo: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       save(db)
     },
   }
@@ -130,7 +140,58 @@ const consumeFailure = (key) => {
   delete failures[key]
   return dbError(message, 'XX000')
 }
-const newId = (prefix) => prefix + '-' + Date.now() + '-' + Math.floor(Math.random() * 100000)
+const newId = () => crypto.randomUUID()
+
+// ── 신고: 0009_reports.sql의 트리거 · RLS와 같은 규칙을 흉내 내요 (내 글 · 중복 · 대상 없음 · 내 신고만 읽기 · 운영자는 전체) ──
+const runReports = (db, q) => {
+  db.reports ??= []
+  if (q.op === 'insert') {
+    const failed = consumeFailure('report')
+    if (failed) return { data: null, error: failed }
+    const { target_type: type, target_id: id, reason, detail } = q.payload
+    ensureCommunity(db)
+    const target = type === 'post' ? db.posts.find((x) => x.id === id) : type === 'comment' ? db.comments.find((x) => x.id === id) : db.reviews.find((x) => x.id === id)
+    if (!target) return { data: null, error: dbError('TARGET_NOT_FOUND', 'P0001') }
+    if (target.user_id === ME.id) return { data: null, error: dbError('OWN_CONTENT', 'P0001') }
+    if (db.reports.some((r) => r.reporter_id === ME.id && r.target_type === type && r.target_id === id)) return { data: null, error: dbError('duplicate key', '23505') }
+    db.reports.push({
+      id: crypto.randomUUID(), reporter_id: ME.id, target_type: type, target_id: id, reason, detail: detail ?? null,
+      target_user_id: target.user_id, target_snapshot: String(type === 'post' ? target.title + String.fromCharCode(10) + target.content : target.content).slice(0, 200),
+      target_context: type === 'comment' ? target.post_id : type === 'review' ? target.bakery_id : null,
+      status: 'open', handled_note: null, handled_at: null, created_at: new Date().toISOString(),
+    })
+    save(db)
+    return { data: null, error: null }
+  }
+  let rows = db.isAdmin ? db.reports : db.reports.filter((r) => r.reporter_id === ME.id)
+  if (q.filters.status) rows = rows.filter((r) => r.status === q.filters.status)
+  const [column, direction] = q.orders[0] ?? ['created_at', 'asc']
+  rows = [...rows].sort((a, b) => (a[column] < b[column] ? -1 : 1) * (direction === 'desc' ? -1 : 1))
+  return { data: rows, error: null }
+}
+
+// 운영자 처리 함수(admin_handle_report)와 같은 동작
+const handleReportFake = (args) => {
+  const db = load()
+  db.reports ??= []
+  if (!db.isAdmin) return { data: null, error: dbError('NOT_ADMIN', '42501') }
+  const report = db.reports.find((r) => r.id === args.p_report_id)
+  if (!report) return { data: null, error: dbError('REPORT_NOT_FOUND', 'P0001') }
+  if (report.status !== 'open') return { data: null, error: dbError('ALREADY_HANDLED', 'P0001') }
+  let photoPath = null
+  if (args.p_action === 'remove') {
+    const key = report.target_type === 'post' ? 'posts' : report.target_type === 'comment' ? 'comments' : 'reviews'
+    photoPath = (db[key] ?? []).find((x) => x.id === report.target_id)?.photo_path ?? null
+    db[key] = (db[key] ?? []).filter((x) => x.id !== report.target_id)
+    for (const other of db.reports) {
+      if (other.status === 'open' && other.target_type === report.target_type && other.target_id === report.target_id) Object.assign(other, { status: 'resolved', handled_note: args.p_note, handled_at: new Date().toISOString() })
+    }
+  } else {
+    Object.assign(report, { status: 'rejected', handled_note: args.p_note, handled_at: new Date().toISOString() })
+  }
+  save(db)
+  return { data: { photo_path: photoPath }, error: null }
+}
 
 const runCommunity = (db, q) => {
   ensureCommunity(db)
@@ -266,7 +327,7 @@ const insertReview = (db, payload) => {
   const left = Math.max(daily_exp_cap - used, 0)
   const exp_review = left >= review_exp
   const row = {
-    id: `r-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: crypto.randomUUID(),
     user_id: ME.id,
     bakery_id: payload.bakery_id,
     rating: payload.rating,
@@ -287,6 +348,7 @@ export const createClient = () => {
     const run = async () => {
       await new Promise((resolve) => setTimeout(resolve, 150)) // 네트워크 지연 흉내
       const db = load()
+      if (table === 'profiles' && q.inFilter) return { data: db.profiles.filter((p) => q.inFilter.values.includes(p[q.inFilter.key])), error: null }
       if (table === 'profiles') {
         const found = db.profiles.find((p) => p.id === q.filters.id) ?? null
         return { data: found, error: null }
@@ -321,6 +383,7 @@ export const createClient = () => {
           .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
         return { data: rows, error: null }
       }
+      if (table === 'reports') return runReports(db, q)
       if (['post_feed', 'comment_feed', 'posts', 'comments', 'post_likes'].includes(table)) return runCommunity(db, q)
       if (table !== 'reviews') return { data: [], error: null }
 
@@ -375,7 +438,12 @@ export const createClient = () => {
   const listeners = new Set()
   return {
     from: makeBuilder,
-    rpc: async () => ({ data: true, error: null }),
+    rpc: async (name, args) => {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      if (name === 'is_admin') return { data: Boolean(load().isAdmin), error: null }
+      if (name === 'admin_handle_report') return handleReportFake(args)
+      return { data: true, error: null }
+    },
     auth: {
       getSession: async () => ({ data: { session: load().signedIn ? { user: ME } : null }, error: null }),
       initialize: async () => ({ error: null }),

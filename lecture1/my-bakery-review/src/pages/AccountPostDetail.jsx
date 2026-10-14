@@ -24,6 +24,7 @@ import { formatPostDate, isEdited, levelFromIndex } from '../utils/communityForm
 import AuthorInfo from '../components/common/AuthorInfo'
 import StatusMessage from '../components/common/StatusMessage'
 import Reveal from '../components/common/Reveal'
+import ReportButton from '../components/common/ReportButton'
 import { useNavigationNotice } from '../hooks/useNavigationNotice'
 import { RADIUS } from '../theme'
 
@@ -63,6 +64,7 @@ const CommentCard = ({ comment, isReply = false, canReply, isReplying, replyDraf
               삭제
             </Button>
           )}
+          {!comment.isMine && <ReportButton targetType="comment" targetId={comment.id} sx={{ ...TEXT_BUTTON_SX, ml: 'auto' }} />}
         </Box>
       </Box>
     </Box>
@@ -375,6 +377,7 @@ const AccountPostDetail = () => {
               {totalCommentCount}
             </Typography>
           </Box>
+          {!post.isMine && <ReportButton targetType="post" targetId={post.id} sx={{ ml: 'auto' }} />}
           {post.isMine && (
             <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto' }}>
               <Button component={Link} to={`/community/${post.id}/edit`} size="small" sx={TEXT_BUTTON_SX}>
