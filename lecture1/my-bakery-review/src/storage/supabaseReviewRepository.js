@@ -1,6 +1,7 @@
 import { RepositoryError } from './localStore'
 import { AUTH_NETWORK_MESSAGE } from './authMessages'
 import { ensureBakeryRegistered, isNetworkError, messages, toReviewError } from './supabaseShared'
+import { REVIEW_CONTENT_MAX, REVIEW_CONTENT_MIN, getReviewContentStatus } from '../utils/reviewContent'
 
 // 테스트 · 기존 코드가 이 파일에서 가져다 쓰던 이름을 그대로 유지해요
 export { toReviewError }
@@ -18,6 +19,16 @@ const REVIEW_COLUMNS =
   'id, user_id, bakery_id, rating, content, photo_path, exp_review, exp_photo, created_at, updated_at, profiles(nickname), bakeries(name, district_id)'
 const LIST_LIMIT = 500
 const PHOTO_BUCKET = 'photos'
+
+// 화면 검사를 우회해도 서버(0006)가 한 번 더 막지만, 보내기 전에 먼저 확인해서 불필요한 요청(빵집 확인 · 사진 업로드)을 하지 않아요.
+// 앞뒤 공백을 뺀 내용을 돌려줘요. 규칙은 utils/reviewContent.js.
+const validateContent = (rawContent) => {
+  const content = String(rawContent ?? '').trim()
+  const status = getReviewContentStatus(content)
+  if (status.isTooShort) throw new RepositoryError('CONTENT_TOO_SHORT', `내용이 너무 짧아요. 공백을 뺀 글자 수로 ${REVIEW_CONTENT_MIN}자 이상 써 주세요. (저장되지 않았어요)`)
+  if (status.isTooLong) throw new RepositoryError('CONTENT_TOO_LONG', `내용이 너무 길어요. ${REVIEW_CONTENT_MAX}자 이하로 줄여 주세요. (저장되지 않았어요)`)
+  return content
+}
 
 const dataUrlToBlob = async (dataUrl) => (await fetch(dataUrl)).blob()
 const isRemoteUrl = (value) => typeof value === 'string' && /^https?:\/\//.test(value)
@@ -94,7 +105,7 @@ export const createSupabaseReviewRepository = (getClient) => {
         }
         return rows.map((row) => toReview(client, row)).sort(byNewest)
       } catch (error) {
-        throw toReviewError(error)
+        throw toReviewError(error, 'read')
       }
     },
 
@@ -106,7 +117,7 @@ export const createSupabaseReviewRepository = (getClient) => {
         if (error) throw error
         return Object.fromEntries((data ?? []).map((row) => [row.user_id, Number(row.level_index)]))
       } catch (error) {
-        throw toReviewError(error)
+        throw toReviewError(error, 'read')
       }
     },
 
@@ -119,18 +130,21 @@ export const createSupabaseReviewRepository = (getClient) => {
         const map = Object.fromEntries((data ?? []).map((row) => [row.key, Number(row.value)]))
         return { dailyExpCap: map.daily_exp_cap, reviewExp: map.review_exp, photoExp: map.photo_exp }
       } catch (error) {
-        throw toReviewError(error)
+        throw toReviewError(error, 'read')
       }
     },
 
     async create(input) {
       const { bakeryId, bakerySource, rating, content, photo = null } = input
       if (bakerySource === 'sample') throw new RepositoryError('SAMPLE_BAKERY', messages.SAMPLE_BAKERY)
+      const cleanContent = validateContent(content)
       let uploadedPath = null
+      let step = 'register' // 어디서 실패했는지 알려주려고 단계를 기억해요: register(빵집 확인) → photo(사진) → insert(일지 저장)
       try {
         const client = await getClient()
         const userId = await requireUserId(client)
         await ensureBakeryRegistered(client, { ...input, bakeryId: String(bakeryId) })
+        step = 'photo'
         if (photo) {
           if (typeof photo !== 'string' || !photo.startsWith('data:image/')) {
             throw new RepositoryError('INVALID_PHOTO', '사진 형식이 올바르지 않아요.')
@@ -138,9 +152,10 @@ export const createSupabaseReviewRepository = (getClient) => {
           uploadedPath = await uploadPhoto(client, userId, photo)
         }
         // EXP 칸은 보내지 않아요. 서버 트리거가 정해서 돌려줘요.
+        step = 'insert'
         const { data, error } = await client
           .from('reviews')
-          .insert({ bakery_id: String(bakeryId), rating, content: String(content ?? '').trim(), photo_path: uploadedPath })
+          .insert({ bakery_id: String(bakeryId), rating, content: cleanContent, photo_path: uploadedPath })
           .select(REVIEW_COLUMNS)
           .single()
         if (error) throw error
@@ -148,12 +163,14 @@ export const createSupabaseReviewRepository = (getClient) => {
       } catch (error) {
         // 저장에 실패하면 방금 올린 사진은 지워서 파일이 남지 않게 해요
         if (uploadedPath) await removePhotoQuietly(await getClient().catch(() => null), uploadedPath)
-        throw toReviewError(error)
+        throw toReviewError(error, step)
       }
     },
 
     // 내 일지만 고칠 수 있어요. photo: undefined = 그대로 / null = 사진 지우기 / data URL = 새 사진 / 이미 올라간 주소 = 그대로
     async update(reviewId, _userId, { rating, content, photo }) {
+      // 고칠 때도 새로 쓸 때와 같은 글자 수 규칙이에요 (내용을 보내는 경우)
+      const cleanContent = content === undefined ? undefined : validateContent(content)
       let newPath = null
       try {
         const client = await getClient()
@@ -164,7 +181,7 @@ export const createSupabaseReviewRepository = (getClient) => {
 
         const patch = {}
         if (rating !== undefined) patch.rating = rating
-        if (content !== undefined) patch.content = String(content).trim()
+        if (cleanContent !== undefined) patch.content = cleanContent
         const photoChanged = photo === null || (typeof photo === 'string' && !isRemoteUrl(photo))
         if (photo === null) patch.photo_path = null
         else if (photoChanged) {
@@ -179,7 +196,7 @@ export const createSupabaseReviewRepository = (getClient) => {
         return toReview(client, data)
       } catch (error) {
         if (newPath) await removePhotoQuietly(await getClient().catch(() => null), newPath)
-        throw toReviewError(error)
+        throw toReviewError(error, 'update')
       }
     },
 
@@ -192,7 +209,7 @@ export const createSupabaseReviewRepository = (getClient) => {
         if (!data || data.length === 0) throw new RepositoryError('NOT_FOUND', messages.NOT_FOUND)
         await removePhotoQuietly(client, data[0].photo_path)
       } catch (error) {
-        throw toReviewError(error)
+        throw toReviewError(error, 'delete')
       }
     },
 

@@ -4,6 +4,9 @@
 import { createServer } from 'vite'
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'silent' })
+// 개발용 오류 출력(콘솔)은 이 시험에서는 끄고, 안내 문구만 확인해요
+const sharedModule = await server.ssrLoadModule('/src/storage/supabaseShared.js')
+sharedModule.setDebugLogger(() => {})
 const { createSupabaseReviewRepository, toReviewError } = await server.ssrLoadModule('/src/storage/supabaseReviewRepository.js')
 
 const localWrites = []
@@ -125,7 +128,7 @@ const repoFor = (state) => {
   return { client, repo: createSupabaseReviewRepository(async () => client) }
 }
 const invokeError = (status, body) => Object.assign(new Error('fn'), { context: { status, json: async () => body } })
-const baseInput = { bakeryId: '111', bakerySource: 'kakao', bakeryName: '테스트빵집', districtId: 'seomyeon', bakeryLat: 35.15, bakeryLng: 129.06, bakeryAddress: '부산', rating: 4.5, content: ' 맛있어요 ' }
+const baseInput = { bakeryId: '111', bakerySource: 'kakao', bakeryName: '테스트빵집', districtId: 'seomyeon', bakeryLat: 35.15, bakeryLng: 129.06, bakeryAddress: '부산', rating: 4.5, content: ' 맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 ' }
 
 // ── 목록 ──
 {
@@ -153,7 +156,7 @@ const baseInput = { bakeryId: '111', bakerySource: 'kakao', bakeryName: '테스�
   const created = await repo.create(baseInput)
   const payload = client.log.inserts[0]
   check('작성: 서버에는 빵집 · 별점 · 내용 · 사진 경로만 보내요(EXP · 작성자 · 날짜 없음)', JSON.stringify(Object.keys(payload).sort()) === '["bakery_id","content","photo_path","rating"]', JSON.stringify(payload))
-  check('작성: 내용은 앞뒤 공백 제거', payload.content === '맛있어요')
+  check('작성: 내용은 앞뒤 공백 제거', payload.content === '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다')
   check('작성: 이미 등록된 빵집이면 등록 함수를 부르지 않아요', client.log.invokes.length === 0)
   check('작성: 서버가 정한 EXP 여부(상한 초과 시 false)를 그대로 돌려줘요', created.expReview === false)
 }
@@ -213,10 +216,10 @@ for (const [label, insertError, expected] of [
 // ── 수정 ──
 {
   const { repo, client } = repoFor({ rows: [row({ photo_path: 'me/old.jpg' })] })
-  await repo.update('r1', 'me', { rating: 3, content: ' 수정 ', photo: 'https://cdn.test/photos/me/old.jpg' })
+  await repo.update('r1', 'me', { rating: 3, content: ' 맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 수정 ', photo: 'https://cdn.test/photos/me/old.jpg' })
   const patch = client.log.updates[0].patch
   check('수정: 이미 올라간 사진 주소를 그대로 보내면 사진은 안 건드려요', !('photo_path' in patch) && client.log.uploads.length === 0 && client.log.removes.length === 0)
-  check('수정: 별점 · 내용만 보내고 EXP 칸은 없어요', JSON.stringify(Object.keys(patch).sort()) === '["content","rating"]' && patch.content === '수정')
+  check('수정: 별점 · 내용만 보내고 EXP 칸은 없어요', JSON.stringify(Object.keys(patch).sort()) === '["content","rating"]' && patch.content === '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 수정')
   check('수정: 내 리뷰 조건(user_id)으로만 고쳐요', client.log.updates[0].filters.user_id === 'me' && client.log.updates[0].filters.id === 'r1')
 }
 {
@@ -237,7 +240,7 @@ for (const [label, insertError, expected] of [
 }
 {
   const { repo, client } = repoFor({ currentRow: null })
-  const error = await rejects(repo.update('r1', 'me', { content: '해킹' }))
+  const error = await rejects(repo.update('r1', 'me', { content: '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다 해킹' }))
   check('내 일지가 아니면(조회 결과 없음) 수정 요청을 보내지 않아요', error?.code === 'NOT_FOUND' && client.log.updates.length === 0)
 }
 

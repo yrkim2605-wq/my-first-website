@@ -16,7 +16,7 @@ import Illustration from '../common/decor/Illustration'
 import { useProfile } from '../../hooks/useProfile'
 import { useReviews } from '../../hooks/useReviews'
 import { useGameState } from '../../hooks/useGameState'
-import { REVIEW_CONTENT_MAX } from '../../storage/reviewRepository'
+import { REVIEW_CONTENT_MAX, REVIEW_CONTENT_MIN, getReviewContentStatus, getShortContentMessage } from '../../utils/reviewContent'
 import { createId } from '../../storage/localStore'
 import { buildGameState, diffGameState, predictNewReviewExp } from '../../utils/gameState'
 import { IS_ACCOUNT_MODE } from '../../lib/backend'
@@ -39,6 +39,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
   const [photo, setPhoto] = useState(existingReview?.photo ?? null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  const [errorDebug, setErrorDebug] = useState(null) // 개발 환경에서만 화면에 보여주는 오류 상세 (단계 · 상태 · 코드)
   const requestIdRef = useRef(createId())
 
   const bakerySource = isRealBakery ? 'kakao' : 'sample'
@@ -50,7 +51,9 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
     IS_ACCOUNT_MODE && !isEdit && !sampleBlocked && !recordUnknown
       ? predictNewReviewExp(game.myReviews, { hasPhoto: Boolean(photo), settings: gameSettings?.dailyExpCap != null ? gameSettings : undefined })
       : null
-  const canSubmit = Boolean(content.trim()) && rating >= 0.5 && !submitting && !sampleBlocked && !prediction?.limitReached
+  // 내용은 공백을 뺀 20자 이상, 500자 이하여야 저장할 수 있어요 (서버도 같은 규칙으로 한 번 더 검사해요)
+  const contentStatus = getReviewContentStatus(content)
+  const canSubmit = contentStatus.isValid && rating >= 0.5 && !submitting && !sampleBlocked && !prediction?.limitReached
 
   // 저장하면 받게 될 EXP를 미리 계산해서 보여줘요 (저장 전 / 후 상태 비교)
   // 계정 모드: 고쳐 쓰기는 EXP가 변하지 않고, 새 일지는 하루 상한을 반영해요 (진짜 지급은 서버가 정해요)
@@ -85,6 +88,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
     if (!canSubmit) return
     setSubmitting(true)
     setError(null)
+    setErrorDebug(null)
     const before = game
     try {
       const saved = isEdit
@@ -110,6 +114,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
       onSaved({ mode: isEdit ? 'update' : 'create', review: saved, diff: diffGameState(before, after), after })
     } catch (saveError) {
       setError(saveError.message || '저장하지 못했어요. 잠시 후 다시 시도해 주세요.')
+      setErrorDebug(saveError.debug ?? null)
       setSubmitting(false)
     }
   }
@@ -178,8 +183,30 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
               multiline
               minRows={4}
               fullWidth
-              slotProps={{ htmlInput: { maxLength: REVIEW_CONTENT_MAX } }}
-              helperText={`${content.length}/${REVIEW_CONTENT_MAX}`}
+              slotProps={{ htmlInput: { maxLength: REVIEW_CONTENT_MAX, 'aria-describedby': 'review-content-help' } }}
+              helperText={
+                <Box component="span" sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5, alignItems: 'flex-start' }}>
+                  <Box
+                    component="span"
+                    id="review-content-help"
+                    aria-live="polite"
+                    sx={{
+                      fontWeight: contentStatus.isTooShort && content ? 700 : 500,
+                      color: !content ? 'text.secondary' : contentStatus.isTooShort ? 'terracotta.main' : 'secondary.dark',
+                      wordBreak: 'keep-all',
+                    }}
+                  >
+                    {!content
+                      ? `공백을 뺀 ${REVIEW_CONTENT_MIN}자 이상 적어주세요`
+                      : contentStatus.isTooShort
+                        ? getShortContentMessage(contentStatus.remaining)
+                        : '충분히 적었어요!'}
+                  </Box>
+                  <Box component="span" sx={{ flexShrink: 0 }}>
+                    {contentStatus.typedLength}/{REVIEW_CONTENT_MAX}
+                  </Box>
+                </Box>
+              }
               sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.55)' } }}
             />
 
@@ -271,6 +298,11 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
             {error && (
               <Alert severity="error" sx={{ mt: 2 }}>
                 {error}
+                {import.meta.env.DEV && errorDebug && (
+                  <Box component="code" sx={{ display: 'block', mt: 0.75, fontSize: '0.72rem', opacity: 0.8, wordBreak: 'break-all' }}>
+                    [개발용] 단계={errorDebug.step} 출처={errorDebug.source} 상태={String(errorDebug.status)} 코드={String(errorDebug.serverCode ?? errorDebug.code)}
+                  </Box>
+                )}
               </Alert>
             )}
           </DialogContent>

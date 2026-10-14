@@ -1,4 +1,5 @@
 import { RepositoryError, createId, readJson, subscribeToKey, writeJson } from './localStore'
+import { REVIEW_CONTENT_MAX, REVIEW_CONTENT_MIN, getReviewContentStatus } from '../utils/reviewContent'
 
 // 리뷰 저장소예요 (localStorage). ⚠️ 이 브라우저에만 저장되고 다른 사용자와 공유되지 않아요.
 //
@@ -21,7 +22,8 @@ import { RepositoryError, createId, readJson, subscribeToKey, writeJson } from '
 
 export const REVIEWS_STORAGE_KEY = 'my-bakery-review:v1:reviews'
 
-export const REVIEW_CONTENT_MAX = 500
+// 글자 수 규칙(공백을 뺀 20자 이상, 500자 이하)은 utils/reviewContent.js에 있어요. 이미 저장된 짧은 일지는 바꾸지 않고, 새로 쓰거나 고칠 때만 적용해요.
+export { REVIEW_CONTENT_MAX }
 
 const EMPTY_STATE = { version: 1, reviews: [] }
 
@@ -42,7 +44,11 @@ const validateRating = (rating) => {
 const validateContent = (rawContent) => {
   const content = (rawContent ?? '').trim()
   if (!content) throw new RepositoryError('INVALID_CONTENT', '리뷰 내용을 입력해주세요.')
-  if (content.length > REVIEW_CONTENT_MAX) {
+  const status = getReviewContentStatus(content)
+  if (status.isTooShort) {
+    throw new RepositoryError('INVALID_CONTENT', `내용이 너무 짧아요. 공백을 뺀 글자 수로 ${REVIEW_CONTENT_MIN}자 이상 써 주세요.`)
+  }
+  if (status.isTooLong) {
     throw new RepositoryError('INVALID_CONTENT', `리뷰는 ${REVIEW_CONTENT_MAX}자까지 쓸 수 있어요.`)
   }
   return content

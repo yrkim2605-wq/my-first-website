@@ -1,0 +1,216 @@
+// 리뷰 저장 실패 원인 구분 검증: 빵집 확인 서버 함수 · 일지 저장(DB) · 권한 · 연결 오류를 단계별로 안내하는지,
+// 개발용 오류 출력에 단계 · 상태 · 코드 · 메시지가 담기는지, 글자 수 규칙이 서버로 보내기 전에 먼저 적용되는지 확인해요.
+// 진짜 서버 대신 가짜 클라이언트를 써요.   실행: node supabase/tests/review-save-errors.test.mjs
+
+import { createServer } from 'vite'
+
+const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'silent' })
+const { createSupabaseReviewRepository } = await server.ssrLoadModule('/src/storage/supabaseReviewRepository.js')
+const shared = await server.ssrLoadModule('/src/storage/supabaseShared.js')
+const localRepo = await server.ssrLoadModule('/src/storage/reviewRepository.js')
+
+const logs = []
+shared.setDebugLogger((info) => logs.push(info))
+
+const store = {}
+globalThis.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => (store[k] = String(v)), removeItem: (k) => delete store[k] }
+
+let passed = 0
+const failures = []
+const check = (name, ok, detail = '') => {
+  if (ok) passed += 1
+  else failures.push(`${name} ${detail}`)
+  console.log(`${ok ? '✅' : '❌'} ${name}${ok ? '' : ' ' + detail}`)
+}
+const rejects = async (promise) => {
+  try {
+    await promise
+    return null
+  } catch (error) {
+    return error
+  }
+}
+
+const ENOUGH = '맛있어요 소금빵이 정말 훌륭해서 또 가고 싶어요 강력 추천합니다'
+const rep = (text, n) => text.repeat(n)
+
+const makeFake = (state = {}) => {
+  const log = { inserts: [], updates: [], invokes: [], queries: [] }
+  const s = { session: { user: { id: 'me' } }, registered: false, ...state }
+  const result = async (q) => {
+    log.queries.push(q.table + ':' + q.op)
+    if (s.networkDown) throw new TypeError('Failed to fetch')
+    if (q.table === 'bakeries') return { data: s.registered ? { id: q.filters.id } : null, error: null }
+    if (q.op === 'insert') {
+      log.inserts.push(q.payload)
+      if (s.insertError) return { data: null, error: s.insertError }
+      return { data: { id: 'new', user_id: 'me', bakery_id: q.payload.bakery_id, rating: q.payload.rating, content: q.payload.content, photo_path: null, exp_review: true, exp_photo: false, created_at: '2026-10-14T00:00:00Z', updated_at: '2026-10-14T00:00:00Z', profiles: { nickname: '나' }, bakeries: { name: '빵집', district_id: 'seomyeon' } }, error: null }
+    }
+    if (q.op === 'update') {
+      log.updates.push(q.payload)
+      return { data: { id: 'r1', user_id: 'me', bakery_id: 'b', rating: 4, content: q.payload.content ?? '기존', photo_path: null, exp_review: true, exp_photo: false, created_at: '2026-10-14T00:00:00Z', updated_at: '2026-10-14T00:00:00Z', profiles: { nickname: '나' }, bakeries: { name: '빵집', district_id: 'seomyeon' } }, error: null }
+    }
+    // select (수정 전 조회)
+    return { data: { id: 'r1', photo_path: null }, error: null }
+  }
+  const from = (table) => {
+    const q = { table, op: 'select', filters: {}, payload: null }
+    const builder = {
+      select: () => builder,
+      eq: (key, value) => ((q.filters[key] = value), builder),
+      insert: (payload) => ((q.op = 'insert'), (q.payload = payload), builder),
+      update: (payload) => ((q.op = 'update'), (q.payload = payload), builder),
+      maybeSingle: () => result(q),
+      single: () => result(q),
+      then: (resolve, reject) => result(q).then(resolve, reject),
+    }
+    return builder
+  }
+  return {
+    log,
+    from,
+    auth: { getSession: async () => ({ data: { session: s.session }, error: null }) },
+    storage: { from: () => ({ getPublicUrl: (p) => ({ data: { publicUrl: 'https://cdn.test/' + p } }), upload: async () => ({ data: {}, error: null }), remove: async () => ({}) }) },
+    functions: {
+      invoke: async (name, { body }) => {
+        log.invokes.push({ name, body })
+        if (s.invokeError) return { data: null, error: s.invokeError }
+        s.registered = true
+        return { data: { ok: true }, error: null }
+      },
+    },
+  }
+}
+const repoFor = (state) => {
+  const client = makeFake(state)
+  return { client, repo: createSupabaseReviewRepository(async () => client) }
+}
+const baseInput = { bakeryId: '111', bakerySource: 'kakao', bakeryName: '테스트빵집', districtId: 'seomyeon', bakeryLat: 35.15, bakeryLng: 129.06, bakeryAddress: '부산', rating: 5, content: ENOUGH }
+const fnError = (status, code, message = '서버 메시지') =>
+  Object.assign(new Error('Edge Function returned a non-2xx status code'), { name: 'FunctionsHttpError', context: { status, json: async () => ({ error: { code, message } }) } })
+
+// ── 1. 빵집 확인 서버 함수(register-bakery) 오류: 원인별 안내 ──
+const fnCases = [
+  ['카카오 연결 실패(502)', fnError(502, 'KAKAO_UNAVAILABLE'), 'KAKAO_UNAVAILABLE', /카카오/],
+  ['서버 설정 누락(500 NOT_CONFIGURED)', fnError(500, 'NOT_CONFIGURED'), 'FUNCTION_NOT_CONFIGURED', /KAKAO_REST_API_KEY/],
+  ['서버 내부 오류(500)', fnError(500, 'INTERNAL'), 'FUNCTION_ERROR', /register\/500\/INTERNAL/],
+  ['요청이 너무 큼(413)', fnError(413, 'TOO_LARGE'), 'TOO_LARGE', /너무 커/],
+  ['호출이 너무 많음(429)', fnError(429, 'RATE_LIMITED'), 'RATE_LIMITED', /너무 많아/],
+  ['이메일 미인증(403)', fnError(403, 'EMAIL_NOT_VERIFIED'), 'EMAIL_NOT_CONFIRMED', /이메일 인증/],
+  ['로그인 만료(401)', fnError(401, 'NOT_SIGNED_IN'), 'SESSION_EXPIRED', /로그인/],
+  ['함수가 배포되지 않음(404)', fnError(404, null), 'FUNCTION_MISSING', /빵집 확인 기능/],
+  ['카카오가 빵집으로 인정하지 않음(400)', fnError(400, 'BAKERY_NOT_FOUND', '실제 제과 · 베이커리로 확인되지 않았어요.'), 'BAKERY_REJECTED', /확인되지/],
+  ['서버에 닿지 못함(연결 · 접근 차단)', Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError', context: new TypeError('Failed to fetch') }), 'FUNCTION_UNREACHABLE', /빵집 확인 서버에 연결/],
+]
+for (const [label, invokeError, expectedCode, pattern] of fnCases) {
+  logs.length = 0
+  const { repo, client } = repoFor({ invokeError })
+  const error = await rejects(repo.create(baseInput))
+  check(`빵집 확인 오류 안내: ${label}`, error?.code === expectedCode && pattern.test(error.message) && client.log.inserts.length === 0 && !/^저장하지 못했어요\. 잠시 후 다시 시도해 주세요\.$/.test(error.message), `${error?.code} ${error?.message}`)
+  check(`  └ 개발용 정보: 단계=register · 출처=function`, error?.debug?.step === 'register' && error.debug.source === 'function' && logs.length === 1 && logs[0].step === 'register', JSON.stringify(error?.debug))
+}
+{
+  logs.length = 0
+  const { repo } = repoFor({ invokeError: fnError(502, 'KAKAO_UNAVAILABLE', '서버 쪽 설명') })
+  const error = await rejects(repo.create(baseInput))
+  check('개발용 정보에 HTTP 상태 · 서버 오류 코드 · 서버 메시지가 담겨요', error.debug.status === 502 && error.debug.serverCode === 'KAKAO_UNAVAILABLE' && error.debug.serverMessage === '서버 쪽 설명')
+}
+
+// ── 2. 일지 저장(insert) 오류: 원인별 안내 ──
+const dbCases = [
+  ['권한 없음(RLS)', { code: '42501', message: 'new row violates row-level security policy for table "reviews"' }, 'FORBIDDEN', /저장할 권한/],
+  ['서버 칸이 앱과 안 맞음(PGRST204)', { code: 'PGRST204', message: "Could not find the 'x' column of 'reviews' in the schema cache" }, 'SCHEMA_MISMATCH', /마이그레이션/],
+  ['연결 관계를 못 찾음(PGRST200)', { code: 'PGRST200', message: 'Could not find a relationship' }, 'SCHEMA_MISMATCH', /마이그레이션/],
+  ['없는 칸(42703)', { code: '42703', message: 'column does not exist' }, 'SCHEMA_MISMATCH', /마이그레이션/],
+  ['서버의 글자 수 검사(너무 짧음)', { code: '23514', message: 'REVIEW_TOO_SHORT' }, 'CONTENT_TOO_SHORT', /20자 이상/],
+  ['서버의 글자 수 검사(너무 김)', { code: '23514', message: 'REVIEW_TOO_LONG' }, 'CONTENT_TOO_LONG', /500자 이하/],
+  ['다른 입력값 제약(별점 등)', { code: '23514', message: 'new row violates check constraint' }, 'INVALID_INPUT', /별점과 내용/],
+  ['값 형식 오류(22P02)', { code: '22P02', message: 'invalid input syntax' }, 'INVALID_INPUT', /별점과 내용/],
+  ['필수 값 누락(23502)', { code: '23502', message: 'null value violates not-null constraint' }, 'INVALID_INPUT', /별점과 내용/],
+  ['이미 쓴 빵집(중복)', { code: '23505', message: 'duplicate key' }, 'DUPLICATE_REVIEW', /이미 이 빵집/],
+  ['등록되지 않은 빵집(FK)', { code: '23503', message: 'fk' }, 'INVALID_BAKERY', /등록되지 않은/],
+  ['하루 작성 한도', { code: 'P0001', message: 'DAILY_REVIEW_LIMIT' }, 'DAILY_REVIEW_LIMIT', /하루 20개/],
+  ['이메일 미인증(서버)', { code: '42501', message: 'EMAIL_NOT_VERIFIED' }, 'EMAIL_NOT_CONFIRMED', /이메일 인증/],
+  ['로그인 만료', { code: 'PGRST301', message: 'JWT expired' }, 'SESSION_EXPIRED', /로그인/],
+]
+for (const [label, insertError, expectedCode, pattern] of dbCases) {
+  logs.length = 0
+  const { repo, client } = repoFor({ registered: true, insertError })
+  const error = await rejects(repo.create(baseInput))
+  check(`일지 저장 오류 안내: ${label}`, error?.code === expectedCode && pattern.test(error.message) && client.log.inserts.length === 1, `${error?.code} ${error?.message}`)
+  check(`  └ 개발용 정보: 단계=insert · 코드=${insertError.code}`, error?.debug?.step === 'insert' && error.debug.code === insertError.code && logs.length === 1, JSON.stringify(error?.debug))
+}
+{
+  logs.length = 0
+  const { repo } = repoFor({ registered: true, insertError: { code: 'XX000', message: 'boom internal', details: 'some detail', hint: 'some hint' } })
+  const error = await rejects(repo.create(baseInput))
+  check('알 수 없는 오류: 안내 + 짧은 오류 코드(insert/XX000)를 같이 보여줘요', error?.code === 'UNKNOWN' && error.message.startsWith('저장하지 못했어요.') && error.message.includes('(오류 코드: insert/XX000)'), error?.message)
+  check('개발용 출력: 단계 · 코드 · 메시지 · 상세 · 힌트가 모두 담겨요', logs.length === 1 && logs[0].step === 'insert' && logs[0].code === 'XX000' && logs[0].message === 'boom internal' && logs[0].details === 'some detail' && logs[0].hint === 'some hint' && logs[0].userCode === 'UNKNOWN')
+  check('개발용 출력에 로그인 토큰 · 키 같은 값은 없어요', !/token|secret|apikey|bearer/i.test(JSON.stringify(logs[0])))
+}
+{
+  const { repo, client } = repoFor({ networkDown: true })
+  const error = await rejects(repo.create(baseInput))
+  check('인터넷이 끊기면 연결 안내(저장 안 됨)', error?.code === 'NETWORK' && /저장되지 않았어요/.test(error.message) && client.log.inserts.length === 0)
+}
+{
+  const { repo, client } = repoFor({ registered: true, insertError: { code: 'XX000', message: 'boom' } })
+  await rejects(repo.create(baseInput))
+  check('실패해도 자동으로 다시 저장하지 않아요 (일지 · EXP 중복 방지)', client.log.inserts.length === 1 && client.log.invokes.length === 0)
+}
+
+// ── 3. 글자 수 규칙은 서버로 보내기 전에 먼저 적용돼요 ──
+{
+  const cases = [
+    ['19자', rep('가', 19), 'CONTENT_TOO_SHORT'],
+    ['공백만', rep(' ', 30), 'CONTENT_TOO_SHORT'],
+    ['19자 + 공백', rep('가', 19) + rep(' ', 40), 'CONTENT_TOO_SHORT'],
+    ['501자', rep('가', 501), 'CONTENT_TOO_LONG'],
+  ]
+  for (const [label, content, code] of cases) {
+    const { repo, client } = repoFor()
+    const error = await rejects(repo.create({ ...baseInput, content }))
+    check(`작성: ${label} → 서버 요청 없이 거절`, error?.code === code && client.log.queries.length === 0 && client.log.invokes.length === 0 && client.log.inserts.length === 0, `${error?.code}`)
+  }
+  for (const [label, content] of [['20자', rep('가', 20)], ['500자', rep('가', 500)], ['글자마다 띄어 쓴 20자', rep('가 ', 19) + '가']]) {
+    const { repo, client } = repoFor({ registered: true })
+    const error = await rejects(repo.create({ ...baseInput, content }))
+    check(`작성: ${label} → 저장 요청을 보내요`, error === null && client.log.inserts.length === 1)
+  }
+  const { repo, client } = repoFor({ registered: true })
+  await repo.create({ ...baseInput, content: '   ' + rep('나', 20) + '   ' })
+  check('작성: 서버에는 앞뒤 공백을 뺀 내용을 보내요', client.log.inserts[0].content === rep('나', 20))
+}
+{
+  const { repo, client } = repoFor()
+  const error = await rejects(repo.update('r1', 'me', { content: rep('가', 19) }))
+  check('수정: 19자 → 요청 없이 거절', error?.code === 'CONTENT_TOO_SHORT' && client.log.updates.length === 0 && client.log.queries.length === 0)
+  const ok = repoFor()
+  await ok.repo.update('r1', 'me', { content: rep('가', 20) })
+  check('수정: 20자 통과', ok.client.log.updates.length === 1)
+  const ratingOnly = repoFor()
+  await ratingOnly.repo.update('r1', 'me', { rating: 3 })
+  check('수정: 내용을 보내지 않는 요청(별점만)은 글자 수를 검사하지 않아요', ratingOnly.client.log.updates.length === 1 && !('content' in ratingOnly.client.log.updates[0]))
+}
+
+// ── 4. 로컬 모드도 같은 규칙, 이미 저장된 짧은 일지는 그대로 ──
+{
+  const local = localRepo.reviewRepository
+  store['my-bakery-review:v1:reviews'] = JSON.stringify({ version: 1, reviews: [{ id: 'old', userId: 'u1', authorNickname: '나', bakeryId: '1', bakerySource: 'kakao', bakeryName: '옛 빵집', districtId: null, rating: 4, content: '짧은 옛 일지', photo: null, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' }] })
+  const base = { userId: 'u1', authorNickname: '나', bakeryId: '2', bakerySource: 'kakao', bakeryName: '빵집', districtId: null, rating: 5 }
+  check('로컬: 19자 거절', (await rejects(local.create({ ...base, content: rep('가', 19) })))?.code === 'INVALID_CONTENT')
+  check('로컬: 공백만 거절', (await rejects(local.create({ ...base, content: rep(' ', 30) })))?.code === 'INVALID_CONTENT')
+  check('로컬: 501자 거절', (await rejects(local.create({ ...base, content: rep('가', 501) })))?.code === 'INVALID_CONTENT')
+  check('로컬: 20자 · 500자 저장', (await rejects(local.create({ ...base, content: rep('가', 20) }))) === null && (await rejects(local.create({ ...base, bakeryId: '3', content: rep('가', 500) }))) === null)
+  const list = await local.list()
+  check('로컬: 기존 짧은 일지는 삭제 · 변경 없이 그대로', list.some((r) => r.id === 'old' && r.content === '짧은 옛 일지') && list.length === 3)
+  check('로컬: 기존 짧은 일지도 고칠 때는 같은 규칙 (짧게 → 거절, 20자 → 통과)',
+    (await rejects(local.update('old', 'u1', { content: '짧게' })))?.code === 'INVALID_CONTENT' && (await rejects(local.update('old', 'u1', { content: rep('고', 20) }))) === null)
+}
+
+console.log(`\n통과 ${passed} · 실패 ${failures.length}`)
+await server.close()
+if (failures.length) {
+  console.log(failures.join('\n'))
+  process.exit(1)
+}

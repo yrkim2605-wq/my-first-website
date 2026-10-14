@@ -4,6 +4,9 @@
 import { createServer } from 'vite'
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'silent' })
+// 개발용 오류 출력(콘솔)은 이 시험에서는 끄고, 안내 문구만 확인해요
+const sharedModule = await server.ssrLoadModule('/src/storage/supabaseShared.js')
+sharedModule.setDebugLogger(() => {})
 const { createSupabaseVisitRepository } = await server.ssrLoadModule('/src/storage/supabaseVisitRepository.js')
 
 const localWrites = []
