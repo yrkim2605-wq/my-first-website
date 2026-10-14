@@ -27,6 +27,29 @@ const MyRecordCard = () => {
     )
   }
 
+  if (game.isLoading) {
+    return (
+      <Box role="status" sx={{ ...PARCHMENT_SX, borderRadius: RADIUS.lg, p: 2, mb: 3 }}>
+        <Typography sx={{ fontSize: '0.9rem' }}>
+          <b>내 기록</b> · 불러오고 있어요…
+        </Typography>
+      </Box>
+    )
+  }
+
+  if (game.loadError) {
+    return (
+      <Box role="alert" sx={{ ...PARCHMENT_SX, borderRadius: RADIUS.lg, p: 2, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+        <Typography sx={{ fontSize: '0.9rem', wordBreak: 'keep-all' }}>
+          <b>내 기록</b> · 불러오지 못했어요. {game.loadError} 서버에 저장된 기록은 그대로예요.
+        </Typography>
+        <Button onClick={game.reloadReviews} variant="contained" size="small">
+          다시 시도
+        </Button>
+      </Box>
+    )
+  }
+
   return (
     <Box
       aria-label="내 기록"

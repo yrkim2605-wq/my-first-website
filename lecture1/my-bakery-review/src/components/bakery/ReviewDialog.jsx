@@ -44,8 +44,10 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
   const bakerySource = isRealBakery ? 'kakao' : 'sample'
   // 계정 모드: 예시 빵집은 DB에 없어서 저장할 수 없고, 하루 EXP 상한 · 작성 상한은 서버 규칙과 같게 미리 계산해요
   const sampleBlocked = IS_ACCOUNT_MODE && !isRealBakery
+  // 내 기록을 아직 못 불러왔으면(불러오는 중 · 실패) 오늘 받은 EXP를 알 수 없어서 예고하지 않아요 (진짜 지급과 한도는 서버가 정해요)
+  const recordUnknown = game.isLoading || Boolean(game.loadError)
   const prediction =
-    IS_ACCOUNT_MODE && !isEdit && !sampleBlocked
+    IS_ACCOUNT_MODE && !isEdit && !sampleBlocked && !recordUnknown
       ? predictNewReviewExp(game.myReviews, { hasPhoto: Boolean(photo), settings: gameSettings?.dailyExpCap != null ? gameSettings : undefined })
       : null
   const canSubmit = Boolean(content.trim()) && rating >= 0.5 && !submitting && !sampleBlocked && !prediction?.limitReached
@@ -65,7 +67,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
     }
     return [draft, ...game.myReviews]
   })()
-  const expPreview = diffGameState(game, buildGameState(draftReviews)).expGained
+  const expPreview = recordUnknown ? 0 : diffGameState(game, buildGameState(draftReviews)).expGained
 
   const handlePhotoSelect = async (event) => {
     const file = event.target.files?.[0]
@@ -224,6 +226,11 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
             )}
 
             {/* 계정 모드의 EXP 안내: 하루 상한 · 고쳐 쓰기 · 예시 빵집 */}
+            {recordUnknown && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                {game.isLoading ? '내 기록을 불러오는 중이라' : '내 기록을 불러오지 못해서'} 받을 EXP를 미리 계산하지 못했어요. 일지는 그대로 저장할 수 있고, EXP와 하루 한도는 서버가 정해요.
+              </Alert>
+            )}
             {sampleBlocked && (
               <Alert severity="info" sx={{ mt: 2 }}>
                 예시 빵집에는 일지를 저장할 수 없어요. 지도에서 실제 빵집을 골라 주세요.

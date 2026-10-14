@@ -19,6 +19,7 @@ export const ReviewsProvider = ({ children }) => {
   const [reviews, setReviews] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState(null)
+  const [loadedUserId, setLoadedUserId] = useState(undefined) // 마지막으로 불러오기를 끝낸 사용자 (undefined = 아직 한 번도 안 끝남)
   const [levelIndexByUserId, setLevelIndexByUserId] = useState(null) // 계정 모드: 서버가 계산한 작성자 레벨
   const [gameSettings, setGameSettings] = useState(null) // 계정 모드: 서버의 하루 EXP 상한 등
 
@@ -46,9 +47,16 @@ export const ReviewsProvider = ({ children }) => {
 
   // 로그인 · 로그아웃이 바뀌면 (내 리뷰가 달라지므로) 다시 불러와요
   useEffect(() => {
-    reload()
+    let isCurrent = true
+    reload().then(() => {
+      if (isCurrent) setLoadedUserId(userId)
+    })
     // 로컬 모드: 다른 탭에서 리뷰를 쓰면 이 탭에도 반영돼요
-    return reviewRepository.subscribe(reload)
+    const unsubscribe = reviewRepository.subscribe(reload)
+    return () => {
+      isCurrent = false
+      unsubscribe()
+    }
   }, [reload, userId])
 
   const createReview = useCallback(
@@ -87,8 +95,8 @@ export const ReviewsProvider = ({ children }) => {
   )
 
   const value = useMemo(
-    () => ({ reviews, loaded, loadError, levelsByUserId, gameSettings, reload, createReview, updateReview, removeReview }),
-    [reviews, loaded, loadError, levelsByUserId, gameSettings, reload, createReview, updateReview, removeReview],
+    () => ({ reviews, loaded, loadError, loadedUserId, levelsByUserId, gameSettings, reload, createReview, updateReview, removeReview }),
+    [reviews, loaded, loadError, loadedUserId, levelsByUserId, gameSettings, reload, createReview, updateReview, removeReview],
   )
 
   return <ReviewsContext.Provider value={value}>{children}</ReviewsContext.Provider>

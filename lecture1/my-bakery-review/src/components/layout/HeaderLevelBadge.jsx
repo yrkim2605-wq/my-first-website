@@ -5,6 +5,7 @@ import Popper from '@mui/material/Popper'
 import Fade from '@mui/material/Fade'
 import ClickAwayListener from '@mui/material/ClickAwayListener'
 import Button from '@mui/material/Button'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import { NavLink } from 'react-router-dom'
 import { LEVELS } from '../../constants/levels'
 import { useGameState } from '../../hooks/useGameState'
@@ -46,7 +47,7 @@ const HeaderLevelBadge = () => {
   const closeTimerRef = useRef(null)
   const pinnedRef = useRef(false) // 클릭으로 고정된 상태인지 (고정되면 마우스가 벗어나도 안 닫혀요)
   const [open, setOpen] = useState(false)
-  const { progress, profile } = useGameState()
+  const { progress, profile, isLoading, loadError, reloadReviews } = useGameState()
   const { currentLevel, nextLevel } = progress
   const levelNumber = LEVELS.findIndex((level) => level.id === currentLevel.id) + 1
 
@@ -85,6 +86,46 @@ const HeaderLevelBadge = () => {
       pinnedRef.current = true
       setOpen(true)
     }
+  }
+
+  // 내 기록을 불러오는 중이거나 불러오지 못했을 때는 "Lv.1 0%"로 잘못 보여주지 않고 상태를 알려줘요
+  if (isLoading || loadError) {
+    const message = isLoading ? '내 기록을 불러오는 중이에요' : `내 기록을 불러오지 못했어요. ${loadError} 눌러서 다시 시도해 주세요.`
+    return (
+      <Box
+        component="button"
+        type="button"
+        onClick={isLoading ? undefined : reloadReviews}
+        disabled={isLoading}
+        aria-busy={isLoading}
+        aria-label={message}
+        title={message}
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.5,
+          px: 1.5,
+          py: 0.9,
+          ...WOOD_PLANK_SX,
+          borderRadius: RADIUS.pill,
+          fontFamily: 'inherit',
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          cursor: isLoading ? 'default' : 'pointer',
+          '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+        }}
+      >
+        {isLoading ? (
+          '불러오는 중…'
+        ) : (
+          <>
+            <ErrorOutlineIcon sx={{ fontSize: '1rem', color: 'gold.light' }} />
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>기록 불러오기 실패 ·</Box> 다시 시도
+          </>
+        )}
+      </Box>
+    )
   }
 
   return (

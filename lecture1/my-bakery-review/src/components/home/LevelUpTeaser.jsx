@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
 import { Link } from 'react-router-dom'
 import SectionHeading from '../common/SectionHeading'
 import Reveal from '../common/Reveal'
@@ -21,8 +22,10 @@ const describeCriteria = (level) => getCriteriaParts(level).join(' · ')
 // 레벨 계산은 헤더 · 마이페이지와 같은 getLevelProgress를 써서 값이 항상 같아요.
 // 메달이나 버튼을 누르면 마이페이지로 가요.
 const LevelUpTeaser = () => {
-  const { progress, profile } = useGameState()
-  const currentIndex = progress.currentIndex
+  const { progress, profile, isLoading, loadError, reloadReviews } = useGameState()
+  // 계정 모드에서 내 기록을 아직 모르면(불러오는 중 · 실패) 레벨을 Lv.1로 표시하지 않아요
+  const isRecordUnknown = isLoading || Boolean(loadError)
+  const currentIndex = isRecordUnknown ? -1 : progress.currentIndex
 
   return (
     <Container maxWidth="lg" component="section" aria-labelledby="level-up-title" sx={{ pt: { xs: 6, md: 8 } }}>
@@ -205,14 +208,29 @@ const LevelUpTeaser = () => {
             <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: 'terracotta.main', mb: 1 }}>
               {profile ? `${profile.nickname}의 모험가 상태` : '내 모험가 상태 · 로그인하면 기록이 쌓여요'}
             </Typography>
-            <XpProgressBar
-              levelName={progress.currentLevel.name}
-              nextLevelName={progress.nextLevel?.name}
-              percent={progress.percent}
-              exp={progress.exp}
-              expToNext={progress.expToNext}
-              isMaxLevel={progress.isMaxLevel}
-            />
+            {isLoading ? (
+              <Typography role="status" sx={{ fontSize: '0.9rem', color: 'text.secondary' }}>
+                내 기록을 불러오고 있어요…
+              </Typography>
+            ) : loadError ? (
+              <Box role="alert" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary', wordBreak: 'keep-all' }}>
+                  내 기록을 불러오지 못했어요. {loadError}
+                </Typography>
+                <Button onClick={reloadReviews} size="small" variant="outlined">
+                  다시 시도
+                </Button>
+              </Box>
+            ) : (
+              <XpProgressBar
+                levelName={progress.currentLevel.name}
+                nextLevelName={progress.nextLevel?.name}
+                percent={progress.percent}
+                exp={progress.exp}
+                expToNext={progress.expToNext}
+                isMaxLevel={progress.isMaxLevel}
+              />
+            )}
           </Box>
           <WoodButton component={Link} to="/mypage" size="sm" sx={{ justifySelf: { xs: 'stretch', sm: 'auto' } }}>
             내 레벨과 메달 보기
