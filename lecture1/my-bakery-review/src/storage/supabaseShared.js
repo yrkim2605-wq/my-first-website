@@ -21,39 +21,46 @@ export const messages = {
   CONTENT_TOO_SHORT: '내용이 너무 짧아요. 공백을 뺀 글자 수로 20자 이상 써 주세요. (저장되지 않았어요)',
   CONTENT_TOO_LONG: '내용이 너무 길어요. 500자 이하로 줄여 주세요. (저장되지 않았어요)',
   PHOTO_FAILED: '사진을 올리지 못했어요. 사진을 빼거나 다른 사진으로 다시 시도해 주세요. (저장되지 않았어요)',
-  FUNCTION_MISSING: '빵집 확인 기능이 아직 설정되지 않았어요. 관리자(서버 설정)가 필요해요. (저장되지 않았어요)',
-  FUNCTION_NOT_CONFIGURED: '빵집 확인 서버의 설정이 끝나지 않았어요. 서버 관리자가 KAKAO_REST_API_KEY를 설정해야 해요. (저장되지 않았어요)',
-  KAKAO_UNAVAILABLE:
-    '카카오의 빵집 확인 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 카카오 REST API 키와 사용 설정을 확인해야 해요. (저장되지 않았어요)',
-  FUNCTION_DB_PERMISSION:
-    '서버(Supabase)의 데이터베이스 권한 설정이 끝나지 않아 빵집을 등록하지 못했어요. 서버 관리자가 마이그레이션 0007_service_role_grants.sql을 적용해야 해요. (저장되지 않았어요)',
+  FUNCTION_MISSING: '지금은 빵집을 확인하는 기능을 쓸 수 없어요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
+  FUNCTION_NOT_CONFIGURED: '빵집 확인 기능을 준비하는 중이에요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
+  KAKAO_UNAVAILABLE: '카카오의 빵집 확인 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
+  FUNCTION_DB_PERMISSION: '서비스 설정에 문제가 있어서 지금은 빵집을 등록하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
   FUNCTION_ERROR: '빵집 확인 서버에서 문제가 생겼어요. 잠시 후 다시 시도해 주세요. (저장되지 않았어요)',
-  FUNCTION_UNREACHABLE:
-    '빵집 확인 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 빵집 확인 함수의 배포 · 접근 설정을 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_UNREACHABLE: '빵집 확인 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
   FUNCTION_NETWORK_BLOCKED:
     '이 브라우저에서 서버(Supabase)에 연결되지 않아요. 인터넷 연결, VPN, 광고 · 보안 차단 확장 프로그램을 확인한 뒤 다시 시도해 주세요. 시크릿 창에서 확장 프로그램 없이 시도해 보는 것도 좋아요. (저장되지 않았어요)',
-  FUNCTION_REQUEST_BLOCKED:
-    '빵집 확인 서버는 응답하는데, 로그인 정보가 담긴 요청이 서버에 닿기 전에 막혔어요. 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 서버 관리자가 빵집 확인 함수의 접근(CORS) · 로그인 검사 설정을 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_REQUEST_BLOCKED: '빵집 확인 서버는 응답하는데, 로그인 정보가 담긴 요청이 서버에 닿기 전에 막혔어요. 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
   FUNCTION_HEADERS_BLOCKED:
     '이 브라우저가 로그인 정보(인증 헤더)가 담긴 요청을 막았어요. 보안 프로그램 · 확장 프로그램 · 회사/학교 네트워크를 확인하거나, 시크릿 창이나 다른 네트워크(휴대폰 핫스팟)에서 시도해 보세요. (저장되지 않았어요)',
-  FUNCTION_TOKEN_BLOCKED:
-    '로그인 토큰이 담긴 요청이 서버 앞단이나 브라우저에서 막혀요. (공개 키만 담은 요청은 통과해요) 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 서버 관리자가 빵집 확인 함수의 Verify JWT · 로그인 키(JWT 서명 방식) 설정을 확인해야 해요. (저장되지 않았어요)',
-  FUNCTION_AUTH_NO_RESPONSE:
-    '서버가 로그인 정보를 확인하는 단계에서 응답하지 못해요. 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 Edge Functions Logs와 함수의 서버 비밀 키 설정을 확인해야 해요. (저장되지 않았어요)',
-  FUNCTION_PROCESS_FAILED:
-    '서버는 로그인과 요청 형식까지는 정상으로 받는데, 빵집을 확인하고 등록하는 중(카카오 확인 · DB 등록)에 응답이 끊겼어요. 서버 관리자가 Edge Functions → register-bakery → Logs에서 오류를 확인해야 해요. (저장되지 않았어요)',
-  FUNCTION_NO_RESPONSE:
-    '서버가 로그인한 사용자의 요청을 처리하다가 응답하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 Supabase → Edge Functions → register-bakery의 Logs(호출 기록)를 확인해야 해요. (저장되지 않았어요)',
-  FUNCTION_TIMEOUT:
-    '빵집 확인 서버의 응답이 너무 늦어요(25초). 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 카카오 연결 상태와 Edge Functions Logs를 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_TOKEN_BLOCKED: '로그인 정보가 담긴 요청이 막혀요. 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
+  FUNCTION_AUTH_NO_RESPONSE: '서버가 로그인 정보를 확인하는 단계에서 응답하지 못해요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
+  FUNCTION_PROCESS_FAILED: '서버가 빵집을 확인하고 등록하는 중에 응답이 끊겼어요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
+  FUNCTION_NO_RESPONSE: '서버가 요청을 처리하다가 응답하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
+  FUNCTION_TIMEOUT: '빵집 확인 서버의 응답이 너무 늦어요(25초). 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
   TOO_LARGE: '요청이 너무 커서 처리하지 못했어요. (저장되지 않았어요)',
   RATE_LIMITED: '빵집 확인 요청이 너무 많아요. 잠시 후 다시 시도해 주세요. (저장되지 않았어요)',
   BAKERY_REJECTED: '이 빵집은 확인하지 못했어요. 지도에서 다시 골라 주세요.',
   FORBIDDEN_SAVE: '저장할 권한이 없어요. 로그인 상태와 이메일 인증을 확인한 뒤 다시 시도해 주세요. 계속되면 서버 권한 설정 문제일 수 있어요. (저장되지 않았어요)',
-  SCHEMA_MISMATCH:
-    '서버 데이터베이스 설정이 앱과 맞지 않아요. 서버 관리자가 마이그레이션(0001~0007)이 모두 적용됐는지 확인해야 해요. (저장되지 않았어요)',
+  SCHEMA_MISMATCH: '서비스 설정에 문제가 있어서 지금은 저장하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (저장되지 않았어요)',
   UNKNOWN: '저장하지 못했어요. 잠시 후 다시 시도해 주세요.',
   NOT_FOUND: '일지를 찾을 수 없어요. (이미 지워졌거나 내가 쓴 일지가 아니에요)',
+}
+
+// 사용자에게는 쉬운 안내만 보여주고, 원인을 찾는 데 필요한 기술 안내는 여기에 둬요.
+// 화면에는 나오지 않아요. 오류 객체의 debug.operatorHint와 개발 환경(npm run dev) 콘솔에서만 볼 수 있어요.
+export const operatorHints = {
+  FUNCTION_MISSING: 'Edge Function register-bakery가 배포되지 않았어요 (404).',
+  FUNCTION_NOT_CONFIGURED: 'Edge Function 시크릿 KAKAO_REST_API_KEY를 설정해야 해요.',
+  KAKAO_UNAVAILABLE: '카카오 REST API 키와 카카오맵 사용 설정(쿼터 포함)을 확인해야 해요.',
+  FUNCTION_DB_PERMISSION: '마이그레이션 0007_service_role_grants.sql을 적용해야 해요 (service_role 권한 부족, 42501).',
+  FUNCTION_UNREACHABLE: 'register-bakery 함수의 배포 · 접근 설정을 확인해야 해요.',
+  FUNCTION_REQUEST_BLOCKED: '함수의 접근(CORS) · 로그인 검사 설정을 확인해야 해요.',
+  FUNCTION_TOKEN_BLOCKED: '함수의 Verify JWT · 로그인 키(JWT 서명 방식) 설정을 확인해야 해요.',
+  FUNCTION_AUTH_NO_RESPONSE: 'Edge Functions Logs와 함수의 서버 비밀 키 설정을 확인해야 해요.',
+  FUNCTION_PROCESS_FAILED: 'Edge Functions → register-bakery → Logs에서 오류를 확인해야 해요 (카카오 확인 · DB 등록 중 끊김).',
+  FUNCTION_NO_RESPONSE: 'Supabase → Edge Functions → register-bakery의 Logs(호출 기록)를 확인해야 해요.',
+  FUNCTION_TIMEOUT: '카카오 연결 상태와 Edge Functions Logs를 확인해야 해요.',
+  SCHEMA_MISMATCH: '마이그레이션 0001~0010이 모두 적용됐는지 확인해야 해요.',
 }
 
 export const isNetworkError = (error) =>
@@ -91,7 +98,7 @@ export const describeError = (error, step, source = 'database') => ({
 
 const fail = (code, message, debug) => {
   const result = new RepositoryError(code, message)
-  result.debug = debug
+  result.debug = { ...debug, operatorHint: operatorHints[code] ?? null }
   debugLogger({ ...debug, userMessage: message, userCode: code })
   return result
 }

@@ -15,7 +15,7 @@ export const RANKING_LIMIT = 10
 const rankingMessages = {
   NETWORK: '서버에 연결하지 못했어요. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.',
   LOAD_FAILED: '순위를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
-  NOT_SET_UP: '순위 기능이 아직 서버에 설정되지 않았어요. (관리자: 0005_rankings.sql을 적용해 주세요)',
+  NOT_SET_UP: '순위 기능을 준비하는 중이에요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요.',
 }
 
 const toRankingError = (error) => {

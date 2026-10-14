@@ -21,6 +21,7 @@ const AccountLogin = lazy(() => import('./pages/AccountLogin'))
 const AccountSignup = lazy(() => import('./pages/AccountSignup'))
 const PrivacyPolicyPage = lazy(() => import('./pages/LegalDocument').then((m) => ({ default: m.PrivacyPolicyPage })))
 const TermsOfServicePage = lazy(() => import('./pages/LegalDocument').then((m) => ({ default: m.TermsOfServicePage })))
+const NotFound = lazy(() => import('./pages/NotFound'))
 const AdminReports = lazy(() => import('./pages/AdminReports'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
@@ -71,6 +72,8 @@ function App() {
                       {IS_ACCOUNT_MODE && <Route path="/admin/reports" element={<AdminReports />} />}
                       {IS_ACCOUNT_MODE && <Route path="/forgot-password" element={<ForgotPassword />} />}
                       {IS_ACCOUNT_MODE && <Route path="/reset-password" element={<ResetPassword />} />}
+                      {/* 위의 어느 주소에도 맞지 않으면 "찾을 수 없어요" 화면 */}
+                      <Route path="*" element={<NotFound />} />
                     </Route>
                   </Routes>
                 </HashRouter>

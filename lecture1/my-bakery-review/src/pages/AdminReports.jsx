@@ -15,6 +15,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import SectionHeading from '../components/common/SectionHeading'
 import StatusMessage from '../components/common/StatusMessage'
+import NotFound from './NotFound'
 import { PAGE_TABS_SX } from '../constants/tabStyles'
 import { PARCHMENT_SX } from '../constants/rpgStyles'
 import { useProfile } from '../hooks/useProfile'
@@ -198,16 +199,8 @@ const AdminReports = () => {
     )
   }
 
-  if (access === 'denied') {
-    // 운영자 화면이 있다는 것도 드러내지 않도록, 없는 페이지처럼 보여줘요
-    return (
-      <Container maxWidth="md">
-        <Box sx={{ py: { xs: 5, sm: 8 } }}>
-          <StatusMessage mood="notfound" title="페이지를 찾을 수 없어요" description="주소가 잘못됐거나 없어진 페이지예요." actionLabel="첫 화면으로" onAction={() => (window.location.hash = '#/')} />
-        </Box>
-      </Container>
-    )
-  }
+  // 운영자 화면이 있다는 것도 드러내지 않도록, 없는 페이지와 똑같이 보여줘요
+  if (access === 'denied') return <NotFound />
 
   const isLoading = list.key !== requestKey
 

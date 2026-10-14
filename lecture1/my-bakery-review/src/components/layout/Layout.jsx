@@ -6,6 +6,7 @@ import { Outlet, useLocation, Link } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
 import ScrollToTopButton from '../common/ScrollToTopButton'
+import ErrorBoundary from '../common/ErrorBoundary'
 
 const Layout = () => {
   const location = useLocation()
@@ -58,9 +59,12 @@ const Layout = () => {
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Box key={location.pathname} className="page-fade">
           {/* 페이지 파일을 불러오는 동안 푸터가 위로 튀지 않도록 빈 공간을 잡아둬요 */}
-          <Suspense fallback={<Box sx={{ minHeight: '60vh' }} />}>
-            <Outlet />
-          </Suspense>
+          {/* 한 페이지에서 오류가 나도 헤더 · 푸터는 그대로 두고, 다른 페이지로 가면 다시 시도해요 */}
+          <ErrorBoundary resetKey={location.pathname}>
+            <Suspense fallback={<Box sx={{ minHeight: '60vh' }} />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </Box>
       </Box>
       <Footer />

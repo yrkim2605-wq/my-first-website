@@ -103,14 +103,14 @@ const fnError = (status, code, message = '서버 메시지') =>
 // ── 1. 빵집 확인 서버 함수(register-bakery) 오류: 원인별 안내 ──
 const fnCases = [
   ['카카오 연결 실패(502)', fnError(502, 'KAKAO_UNAVAILABLE'), 'KAKAO_UNAVAILABLE', /카카오/],
-  ['서버 설정 누락(500 NOT_CONFIGURED)', fnError(500, 'NOT_CONFIGURED'), 'FUNCTION_NOT_CONFIGURED', /KAKAO_REST_API_KEY/],
-  ['서버 DB 권한 부족(500 DB_PERMISSION, 실제로 겪은 오류)', fnError(500, 'DB_PERMISSION'), 'FUNCTION_DB_PERMISSION', /0007_service_role_grants/],
+  ['서버 설정 누락(500 NOT_CONFIGURED)', fnError(500, 'NOT_CONFIGURED'), 'FUNCTION_NOT_CONFIGURED', /준비하는 중/],
+  ['서버 DB 권한 부족(500 DB_PERMISSION, 실제로 겪은 오류)', fnError(500, 'DB_PERMISSION'), 'FUNCTION_DB_PERMISSION', /서비스 설정에 문제/],
   ['서버 내부 오류(500)', fnError(500, 'INTERNAL'), 'FUNCTION_ERROR', /register\/500\/INTERNAL/],
   ['요청이 너무 큼(413)', fnError(413, 'TOO_LARGE'), 'TOO_LARGE', /너무 커/],
   ['호출이 너무 많음(429)', fnError(429, 'RATE_LIMITED'), 'RATE_LIMITED', /너무 많아/],
   ['이메일 미인증(403)', fnError(403, 'EMAIL_NOT_VERIFIED'), 'EMAIL_NOT_CONFIRMED', /이메일 인증/],
   ['로그인 만료(401)', fnError(401, 'NOT_SIGNED_IN'), 'SESSION_EXPIRED', /로그인/],
-  ['함수가 배포되지 않음(404)', fnError(404, null), 'FUNCTION_MISSING', /빵집 확인 기능/],
+  ['함수가 배포되지 않음(404)', fnError(404, null), 'FUNCTION_MISSING', /빵집을 확인하는 기능/],
   ['카카오가 빵집으로 인정하지 않음(400)', fnError(400, 'BAKERY_NOT_FOUND', '실제 제과 · 베이커리로 확인되지 않았어요.'), 'BAKERY_REJECTED', /확인되지/],
   ['서버에 닿지 못함(진단도 실패 → 이 브라우저가 못 닿음)', Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError', context: new TypeError('Failed to fetch') }), 'FUNCTION_NETWORK_BLOCKED', /이 브라우저에서 서버/],
 ]
@@ -126,6 +126,25 @@ for (const [label, invokeError, expectedCode, pattern] of fnCases) {
   const { repo } = repoFor({ invokeError: fnError(502, 'KAKAO_UNAVAILABLE', '서버 쪽 설명') })
   const error = await rejects(repo.create(baseInput))
   check('개발용 정보에 HTTP 상태 · 서버 오류 코드 · 서버 메시지가 담겨요', error.debug.status === 502 && error.debug.serverCode === 'KAKAO_UNAVAILABLE' && error.debug.serverMessage === '서버 쪽 설명')
+}
+
+{
+  const JARGON = /KAKAO_REST_API_KEY|0007_|0001~|마이그레이션|Verify JWT|CORS|Edge Functions|register-bakery|서버 관리자|service_role/
+  for (const [label, invokeError] of [
+    ['NOT_CONFIGURED', fnError(500, 'NOT_CONFIGURED')],
+    ['DB_PERMISSION', fnError(500, 'DB_PERMISSION')],
+    ['404', fnError(404, null)],
+    ['502', fnError(502, 'KAKAO_UNAVAILABLE')],
+  ]) {
+    const { repo } = repoFor({ invokeError })
+    const error = await rejects(repo.create(baseInput))
+    check(`사용자에게 보이는 안내에 기술 용어가 없어요: ${label}`, !JARGON.test(error.message) && /문의처|잠시 후/.test(error.message), error.message)
+    check(`  └ 기술 안내는 debug.operatorHint에 있어요: ${label}`, typeof error.debug.operatorHint === 'string' && error.debug.operatorHint.length > 0)
+  }
+  const { repo: repoA } = repoFor({ invokeError: fnError(500, 'NOT_CONFIGURED') })
+  check('운영자 안내에는 설정 이름이 있어요 (KAKAO_REST_API_KEY)', /KAKAO_REST_API_KEY/.test((await rejects(repoA.create(baseInput))).debug.operatorHint))
+  const { repo: repoB } = repoFor({ invokeError: fnError(500, 'DB_PERMISSION') })
+  check('운영자 안내에는 마이그레이션 파일명이 있어요 (0007)', /0007_service_role_grants/.test((await rejects(repoB.create(baseInput))).debug.operatorHint))
 }
 
 // ── 1-2. 연결 오류(상태 없음)의 원인 진단 ──
@@ -154,7 +173,7 @@ for (const [label, invokeError, expectedCode, pattern] of fnCases) {
   fetchBehavior = () => Promise.resolve({ status: 401 })
   t = repoFor({ invokeError: fetchError(), withKey: true })
   error = await rejects(t.repo.create(baseInput))
-  check('진단 2단계: 인증 헤더 요청도 응답 → "서버가 응답하지 못했어요(Edge Functions Logs 확인)"', error?.code === 'FUNCTION_NO_RESPONSE' && /Logs/.test(error.message) && error.debug.probe.includes('인증 헤더 요청도 응답함'), `${error?.code} ${error?.debug?.probe}`)
+  check('진단 2단계: 인증 헤더 요청도 응답 → "서버가 응답하지 못했어요(Edge Functions Logs 확인)"', error?.code === 'FUNCTION_NO_RESPONSE' && /문의처/.test(error.message) && /Logs/.test(error.debug.operatorHint) && error.debug.probe.includes('인증 헤더 요청도 응답함'), `${error?.code} ${error?.debug?.probe}`)
   const second = fetchCalls[1]
   check('진단 2단계 요청: 공개 키만 쓰고(로그인 토큰 아님) 아무것도 바꾸지 않는 빈 요청', fetchCalls.length === 2 && second.init.headers.Authorization === 'Bearer sb_publishable_test_key' && second.init.headers.apikey === 'sb_publishable_test_key' && second.init.body === '{}')
 
@@ -196,7 +215,7 @@ for (const [label, invokeError, expectedCode, pattern] of fnCases) {
 
   // 토큰 POST{}까지 정상(400) → 실제 등록 처리(카카오 · DB) 중에 끊김
   r = await runToken((url, init) => Promise.resolve({ status: withToken(init) ? (init.method === 'GET' ? 405 : 400) : 401 }))
-  check('진단 4단계: 토큰 POST{}가 정상(400) → "빵집 확인 · 등록 처리 중에 응답이 끊겼어요(Logs 확인)"', r.err?.code === 'FUNCTION_PROCESS_FAILED' && /Logs/.test(r.err.message) && r.err.debug.probe.includes('토큰 POST{}→HTTP 400'), r.err?.code)
+  check('진단 4단계: 토큰 POST{}가 정상(400) → "빵집 확인 · 등록 처리 중에 응답이 끊겼어요(Logs 확인)"', r.err?.code === 'FUNCTION_PROCESS_FAILED' && /문의처/.test(r.err.message) && /Logs/.test(r.err.debug.operatorHint) && r.err.debug.probe.includes('토큰 POST{}→HTTP 400'), r.err?.code)
   check('진단 정보에 토큰 종류와 남은 시간만 있고 토큰 값은 없어요', r.err.debug.probe.includes('토큰 알고리즘=ES256') && r.err.debug.probe.includes('역할=authenticated') && r.err.debug.probe.includes('만료까지=') && r.err.debug.probe.includes('초') && !JSON.stringify(r.err.debug).includes(token) && !JSON.stringify(logs).includes(token))
   const tokenCalls = r.calls.filter((c) => withToken(c.init))
   check('토큰을 쓰는 진단 요청은 GET 1번 + 빈 본문 POST 1번뿐이에요 (데이터를 바꾸는 요청 없음)', tokenCalls.length === 2 && tokenCalls[0].init.method === 'GET' && tokenCalls[1].init.method === 'POST' && tokenCalls[1].init.body === '{}' && r.run.client.log.inserts.length === 0)
@@ -219,9 +238,9 @@ for (const [label, invokeError, expectedCode, pattern] of fnCases) {
 // ── 2. 일지 저장(insert) 오류: 원인별 안내 ──
 const dbCases = [
   ['권한 없음(RLS)', { code: '42501', message: 'new row violates row-level security policy for table "reviews"' }, 'FORBIDDEN', /저장할 권한/],
-  ['서버 칸이 앱과 안 맞음(PGRST204)', { code: 'PGRST204', message: "Could not find the 'x' column of 'reviews' in the schema cache" }, 'SCHEMA_MISMATCH', /마이그레이션/],
-  ['연결 관계를 못 찾음(PGRST200)', { code: 'PGRST200', message: 'Could not find a relationship' }, 'SCHEMA_MISMATCH', /마이그레이션/],
-  ['없는 칸(42703)', { code: '42703', message: 'column does not exist' }, 'SCHEMA_MISMATCH', /마이그레이션/],
+  ['서버 칸이 앱과 안 맞음(PGRST204)', { code: 'PGRST204', message: "Could not find the 'x' column of 'reviews' in the schema cache" }, 'SCHEMA_MISMATCH', /서비스 설정에 문제/],
+  ['연결 관계를 못 찾음(PGRST200)', { code: 'PGRST200', message: 'Could not find a relationship' }, 'SCHEMA_MISMATCH', /서비스 설정에 문제/],
+  ['없는 칸(42703)', { code: '42703', message: 'column does not exist' }, 'SCHEMA_MISMATCH', /서비스 설정에 문제/],
   ['서버의 글자 수 검사(너무 짧음)', { code: '23514', message: 'REVIEW_TOO_SHORT' }, 'CONTENT_TOO_SHORT', /20자 이상/],
   ['서버의 글자 수 검사(너무 김)', { code: '23514', message: 'REVIEW_TOO_LONG' }, 'CONTENT_TOO_LONG', /500자 이하/],
   ['다른 입력값 제약(별점 등)', { code: '23514', message: 'new row violates check constraint' }, 'INVALID_INPUT', /별점과 내용/],
