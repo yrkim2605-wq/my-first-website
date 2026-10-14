@@ -17,7 +17,7 @@ import { RADIUS } from '../../theme'
 //
 // 배치: 사진이 있으면 PC에서는 왼쪽(작성자 · 본문 · 버튼) + 오른쪽(사진) 두 칸, 모바일에서는 위아래로 쌓아요.
 //       사진이 없으면 한 칸이고, 내용 높이에 맞춰 줄어들어요 (빈 줄 · 빈 여백 없음).
-const PHOTO_COLUMN_WIDTH = 260
+const PHOTO_COLUMN_WIDTH = 224
 
 const ReviewJournalCard = ({ card, onEdit, onDelete }) => {
   const hasPhoto = Boolean(card.photo)
@@ -47,7 +47,7 @@ const ReviewJournalCard = ({ card, onEdit, onDelete }) => {
       <Box sx={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1.25, height: { sm: hasPhoto ? '100%' : 'auto' } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', columnGap: 1.5, rowGap: 0.5, flexWrap: 'wrap' }}>
           <AuthorInfo author={card.authorName} level={card.level} caption={card.dateLabel} />
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: { sm: 'auto' } }}>
             {hasTag && (
               <Chip
                 size="small"
@@ -99,7 +99,7 @@ const ReviewJournalCard = ({ card, onEdit, onDelete }) => {
           sx={{
             display: 'block',
             width: '100%',
-            aspectRatio: { xs: '16 / 10', sm: '4 / 3' },
+            aspectRatio: { xs: '16 / 9', sm: '3 / 2' },
             objectFit: 'cover',
             borderRadius: RADIUS.md,
             border: '2px solid #c9a56a',
