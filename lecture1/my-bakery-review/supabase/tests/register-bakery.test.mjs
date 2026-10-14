@@ -213,6 +213,50 @@ const run = async (req, over) => {
   check('어떤 응답에도 비밀 값이 들어가지 않아요', bodies.every((text) => !text.includes(SECRET)))
 }
 
+// ── 서버 로그(실패 단계)와 DB 권한 오류 구분 ──
+{
+  const logs = []
+  const logDeps = (over) => makeDeps({ ...over }).deps
+  const withLog = (deps) => ({ ...deps, log: (step, detail) => logs.push({ step, detail }) })
+  const send = async (deps, req = request(good)) => {
+    logs.length = 0
+    const res = await handleRequest(req, withLog(deps))
+    const text = await res.text()
+    return { status: res.status, text, body: JSON.parse(text), cors: res.headers.get('Access-Control-Allow-Origin'), logs: [...logs] }
+  }
+
+  // 실제로 겪은 오류: service_role에 bakeries 권한이 없을 때 (42501)
+  const permissionError = Object.assign(new Error('permission denied for table bakeries'), { name: 'PostgrestError', code: '42501', hint: 'Grant the required privileges with: GRANT SELECT ON public.bakeries TO service_role;' })
+  let r = await send(logDeps({ hasBakery: async () => { throw permissionError } }))
+  check('DB 권한 오류(42501)는 500 DB_PERMISSION으로 구분하고, CORS가 붙어 브라우저가 읽을 수 있어요', r.status === 500 && r.body.error.code === 'DB_PERMISSION' && r.cors === '*')
+  check('권한 오류 응답에는 표 이름 · 힌트 · 코드 같은 내부 내용이 없어요', !/bakeries|GRANT|service_role|42501|permission denied/i.test(r.text), r.text)
+  check('서버 로그에는 실패 단계(lookup-bakery)와 오류 코드가 남아요', r.logs.length === 1 && r.logs[0].step === 'lookup-bakery' && r.logs[0].detail.includes('code=42501'), JSON.stringify(r.logs))
+  check('서버 로그에 GRANT 힌트 전문이나 요청의 로그인 토큰은 없어요', !r.logs[0].detail.includes('GRANT') )
+
+  // 등록(저장) 단계의 일반 오류
+  r = await send(logDeps({ searchKakao: async () => docs, upsertBakery: async () => { throw new Error('upsert exploded') } }), request({ ...good, id: '12345678' }))
+  check('저장 단계 오류는 500 INTERNAL(내용 숨김) + 서버 로그 단계=save-bakery', r.status === 500 && r.body.error.code === 'INTERNAL' && !r.text.includes('exploded') && r.logs[0]?.step === 'save-bakery' && r.logs[0].detail.includes('exploded'), JSON.stringify(r.logs))
+
+  // 권한 오류가 저장 단계에서 나도 구분돼요 (insert 권한이 없을 때)
+  r = await send(logDeps({ searchKakao: async () => docs, upsertBakery: async () => { throw Object.assign(new Error('permission denied for table bakeries'), { code: '42501' }) } }), request({ ...good, id: '12345678' }))
+  check('저장 단계의 권한 오류도 DB_PERMISSION + 단계=save-bakery', r.body.error?.code === 'DB_PERMISSION' && r.logs[0]?.step === 'save-bakery')
+
+  // 카카오 오류
+  r = await send(logDeps({ searchKakao: async () => { throw new Error('kakao 401') } }))
+  check('카카오 오류는 502, 서버 로그 단계=kakao', r.status === 502 && r.body.error.code === 'KAKAO_UNAVAILABLE' && r.logs[0]?.step === 'kakao' && r.logs[0].detail.includes('kakao 401'))
+
+  // 정상 요청 · 검증 실패는 로그를 남기지 않아요 (로그가 시끄럽지 않게)
+  r = await send(logDeps({ searchKakao: async () => docs }), request({ ...good, id: '12345678' }))
+  check('정상 등록은 로그를 남기지 않아요', r.status === 200 && r.logs.length === 0)
+  r = await send(logDeps(), request({ ...good, id: 'x' }))
+  check('입력 오류(400) · 로그인 오류(401)도 오류 로그를 남기지 않아요', r.status === 400 && r.logs.length === 0)
+
+  // 로그 함수가 고장나도 응답은 정상이에요
+  const brokenLog = { ...logDeps({ hasBakery: async () => { throw new Error('boom') } }), log: () => { throw new Error('log failed') } }
+  const res = await handleRequest(request(good), brokenLog)
+  check('로그를 못 남겨도 500 응답은 그대로 나가요', res.status === 500 && (await res.json()).error.code === 'INTERNAL')
+}
+
 console.log(`\n통과 ${passed} · 실패 ${failures.length}`)
 if (failures.length) {
   console.log(failures.join('\n'))

@@ -104,6 +104,7 @@ const fnError = (status, code, message = '서버 메시지') =>
 const fnCases = [
   ['카카오 연결 실패(502)', fnError(502, 'KAKAO_UNAVAILABLE'), 'KAKAO_UNAVAILABLE', /카카오/],
   ['서버 설정 누락(500 NOT_CONFIGURED)', fnError(500, 'NOT_CONFIGURED'), 'FUNCTION_NOT_CONFIGURED', /KAKAO_REST_API_KEY/],
+  ['서버 DB 권한 부족(500 DB_PERMISSION, 실제로 겪은 오류)', fnError(500, 'DB_PERMISSION'), 'FUNCTION_DB_PERMISSION', /0007_service_role_grants/],
   ['서버 내부 오류(500)', fnError(500, 'INTERNAL'), 'FUNCTION_ERROR', /register\/500\/INTERNAL/],
   ['요청이 너무 큼(413)', fnError(413, 'TOO_LARGE'), 'TOO_LARGE', /너무 커/],
   ['호출이 너무 많음(429)', fnError(429, 'RATE_LIMITED'), 'RATE_LIMITED', /너무 많아/],

@@ -25,6 +25,8 @@ export const messages = {
   FUNCTION_NOT_CONFIGURED: '빵집 확인 서버의 설정이 끝나지 않았어요. 서버 관리자가 KAKAO_REST_API_KEY를 설정해야 해요. (저장되지 않았어요)',
   KAKAO_UNAVAILABLE:
     '카카오의 빵집 확인 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 카카오 REST API 키와 사용 설정을 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_DB_PERMISSION:
+    '서버(Supabase)의 데이터베이스 권한 설정이 끝나지 않아 빵집을 등록하지 못했어요. 서버 관리자가 마이그레이션 0007_service_role_grants.sql을 적용해야 해요. (저장되지 않았어요)',
   FUNCTION_ERROR: '빵집 확인 서버에서 문제가 생겼어요. 잠시 후 다시 시도해 주세요. (저장되지 않았어요)',
   FUNCTION_UNREACHABLE:
     '빵집 확인 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 빵집 확인 함수의 배포 · 접근 설정을 확인해야 해요. (저장되지 않았어요)',
@@ -49,7 +51,7 @@ export const messages = {
   BAKERY_REJECTED: '이 빵집은 확인하지 못했어요. 지도에서 다시 골라 주세요.',
   FORBIDDEN_SAVE: '저장할 권한이 없어요. 로그인 상태와 이메일 인증을 확인한 뒤 다시 시도해 주세요. 계속되면 서버 권한 설정 문제일 수 있어요. (저장되지 않았어요)',
   SCHEMA_MISMATCH:
-    '서버 데이터베이스 설정이 앱과 맞지 않아요. 서버 관리자가 마이그레이션(0001~0006)이 모두 적용됐는지 확인해야 해요. (저장되지 않았어요)',
+    '서버 데이터베이스 설정이 앱과 맞지 않아요. 서버 관리자가 마이그레이션(0001~0007)이 모두 적용됐는지 확인해야 해요. (저장되지 않았어요)',
   UNKNOWN: '저장하지 못했어요. 잠시 후 다시 시도해 주세요.',
   NOT_FOUND: '일지를 찾을 수 없어요. (이미 지워졌거나 내가 쓴 일지가 아니에요)',
 }
@@ -148,6 +150,7 @@ export const mapFunctionError = (error, status, detail, probe, elapsedMs) => {
   if (status === 429) return fail('RATE_LIMITED', messages.RATE_LIMITED, debug)
   if (status === 400 || status === 422) return fail('BAKERY_REJECTED', detail?.error?.message || messages.BAKERY_REJECTED, debug)
   if (status === 502 || serverCode === 'KAKAO_UNAVAILABLE') return fail('KAKAO_UNAVAILABLE', messages.KAKAO_UNAVAILABLE, debug)
+  if (serverCode === 'DB_PERMISSION') return fail('FUNCTION_DB_PERMISSION', messages.FUNCTION_DB_PERMISSION, debug)
   if (serverCode === 'NOT_CONFIGURED') return fail('FUNCTION_NOT_CONFIGURED', messages.FUNCTION_NOT_CONFIGURED, debug)
   if (status && status >= 500) return fail('FUNCTION_ERROR', `${messages.FUNCTION_ERROR} (오류 코드: register/${status}${serverCode ? '/' + serverCode : ''})`, debug)
   // 상태가 없다 = 요청이 서버에 닿기 전에 실패했어요. 로그인 정보 없이 보낸 단순 요청(probe)으로 원인을 가려요.

@@ -90,6 +90,8 @@ export type Deps = {
   searchKakao: (name: string, lat: number, lng: number) => Promise<any[]>
   // 새 빵집을 확인하려고 카카오를 부르기 전에 확인해요 (사용자당 호출 수 제한). 없으면 제한하지 않아요.
   allowLookup?: (userId: string) => boolean
+  // 서버 로그(Edge Functions → Logs)에만 남기는 함수예요. 응답에는 절대 담지 않아요. step = 실패한 단계, detail = 오류 종류 · 짧은 메시지
+  log?: (step: string, detail: string) => void
 }
 
 export const MAX_BODY_BYTES = 4096
@@ -111,24 +113,45 @@ export const createRateLimiter = (limit: number, windowMs: number, now: () => nu
   }
 }
 
-export const handleRequest = async (req: Request, deps: Deps): Promise<Response> => {
+// 서버 로그용 한 줄 설명: 오류 이름 · 코드 · 짧은 메시지만 (헤더 · 키 · 토큰은 오류 객체에 없지만, 길이를 제한해서 혹시 모를 노출도 줄여요)
+const describe = (error: unknown) => {
+  const e: any = error
+  return `${e?.name ?? 'Error'}${e?.code ? ' code=' + e.code : ''}: ${String(e?.message ?? e).slice(0, 200)}`
+}
+const safeLog = (deps: Deps, step: string, error: unknown) => {
   try {
-    return await processRequest(req, deps)
+    deps.log?.(step, describe(error))
   } catch {
-    // 예상하지 못한 오류는 자세한 내용을 숨기고, 브라우저가 읽을 수 있게 CORS가 붙은 500으로 돌려줘요
+    // 로그를 못 남겨도 요청 처리에는 영향을 주지 않아요
+  }
+}
+
+export const handleRequest = async (req: Request, deps: Deps): Promise<Response> => {
+  const trace = { step: 'start' } // 지금 어느 단계인지 (오류가 났을 때 서버 로그에 남겨요)
+  try {
+    return await processRequest(req, deps, trace)
+  } catch (error) {
+    safeLog(deps, trace.step, error)
+    // DB 권한 부족(42501)은 서버 설정 문제라서 따로 알려요. 내용(표 이름 · 힌트)은 숨기고 종류만 돌려줘요.
+    if ((error as any)?.code === '42501') {
+      return rejection(500, 'DB_PERMISSION', '서버의 데이터베이스 권한 설정이 끝나지 않았어요. 서버 관리자가 필요해요.')
+    }
+    // 그 밖의 예상하지 못한 오류는 자세한 내용을 숨기고, 브라우저가 읽을 수 있게 CORS가 붙은 500으로 돌려줘요
     return rejection(500, 'INTERNAL', '서버에서 문제가 생겼어요. 잠시 후 다시 시도해 주세요.')
   }
 }
 
-const processRequest = async (req: Request, deps: Deps): Promise<Response> => {
+const processRequest = async (req: Request, deps: Deps, trace: { step: string }): Promise<Response> => {
   if (req.method === 'OPTIONS') return json(200, { ok: true })
   if (req.method !== 'POST') return rejection(405, 'METHOD_NOT_ALLOWED', 'POST만 쓸 수 있어요.')
 
+  trace.step = 'auth'
   const jwt = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
   const user = jwt ? await deps.getUser(jwt).catch(() => null) : null
   if (!user) return rejection(401, 'NOT_SIGNED_IN', '로그인이 필요해요.')
   if (!user.emailConfirmed) return rejection(403, 'EMAIL_NOT_VERIFIED', '이메일 인증을 마친 뒤에 쓸 수 있어요.')
 
+  trace.step = 'read-body'
   let body: any
   try {
     const raw = await req.text()
@@ -142,16 +165,19 @@ const processRequest = async (req: Request, deps: Deps): Promise<Response> => {
   const bakery = input.value
 
   // 이미 등록돼 있으면 카카오를 다시 부르지 않아요 (호출 수를 아끼고 남용을 줄여요)
+  trace.step = 'lookup-bakery'
   if (await deps.hasBakery(bakery.id)) return json(200, { ok: true, registered: false })
 
   if (deps.allowLookup && !deps.allowLookup(user.id)) {
     return rejection(429, 'RATE_LIMITED', '빵집 확인 요청이 너무 많아요. 잠시 후 다시 시도해 주세요.')
   }
 
+  trace.step = 'kakao'
   let documents: any[]
   try {
     documents = await deps.searchKakao(bakery.name, bakery.lat, bakery.lng)
-  } catch {
+  } catch (error) {
+    safeLog(deps, 'kakao', error)
     return rejection(502, 'KAKAO_UNAVAILABLE', '빵집 확인 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.')
   }
   const match = findBakeryDocument(documents, bakery.id)
@@ -162,6 +188,7 @@ const processRequest = async (req: Request, deps: Deps): Promise<Response> => {
   const lng = Number(match.x)
   const districtId = Number.isFinite(lat) && Number.isFinite(lng) ? resolveDistrict(lat, lng) : null
   if (!districtId) return rejection(400, 'OUT_OF_AREA', '부산 지역의 빵집만 등록할 수 있어요.')
+  trace.step = 'save-bakery'
   await deps.upsertBakery({
     id: bakery.id,
     name: String(match.place_name).slice(0, 100),
@@ -194,6 +221,7 @@ const startServer = () => {
     const admin = createClient(url, secretKey, { auth: { persistSession: false } })
     return handleRequest(req, {
       allowLookup,
+      log: (step, detail) => console.error(`[register-bakery] 실패 단계=${step} ${detail}`),
       getUser: async (jwt) => {
         const { data, error } = await admin.auth.getUser(jwt)
         if (error || !data.user) return null
