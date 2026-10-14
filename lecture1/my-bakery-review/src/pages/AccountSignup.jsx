@@ -5,7 +5,7 @@ import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
-import WoodPanel from '../components/common/WoodPanel'
+import AuthPanel from '../components/common/AuthPanel'
 import SectionHeading from '../components/common/SectionHeading'
 import EmailVerificationPanel from '../components/auth/EmailVerificationPanel'
 import PasswordField from '../components/auth/PasswordField'
@@ -85,7 +85,7 @@ const AccountSignup = () => {
           </Alert>
         )}
 
-        <WoodPanel variant="light" sx={{ p: 3, width: '100%' }}>
+        <AuthPanel knight="knight-hooray" prop="flag">
           {sentTo ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <EmailVerificationPanel email={sentTo} />
@@ -149,7 +149,7 @@ const AccountSignup = () => {
               </Button>
             </Box>
           )}
-        </WoodPanel>
+        </AuthPanel>
       </Box>
     </Container>
   )

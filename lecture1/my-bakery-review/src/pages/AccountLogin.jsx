@@ -6,7 +6,7 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Typography from '@mui/material/Typography'
-import WoodPanel from '../components/common/WoodPanel'
+import AuthPanel from '../components/common/AuthPanel'
 import SectionHeading from '../components/common/SectionHeading'
 import EmailVerificationPanel from '../components/auth/EmailVerificationPanel'
 import PasswordField from '../components/auth/PasswordField'
@@ -59,7 +59,7 @@ const AccountLogin = () => {
           </Alert>
         )}
 
-        <WoodPanel variant="light" sx={{ p: 3, width: '100%' }}>
+        <AuthPanel knight="knight-map" prop="signpost">
           {profile && (
             <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary', mb: 2 }}>
               지금은 <b>{profile.nickname}</b> 모험가로 로그인돼 있어요.
@@ -91,7 +91,7 @@ const AccountLogin = () => {
               새 모험가 만들기 (회원가입)
             </Button>
           </Box>
-        </WoodPanel>
+        </AuthPanel>
       </Box>
     </Container>
   )

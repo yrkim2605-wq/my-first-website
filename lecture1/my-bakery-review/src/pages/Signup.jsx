@@ -6,7 +6,7 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
-import WoodPanel from '../components/common/WoodPanel'
+import AuthPanel from '../components/common/AuthPanel'
 import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import logo from '../assets/logo.webp'
@@ -50,7 +50,7 @@ const Signup = () => {
 
         <LocalProfileNotice sx={{ mb: 2, width: '100%' }} />
 
-        <WoodPanel variant="light" sx={{ p: 3, width: '100%' }}>
+        <AuthPanel knight="knight-hooray" prop="flag">
           <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               label="닉네임"
@@ -69,7 +69,7 @@ const Signup = () => {
               이미 만들었어요 (로그인)
             </Button>
           </Box>
-        </WoodPanel>
+        </AuthPanel>
       </Box>
 
       <Snackbar
