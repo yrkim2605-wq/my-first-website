@@ -44,7 +44,9 @@ const makeFake = (state = {}) => {
     if (q.op === 'select') {
       const rows = s.rows[q.table] ?? []
       if (q.mode === 'maybeSingle') return { data: rows.find((r) => r.id === q.filters.id) ?? null, error: null }
-      return { data: rows, error: null }
+      const matching = q.filters.category_id ? rows.filter((r) => r.category_id === q.filters.category_id) : rows
+      const page = q.range ? matching.slice(q.range[0], q.range[1] + 1) : matching
+      return { data: page, error: null, count: q.count === 'exact' ? matching.length : undefined }
     }
     if (q.op === 'insert') {
       if (q.mode === 'single') return { data: { id: 'new-post' }, error: null }
@@ -54,9 +56,10 @@ const makeFake = (state = {}) => {
     return { data: null, error: null } // delete
   }
   const from = (table) => {
-    const q = { table, op: 'select', filters: {}, orders: [], payload: null, limit: null, mode: 'list' }
+    const q = { table, op: 'select', filters: {}, orders: [], payload: null, limit: null, range: null, count: null, mode: 'list' }
     const builder = {
-      select: () => builder,
+      select: (columns, opts) => ((q.count = opts?.count ?? null), builder),
+      range: (from, to) => ((q.range = [from, to]), builder),
       eq: (key, value) => ((q.filters[key] = value), builder),
       order: (column, opts) => (q.orders.push([column, opts?.ascending === false ? 'desc' : 'asc']), builder),
       limit: (n) => ((q.limit = n), builder),
@@ -80,22 +83,43 @@ const lastQuery = (client, table, op) => [...client.log.queries].reverse().find(
 // ── 글 목록 · 상세 ──
 {
   const { client, repo } = repoFor({ rows: { post_feed: [POST_ROW, { ...POST_ROW, id: 'p2', user_id: 'other', liked_by_me: false }] } })
-  const posts = await repo.listPosts({ categoryId: 'all', sortBy: 'heart' })
+  const { posts } = await repo.listPosts({ categoryId: 'all', sortBy: 'heart' })
   const q = lastQuery(client, 'post_feed', 'select')
-  check('글 목록: 서버 뷰에서 좋아요순 → 최신순으로 정렬해 요청', JSON.stringify(q.orders) === '[["like_count","desc"],["created_at","desc"]]' && q.limit === 100, JSON.stringify(q.orders))
+  check('글 목록: 서버 뷰에서 좋아요순 → 최신순 → 글 ID순으로 정렬해 요청 (동점이어도 순서가 늘 같아요)', JSON.stringify(q.orders) === '[["like_count","desc"],["created_at","desc"],["id","desc"]]', JSON.stringify(q.orders))
+  check('글 목록: 20개씩 — 한 건 더 받아(범위 0~20) 다음 쪽이 있는지 확인', JSON.stringify(q.range) === '[0,20]' && q.count === 'exact', JSON.stringify(q.range))
   check('글 목록: 전체 보기는 카테고리 조건이 없어요', !('category_id' in q.filters))
   check('글 목록: 화면용 모양으로 바뀌고 내 글 표시가 맞아요', posts[0].heartCount === 3 && posts[0].commentCount === 4 && posts[0].author === '나' && posts[0].isMine === true && posts[1].isMine === false && posts[0].likedByMe === true)
   await repo.listPosts({ categoryId: 'new-menu', sortBy: 'latest' })
   const q2 = lastQuery(client, 'post_feed', 'select')
-  check('글 목록: 카테고리 조건 · 최신순은 날짜만 정렬', q2.filters.category_id === 'new-menu' && JSON.stringify(q2.orders) === '[["created_at","desc"]]', JSON.stringify(q2))
+  check('글 목록: 카테고리 조건 · 최신순은 날짜 → 글 ID순', q2.filters.category_id === 'new-menu' && JSON.stringify(q2.orders) === '[["created_at","desc"],["id","desc"]]', JSON.stringify(q2))
   check('글 상세: 글 하나를 돌려줘요', (await repo.getPost('p1')).title === '제목')
   check('글 상세: 없는 글은 null (오류 아님)', (await repo.getPost('nope')) === null)
 }
 {
   const { repo } = repoFor({ session: null, rows: { post_feed: [POST_ROW] } })
-  const posts = await repo.listPosts()
+  const { posts } = await repo.listPosts()
   check('비로그인도 글을 읽을 수 있고 내 글 표시는 없어요', posts.length === 1 && posts[0].isMine === false)
 }
+// ── 더 보기: 20개씩 이어서 불러오기 ──
+{
+  const rows = Array.from({ length: 45 }, (_, i) => ({ ...POST_ROW, id: `p${String(i).padStart(2, '0')}`, user_id: 'other', category_id: i % 3 === 0 ? 'recommend' : 'photo' }))
+  const { client, repo } = repoFor({ rows: { post_feed: rows } })
+  const first = await repo.listPosts({ sortBy: 'latest' })
+  check('첫 쪽: 20개, 다음 쪽 있음, 전체 45개', first.posts.length === 20 && first.hasMore === true && first.total === 45, JSON.stringify({ n: first.posts.length, hasMore: first.hasMore, total: first.total }))
+  const second = await repo.listPosts({ sortBy: 'latest', offset: 20 })
+  check('둘째 쪽: 지금까지 받은 20개를 건너뛰고 범위 20~40을 요청', JSON.stringify(lastQuery(client, 'post_feed', 'select').range) === '[20,40]' && second.posts.length === 20 && second.hasMore === true)
+  const third = await repo.listPosts({ sortBy: 'latest', offset: 40 })
+  check('마지막 쪽: 남은 5개, 다음 쪽 없음', third.posts.length === 5 && third.hasMore === false)
+  const all = [...first.posts, ...second.posts, ...third.posts].map((p) => p.id)
+  check('세 쪽을 이으면 45개가 겹침 · 빠짐 없이 순서대로', all.length === 45 && new Set(all).size === 45 && all.join(',') === rows.map((r) => r.id).join(','))
+  const exact = await repo.listPosts({ offset: 0, limit: 45 })
+  check('딱 맞아떨어지는 경우(45개 중 45개 요청)에는 다음 쪽 없음', exact.posts.length === 45 && exact.hasMore === false)
+  const category = await repo.listPosts({ categoryId: 'recommend' })
+  check('카테고리를 고르면 그 카테고리 글 수만 세요 (전체 15개)', category.total === 15 && category.posts.every((p) => p.categoryId === 'recommend'))
+  const empty = await repoFor({ rows: { post_feed: [] } }).repo.listPosts()
+  check('글이 없으면 빈 목록 · 다음 쪽 없음', empty.posts.length === 0 && empty.hasMore === false && empty.total === 0)
+}
+
 {
   const { repo } = repoFor({ errors: { 'post_feed:select': { code: '22P02', message: 'invalid input syntax for type uuid' } } })
   check('주소가 UUID 모양이 아니면 없는 글로 취급', (await repo.getPost('abc')) === null)

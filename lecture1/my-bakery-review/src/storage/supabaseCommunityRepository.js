@@ -13,7 +13,8 @@ import { messages, toReviewError } from './supabaseShared'
 export const POST_TITLE_MAX = 80
 export const POST_CONTENT_MAX = 2000
 export const COMMENT_CONTENT_MAX = 500
-export const POST_LIST_LIMIT = 100
+// 글 목록은 20개씩 "더 보기"로 이어서 불러와요 (한 번에 많이 받지 않아요)
+export const POST_PAGE_SIZE = 20
 export const COMMENT_LIST_LIMIT = 500
 
 const CATEGORY_IDS = ['today-visit', 'new-menu', 'open-run', 'recommend', 'photo']
@@ -102,18 +103,23 @@ export const createSupabaseCommunityRepository = (getClient) => {
   }
 
   return {
-    // 글 목록: { categoryId?: 'all'|카테고리, sortBy?: 'latest'|'heart'|'comment' }
-    async listPosts({ categoryId = 'all', sortBy = 'latest' } = {}) {
+    // 글 목록 한 쪽: { categoryId?: 'all'|카테고리, sortBy?: 'latest'|'heart'|'comment', offset?: 이미 받은 글 수, limit?: 쪽 크기 }
+    // 돌려주는 값: { posts, hasMore(다음 쪽이 있는지), total(조건에 맞는 전체 글 수) }
+    // 정렬은 "기준 → 최신순 → 글 ID순"까지 정해서, 좋아요 수나 작성 시각이 같아도 순서가 늘 같아요 (쪽을 넘겨도 겹치거나 빠지지 않아요).
+    // 한 건 더 받아서 다음 쪽이 있는지 알아내요.
+    async listPosts({ categoryId = 'all', sortBy = 'latest', offset = 0, limit = POST_PAGE_SIZE } = {}) {
       try {
         const client = await getClient()
         const myUserId = await currentUserId(client)
-        let query = client.from('post_feed').select('*')
+        let query = client.from('post_feed').select('*', { count: 'exact' })
         if (categoryId !== 'all') query = query.eq('category_id', categoryId)
         const column = SORT_COLUMN[sortBy] ?? SORT_COLUMN.latest
         if (column !== 'created_at') query = query.order(column, { ascending: false })
-        const { data, error } = await query.order('created_at', { ascending: false }).limit(POST_LIST_LIMIT)
+        query = query.order('created_at', { ascending: false }).order('id', { ascending: false })
+        const { data, error, count } = await query.range(offset, offset + limit) // limit + 1개 (맨 끝 1개는 "더 있는지" 확인용)
         if (error) throw error
-        return (data ?? []).map((row) => toPost(row, myUserId))
+        const rows = data ?? []
+        return { posts: rows.slice(0, limit).map((row) => toPost(row, myUserId)), hasMore: rows.length > limit, total: Number.isFinite(count) ? count : null }
       } catch (error) {
         throw toCommunityError(error)
       }

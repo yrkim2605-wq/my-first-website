@@ -10,6 +10,7 @@ import StatusMessage from '../components/common/StatusMessage'
 import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import WoodButton from '../components/common/WoodButton'
+import LoadMoreFooter from '../components/common/LoadMoreFooter'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_POSTS } from '../constants/communityPosts'
 import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
@@ -18,7 +19,8 @@ import { formatPostDate, levelFromIndex } from '../utils/communityFormat'
 import { PAGE_TABS_SX } from '../constants/tabStyles'
 import { IS_ACCOUNT_MODE, getBackendConfigProblem } from '../lib/backend'
 import { communityRepository } from '../storage/communityRepository'
-import { POST_LIST_LIMIT } from '../storage/supabaseCommunityRepository'
+import { POST_PAGE_SIZE } from '../storage/supabaseCommunityRepository'
+import { mergePostPages } from '../utils/communityPaging'
 import { useProfile } from '../hooks/useProfile'
 
 const SORT_OPTIONS = [
@@ -43,7 +45,9 @@ const Community = () => {
   // 계정 모드: 서버의 실제 글을 불러와요. 어떤 조건의 결과인지(key)를 같이 들고 있어서,
   // 조건이 바뀌면 이전 결과가 새 조건의 결과처럼 보이지 않고 "불러오는 중"이 돼요.
   const requestKey = `${isKnownCategory ? selectedCategoryId : 'all'}|${sortBy}|${userId}|${retryCount}`
-  const [result, setResult] = useState({ key: null, posts: [], errorMessage: null })
+  const [result, setResult] = useState({ key: null, posts: [], hasMore: false, total: null, errorMessage: null })
+  // "더 보기"로 다음 쪽을 불러오는 중인지 / 실패했는지 (이미 보이는 글은 그대로 두고 아래에만 안내해요)
+  const [more, setMore] = useState({ key: null, loading: false, errorMessage: null })
 
   useEffect(() => {
     if (!IS_ACCOUNT_MODE) return undefined
@@ -51,15 +55,15 @@ const Community = () => {
     const [categoryId] = requestKey.split('|')
     const configProblem = getBackendConfigProblem()
     if (configProblem) {
-      Promise.resolve().then(() => !isCancelled && setResult({ key: requestKey, posts: [], errorMessage: configProblem }))
+      Promise.resolve().then(() => !isCancelled && setResult({ key: requestKey, posts: [], hasMore: false, total: null, errorMessage: configProblem }))
       return () => {
         isCancelled = true
       }
     }
     communityRepository
-      .listPosts({ categoryId, sortBy })
-      .then((posts) => !isCancelled && setResult({ key: requestKey, posts, errorMessage: null }))
-      .catch((error) => !isCancelled && setResult({ key: requestKey, posts: [], errorMessage: error.message }))
+      .listPosts({ categoryId, sortBy, offset: 0, limit: POST_PAGE_SIZE })
+      .then(({ posts, hasMore, total }) => !isCancelled && setResult({ key: requestKey, posts, hasMore, total, errorMessage: null }))
+      .catch((error) => !isCancelled && setResult({ key: requestKey, posts: [], hasMore: false, total: null, errorMessage: error.message }))
     return () => {
       isCancelled = true
     }
@@ -67,6 +71,22 @@ const Community = () => {
 
   const isLoading = IS_ACCOUNT_MODE && result.key !== requestKey
   const loadErrorMessage = IS_ACCOUNT_MODE && !isLoading ? result.errorMessage : null
+
+  // "더 보기": 지금 보이는 글 수만큼 건너뛰고 다음 20개를 이어 붙여요. 카테고리 · 정렬이 바뀌면 requestKey가 바뀌어서 처음부터 다시 불러와요.
+  const handleLoadMore = async () => {
+    if (more.loading || !result.hasMore) return
+    const startedKey = requestKey
+    const [categoryId] = requestKey.split('|')
+    setMore({ key: startedKey, loading: true, errorMessage: null })
+    try {
+      const page = await communityRepository.listPosts({ categoryId, sortBy, offset: result.posts.length, limit: POST_PAGE_SIZE })
+      // 기다리는 동안 카테고리 · 정렬을 바꿨다면 이 결과는 버려요 (다른 목록에 섞이지 않게)
+      setResult((prev) => (prev.key === startedKey ? { ...prev, posts: mergePostPages(prev.posts, page.posts), hasMore: page.hasMore, total: page.total ?? prev.total } : prev))
+      setMore({ key: startedKey, loading: false, errorMessage: null })
+    } catch (error) {
+      setMore({ key: startedKey, loading: false, errorMessage: error.message })
+    }
+  }
 
   // 선택한 카테고리는 주소(?category=)에만 저장해요. 헤더 메뉴로 들어와도, 탭을 눌러도 같은 값을 봐요.
   const handleSelectCategory = (_, categoryId) => {
@@ -157,7 +177,9 @@ const Community = () => {
           <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
             {isLoading || loadErrorMessage
               ? ' '
-              : `글 ${sortedPosts.length}개${IS_ACCOUNT_MODE && sortedPosts.length >= POST_LIST_LIMIT ? ` (최근 ${POST_LIST_LIMIT}개까지 보여요)` : ''}`}
+              : IS_ACCOUNT_MODE
+                ? `글 ${result.total ?? sortedPosts.length}개${result.hasMore ? ` · ${sortedPosts.length}개 보는 중` : ''}`
+                : `글 ${sortedPosts.length}개`}
           </Typography>
           <Box role="group" aria-label="정렬" sx={{ display: 'flex', gap: 0.5, mr: -1.25 }}>
             {SORT_OPTIONS.map((option) => (
@@ -239,6 +261,17 @@ const Community = () => {
               )
             })}
           </Box>
+        )}
+
+        {/* 계정 모드: 20개씩 "더 보기" (버튼). 불러오기에 실패해도 이미 보이는 글은 그대로 두고 아래에만 안내해요 */}
+        {IS_ACCOUNT_MODE && !isLoading && !loadErrorMessage && sortedPosts.length > 0 && (
+          <LoadMoreFooter
+            hasMore={result.hasMore}
+            loading={more.loading}
+            errorMessage={more.key === requestKey ? more.errorMessage : null}
+            pageSize={POST_PAGE_SIZE}
+            onLoadMore={handleLoadMore}
+          />
         )}
       </Box>
     </Container>
