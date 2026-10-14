@@ -9,7 +9,7 @@ import HeaderLevelBadge from './HeaderLevelBadge'
 import WoodButton from '../common/WoodButton'
 import { useProfile } from '../../hooks/useProfile'
 import { COMMUNITY_CATEGORIES } from '../../constants/categories'
-import { RANKING_TABS } from '../../constants/ranking'
+import { ACTIVE_RANKING_TABS } from '../../constants/rankingTabs'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { RADIUS } from '../../theme'
 
@@ -31,7 +31,7 @@ const NAV_ENTRIES = [
     key: 'ranking',
     to: '/ranking',
     label: '명예의 전당',
-    items: RANKING_TABS.map((tab, index) => ({
+    items: ACTIVE_RANKING_TABS.map((tab, index) => ({
       label: tab.label,
       to: `/ranking?tab=${index}`,
     })),

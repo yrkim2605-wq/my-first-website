@@ -9,10 +9,13 @@ import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import MyRecordCard from '../components/ranking/MyRecordCard'
 import LocalRankingBoard from '../components/ranking/LocalRankingBoard'
+import AccountRankingBoard from '../components/ranking/AccountRankingBoard'
 import Typography from '@mui/material/Typography'
 import { DISPLAY_FONT } from '../theme'
 import { PARCHMENT_SX } from '../constants/rpgStyles'
-import { MONTHLY_REVIEWERS, TOP_VISITORS, TOP_BAKERIES, TOP_LIKED_REVIEWS, RANKING_TABS } from '../constants/ranking'
+import { MONTHLY_REVIEWERS, TOP_VISITORS, TOP_BAKERIES, TOP_LIKED_REVIEWS } from '../constants/ranking'
+import { ACTIVE_RANKING_TABS } from '../constants/rankingTabs'
+import { IS_ACCOUNT_MODE } from '../lib/backend'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERIES } from '../constants/bakeries'
 import { REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryReviews'
@@ -90,7 +93,7 @@ const getRankingItems = (tabIndex) => {
 
 const parseTabParam = (value) => {
   const index = Number(value)
-  return Number.isInteger(index) && index >= 0 && index < RANKING_TABS.length ? index : 0
+  return Number.isInteger(index) && index >= 0 && index < ACTIVE_RANKING_TABS.length ? index : 0
 }
 
 const Ranking = () => {
@@ -102,7 +105,8 @@ const Ranking = () => {
     setSearchParams({ tab: String(value) }, { replace: true })
   }
 
-  const items = getRankingItems(activeTab)
+  // 로컬 모드: 예시 순위표 / 계정 모드: 서버의 실제 순위 (AccountRankingBoard가 따로 불러와요)
+  const items = IS_ACCOUNT_MODE ? [] : getRankingItems(activeTab)
   const podiumItems = items.slice(0, 3)
   const restItems = items.slice(3)
 
@@ -113,57 +117,88 @@ const Ranking = () => {
           variant="sign"
           eyebrow="HALL OF FAME"
           title="이번 달 명예의 전당"
-          description="내 기록과 이 브라우저의 실제 순위, 그리고 예시 순위표를 볼 수 있어요."
+          description={IS_ACCOUNT_MODE ? '모든 모험가의 실제 기록으로 계산한 순위예요.' : '내 기록과 이 브라우저의 실제 순위, 그리고 예시 순위표를 볼 수 있어요.'}
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
 
-        {/* 순위표는 예시 데이터라는 점을 분명히 알려요. "내 기록"만 실제로 계산한 값이에요. */}
-        <LocalProfileNotice always sx={{ mb: 2 }}>
-          <b>‘내 기록’과 ‘이 브라우저의 모험가 순위’는 저장된 일지로 계산한 실제 값</b>이에요. 서버가 없어서 다른 기기 · 다른 사람의 기록은 들어 있지 않아요. 맨 아래 탭 순위표는 <b>예시 데이터</b>예요.
-        </LocalProfileNotice>
-        <MyRecordCard />
-        <LocalRankingBoard />
+        {IS_ACCOUNT_MODE ? (
+          <>
+            <LocalProfileNotice
+              sx={{ mb: 2 }}
+              accountChildren={
+                <>
+                  여기 순위는 모두 <b>서버에 저장된 실제 기록</b>으로 계산한 값이고, 예시 데이터는 섞이지 않아요. 닉네임 · 레벨 · EXP · 일지/좋아요
+                  수만 공개되고 이메일 같은 개인 정보는 보이지 않아요.
+                </>
+              }
+            />
+            <MyRecordCard />
 
-        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
-          <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '1.3rem', sm: '1.5rem' }, color: 'primary.main' }}>
-            모험가 예시 순위표
-          </Typography>
-          <Box component="span" sx={{ px: 1, py: 0.1, borderRadius: 999, border: '1px dashed', borderColor: 'text.secondary', color: 'text.secondary', fontSize: '0.75rem', fontWeight: 800 }}>
-            예시 데이터
-          </Box>
-        </Box>
+            <Tabs
+              value={activeTab}
+              onChange={handleChangeTab}
+              variant="scrollable"
+              scrollButtons={false}
+              sx={{ ...PAGE_TABS_SX, mb: { xs: 2, sm: 3 } }}
+            >
+              {ACTIVE_RANKING_TABS.map((tab) => (
+                <Tab key={tab.id} label={tab.label} disableRipple />
+              ))}
+            </Tabs>
 
-        <Tabs
-          value={activeTab}
-          onChange={handleChangeTab}
-          variant="scrollable"
-          scrollButtons={false}
-          sx={{ ...PAGE_TABS_SX, mb: { xs: 4, sm: 6 } }}
-        >
-          {RANKING_TABS.map((tab) => (
-            <Tab key={tab.label} label={tab.label} disableRipple />
-          ))}
-        </Tabs>
+            <AccountRankingBoard key={ACTIVE_RANKING_TABS[activeTab].id} boardId={ACTIVE_RANKING_TABS[activeTab].id} label={ACTIVE_RANKING_TABS[activeTab].label} />
+          </>
+        ) : (
+          <>
+            {/* 순위표는 예시 데이터라는 점을 분명히 알려요. "내 기록"만 실제로 계산한 값이에요. */}
+            <LocalProfileNotice always sx={{ mb: 2 }}>
+              <b>‘내 기록’과 ‘이 브라우저의 모험가 순위’는 저장된 일지로 계산한 실제 값</b>이에요. 서버가 없어서 다른 기기 · 다른 사람의 기록은 들어 있지 않아요. 맨 아래 탭 순위표는 <b>예시 데이터</b>예요.
+            </LocalProfileNotice>
+            <MyRecordCard />
+            <LocalRankingBoard />
 
-        <RankingPodium items={podiumItems} />
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
+              <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '1.3rem', sm: '1.5rem' }, color: 'primary.main' }}>
+                모험가 예시 순위표
+              </Typography>
+              <Box component="span" sx={{ px: 1, py: 0.1, borderRadius: 999, border: '1px dashed', borderColor: 'text.secondary', color: 'text.secondary', fontSize: '0.75rem', fontWeight: 800 }}>
+                예시 데이터
+              </Box>
+            </Box>
 
-        {restItems.length > 0 && (
-          <Box
-            component="ol"
-            start={4}
-            sx={{
-              listStyle: 'none',
-              m: 0,
-              p: 0,
-              ...PARCHMENT_SX,
-              borderRadius: '18px',
-              overflow: 'hidden',
-            }}
-          >
-            {restItems.map((item) => (
-              <RankingListItem key={item.rank} {...item} />
-            ))}
-          </Box>
+            <Tabs
+              value={activeTab}
+              onChange={handleChangeTab}
+              variant="scrollable"
+              scrollButtons={false}
+              sx={{ ...PAGE_TABS_SX, mb: { xs: 4, sm: 6 } }}
+            >
+              {ACTIVE_RANKING_TABS.map((tab) => (
+                <Tab key={tab.label} label={tab.label} disableRipple />
+              ))}
+            </Tabs>
+
+            <RankingPodium items={podiumItems} />
+
+            {restItems.length > 0 && (
+              <Box
+                component="ol"
+                start={4}
+                sx={{
+                  listStyle: 'none',
+                  m: 0,
+                  p: 0,
+                  ...PARCHMENT_SX,
+                  borderRadius: '18px',
+                  overflow: 'hidden',
+                }}
+              >
+                {restItems.map((item) => (
+                  <RankingListItem key={item.rank} {...item} />
+                ))}
+              </Box>
+            )}
+          </>
         )}
       </Box>
     </Container>

@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import { Link } from 'react-router-dom'
 import RankingValue from './RankingValue'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
@@ -61,7 +62,9 @@ const PodiumCard = ({ item }) => {
         borderRadius: { xs: RADIUS.lg, sm: '999px 999px 18px 18px' },
         borderColor: medal.rim,
         borderWidth: 3,
+        ...(item.isMine && { boxShadow: `inset 0 0 0 3px rgba(255,248,225,0.7), 0 0 0 3px rgba(226,176,74,0.7)` }),
       }}
+      aria-current={item.isMine ? 'true' : undefined}
     >
       {item.rank === 1 && <Crown />}
       <Box
@@ -105,7 +108,11 @@ const PodiumCard = ({ item }) => {
           <Typography sx={{ fontSize: '2rem' }}>{item.emoji}</Typography>
         )}
       </Box>
-      <Typography sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: size.name, maxWidth: '100%', color: 'primary.main' }} noWrap>
+      <Typography
+        {...(item.to ? { component: Link, to: item.to } : {})}
+        sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: size.name, maxWidth: '100%', color: 'primary.main', textDecoration: 'none', ...(item.to && { '&:hover': { textDecoration: 'underline' } }) }}
+        noWrap
+      >
         {item.primaryText}
       </Typography>
       {item.levelBadge && (

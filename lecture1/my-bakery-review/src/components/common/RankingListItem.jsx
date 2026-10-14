@@ -1,10 +1,12 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import { Link } from 'react-router-dom'
 import RankingValue from './RankingValue'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
 // 4위부터 보여주는 랭킹 목록의 한 줄
-const RankingListItem = ({ rank, emoji, avatarImage, avatarScale, primaryText, secondaryText, levelBadge, valueText, valueKind }) => {
+// isMine: 내 줄을 살짝 강조해요 / to: 제목을 눌러 이동할 주소 (예: 좋아요 많은 글)
+const RankingListItem = ({ rank, emoji, avatarImage, avatarScale, primaryText, secondaryText, levelBadge, valueText, valueKind, isMine = false, to }) => {
   return (
     <Box
       component="li"
@@ -16,7 +18,9 @@ const RankingListItem = ({ rank, emoji, avatarImage, avatarScale, primaryText, s
         px: { xs: 1.5, sm: 2.5 },
         borderBottom: '1px solid rgba(201,165,106,0.5)',
         '&:last-of-type': { borderBottom: 'none' },
+        ...(isMine && { bgcolor: 'rgba(226,176,74,0.22)' }),
       }}
+      aria-current={isMine ? 'true' : undefined}
     >
       <Typography
         sx={{
@@ -56,7 +60,11 @@ const RankingListItem = ({ rank, emoji, avatarImage, avatarScale, primaryText, s
       </Box>
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
-          <Typography sx={{ fontWeight: 700 }} noWrap>
+          <Typography
+            {...(to ? { component: Link, to } : {})}
+            sx={{ fontWeight: 700, color: 'inherit', textDecoration: 'none', ...(to && { '&:hover': { color: 'primary.main', textDecoration: 'underline' } }) }}
+            noWrap
+          >
             {primaryText}
           </Typography>
           {levelBadge && (
