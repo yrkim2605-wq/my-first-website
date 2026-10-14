@@ -6,6 +6,8 @@
 // 조작(브라우저 콘솔): window.__fake.fail('create', '메시지')  → 다음 저장을 서버 오류로 만들기 / window.__fake.reset()
 
 const DB_KEY = 'fake-supabase-db'
+// 시험용 사진 (경로가 demo/로 시작하는 글에 이 그림이 나와요)
+const DEMO_PHOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="#e8c58a"/><circle cx="400" cy="300" r="170" fill="#b9733a"/><text x="400" y="320" font-size="60" text-anchor="middle" fill="#fff">DEMO</text></svg>')
 const KST_DAY = (iso) => new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
 const ME = { id: 'u-ui', email: 'ui@test.dev', email_confirmed_at: '2026-10-14T00:00:00Z' }
 
@@ -58,6 +60,18 @@ if (typeof window !== 'undefined') {
       save(db)
       return id
     },
+    // 글 n개를 한 번에 넣기 (더 보기 시험용). withPhoto: 3개마다 사진 글
+    seedMany: (n = 25, withPhoto = true) => {
+      const db = load()
+      ensureCommunity(db)
+      const base = Date.now()
+      for (let i = 0; i < n; i += 1) {
+        const at = new Date(base - i * 3600 * 1000).toISOString()
+        db.posts.push({ id: newId('post'), user_id: i % 4 === 0 ? ME.id : 'u-other', category_id: CATEGORY_IDS[i % 5], title: `시험 글 ${i + 1}`, content: `시험용 본문 ${i + 1}번이에요. 오늘 다녀온 빵집 이야기를 길게 적어 봤어요.`, created_at: at, updated_at: at, photo_path: withPhoto && i % 3 === 0 ? 'demo/p.jpg' : null })
+      }
+      save(db)
+      return n
+    },
     setSignedIn: (value) => {
       const db = load()
       db.signedIn = Boolean(value)
@@ -102,7 +116,7 @@ const ensureCommunity = (db) => {
 }
 const nick = (db, id) => db.profiles.find((p) => p.id === id)?.nickname ?? '알 수 없음'
 const postFeedRow = (db, post) => ({
-  id: post.id, category_id: post.category_id, title: post.title, content: post.content, photo_path: null,
+  id: post.id, category_id: post.category_id, title: post.title, content: post.content, photo_path: post.photo_path ?? null,
   created_at: post.created_at, updated_at: post.updated_at, user_id: post.user_id,
   author_nickname: nick(db, post.user_id), author_level_index: progressOf(db, post.user_id).level_index,
   like_count: db.likes.filter((l) => l.post_id === post.id).length,
@@ -132,7 +146,14 @@ const runCommunity = (db, q) => {
       for (const [column, dir] of [...q.orders].reverse()) {
         rows.sort((a, b) => (a[column] < b[column] ? -1 : a[column] > b[column] ? 1 : 0) * (dir === 'desc' ? -1 : 1))
       }
-      return q.single ? { data: rows[0] ?? null, error: null } : { data: rows, error: null }
+      const total = rows.length
+      if (q.range) rows = rows.slice(q.range[0], q.range[1] + 1)
+      return q.single ? { data: rows[0] ?? null, error: null } : { data: rows, error: null, count: q.count === 'exact' ? total : undefined }
+    }
+    if (table === 'posts') {
+      // 글 고치기 전에 현재 사진 경로를 읽는 요청
+      const row = db.posts.find((p) => p.id === q.filters.id && p.user_id === q.filters.user_id)
+      return { data: row ? { photo_path: row.photo_path ?? null } : null, error: null }
     }
     if (table === 'comment_feed') {
       const rows = db.comments
@@ -151,13 +172,13 @@ const runCommunity = (db, q) => {
     if (q.op === 'insert') {
       const failed = consumeFailure('post')
       if (failed) return { data: null, error: failed }
-      const { category_id, title, content } = q.payload
+      const { category_id, title, content, photo_path } = q.payload
       if (!CATEGORY_IDS.includes(category_id) || !String(title).trim() || String(title).length > 80 || !String(content).trim() || String(content).length > 2000) {
         return { data: null, error: dbError('check', '23514') }
       }
       if (todayCount(db.posts) >= 10) return { data: null, error: dbError('DAILY_LIMIT', 'P0001') }
       const now = new Date().toISOString()
-      const row = { id: newId('post'), user_id: ME.id, category_id, title: String(title).trim(), content: String(content).trim(), created_at: now, updated_at: now }
+      const row = { id: newId('post'), user_id: ME.id, category_id, title: String(title).trim(), content: String(content).trim(), created_at: now, updated_at: now, photo_path: photo_path ?? null }
       db.posts.push(row)
       save(db)
       return { data: { id: row.id }, error: null }
@@ -180,7 +201,7 @@ const runCommunity = (db, q) => {
       db.comments = db.comments.filter((c) => !goneIds.includes(c.post_id))
       db.likes = db.likes.filter((l) => !goneIds.includes(l.post_id))
       save(db)
-      return { data: null, error: null }
+      return { data: gone.map((r) => ({ id: r.id, photo_path: r.photo_path ?? null })), error: null }
     }
   }
 
@@ -262,7 +283,7 @@ const insertReview = (db, payload) => {
 
 export const createClient = () => {
   const makeBuilder = (table) => {
-    const q = { table, op: 'select', filters: {}, payload: null, single: false, returning: false, orders: [] }
+    const q = { table, op: 'select', filters: {}, payload: null, single: false, returning: false, orders: [], range: null, count: null }
     const run = async () => {
       await new Promise((resolve) => setTimeout(resolve, 150)) // 네트워크 지연 흉내
       const db = load()
@@ -270,6 +291,8 @@ export const createClient = () => {
         const found = db.profiles.find((p) => p.id === q.filters.id) ?? null
         return { data: found, error: null }
       }
+      // 로컬 기록 가져오기 미리보기: 서버에 이미 있는 빵집 id 목록 (.in)
+      if (table === 'bakeries' && q.inFilter) return { data: db.bakeries.filter((b) => q.inFilter.values.includes(b[q.inFilter.key])), error: null }
       if (table === 'bakeries') return { data: db.bakeries.find((b) => b.id === q.filters.id) ?? null, error: null }
       if (table === 'game_settings') return { data: Object.entries(db.settings).map(([key, value]) => ({ key, value })), error: null }
       if (table === 'user_progress') return { data: db.profiles.map((p) => progressOf(db, p.id)).filter((p) => p.review_count > 0), error: null }
@@ -332,7 +355,9 @@ export const createClient = () => {
       return q.single ? { data: rows[0] ?? null, error: null } : { data: rows, error: null }
     }
     const builder = {
-      select: () => builder,
+      select: (columns, opts) => ((q.count = opts?.count ?? null), builder),
+      range: (from, to) => ((q.range = [from, to]), builder),
+      in: (key, values) => ((q.inFilter = { key, values }), builder),
       eq: (key, value) => ((q.filters[key] = value), builder),
       gt: () => builder,
       order: (column, opts) => (q.orders.push([column, opts?.ascending === false ? 'desc' : 'asc']), builder),
@@ -368,9 +393,14 @@ export const createClient = () => {
     },
     storage: {
       from: () => ({
-        getPublicUrl: (path) => ({ data: { publicUrl: `https://fake-storage.test/photos/${path}` } }),
-        upload: async (path) => ({ data: { path }, error: failures.upload ? dbError(failures.upload) : null }),
-        remove: async () => ({ data: [], error: null }),
+        getPublicUrl: (path) => ({ data: { publicUrl: (String(path).startsWith('demo/') || String(path).startsWith('u-ui/')) ? DEMO_PHOTO : `https://fake-storage.test/photos/${path}` } }),
+        upload: async (path) => {
+          // fail('upload')는 한 번만 실패해요 (다른 시험 도구와 같은 방식)
+          const failed = failures.upload
+          delete failures.upload
+          return { data: { path }, error: failed ? dbError(failed) : null }
+        },
+        remove: async (paths) => ({ data: paths.map((name) => ({ name })), error: null }),
       }),
     },
     functions: {
