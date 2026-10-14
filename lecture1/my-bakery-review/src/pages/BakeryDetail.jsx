@@ -42,6 +42,7 @@ import RewardDialog from '../components/bakery/RewardDialog'
 import LevelUpDialog from '../components/bakery/LevelUpDialog'
 import ReviewJournalCard from '../components/bakery/ReviewJournalCard'
 import BakeryRatingSummary from '../components/bakery/BakeryRatingSummary'
+import Sticker from '../components/common/decor/Sticker'
 import { DISPLAY_FONT, RADIUS } from '../theme'
 
 const STAR_SX = { '& .MuiRating-iconFilled': { color: 'mustard.main' } }
@@ -443,9 +444,12 @@ const BakeryDetail = () => {
         </LocalProfileNotice>
 
         {listCards.length === 0 ? (
-          <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary' }}>
-            아직 기록이 없어요. 이 빵집을 다녀온 첫 모험가가 되어보세요.
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Sticker name="knight-breadbed" width={104} sx={{ flexShrink: 0 }} />
+            <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary' }}>
+              아직 기록이 없어요. 이 빵집을 다녀온 첫 모험가가 되어보세요.
+            </Typography>
+          </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {cards.length === 0 && (

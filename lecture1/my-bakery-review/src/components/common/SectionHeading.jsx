@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import WavyDivider from './decor/WavyDivider'
 import Reveal from './Reveal'
+import Sticker from './decor/Sticker'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 
 // 섹션 제목. 가운데 정렬이고 variant에 따라 제목을 놓는 "물건"이 달라져요 (RPG 컨셉).
@@ -10,8 +11,9 @@ import { PARCHMENT_SX } from '../../constants/rpgStyles'
 //   ribbon  : 버건디 리본 배너 (지도 · 이동 느낌)
 //   board   : 퀘스트 보드에 압정으로 꽂은 양피지 메모
 //   journal : 손글씨 일지 제목 + 형광펜 밑줄
+// flank={{ left: { name, width }, right: { name, width } }}: 제목 양옆에 꾸밈 스티커를 놓아요 (넓은 화면에서만 보여요).
 // tone="onColor"는 색 블록(세이지 · 와인) 위에 올릴 때 써요. titleId를 주면 aria-labelledby에 연결할 수 있어요.
-const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default', variant = 'plain', sx }) => {
+const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default', variant = 'plain', flank, sx }) => {
   const onColor = tone === 'onColor'
 
   const titleSx = {
@@ -117,7 +119,20 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
 
   return (
     <Reveal distance={14}>
-      <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', ...sx }}>
+      <Box sx={{ position: 'relative', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', ...sx }}>
+        {flank &&
+          ['left', 'right'].map(
+            (side) =>
+              flank[side] && (
+                <Sticker
+                  key={side}
+                  name={flank[side].name}
+                  width={flank[side].width}
+                  float={flank[side].float}
+                  sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', top: '50%', transform: 'translateY(-50%)', [side]: '4%' }}
+                />
+              ),
+          )}
         {eyebrow && (
           <Typography
             sx={{

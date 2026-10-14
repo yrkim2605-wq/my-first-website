@@ -154,6 +154,7 @@ const Home = () => {
 
   const bakeriesErrorMessage = (
     <StatusMessage
+      mood="error"
       title="빵집 정보를 불러오지 못했어요"
       description="잠시 후 다시 시도해주세요."
       actionLabel="다시 시도"
@@ -363,6 +364,7 @@ const Home = () => {
           {bakeriesError && bakeriesErrorMessage}
           {!bakeriesLoading && !bakeriesError && filteredBakeries.length === 0 && (
             <StatusMessage
+              mood="empty"
               title="조건에 맞는 빵집이 없어요"
               description="다른 지역을 고르거나 검색어를 바꿔보세요."
               actionLabel="검색 초기화"

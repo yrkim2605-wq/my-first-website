@@ -136,6 +136,7 @@ const Community = () => {
           variant="sign"
           eyebrow="ADVENTURERS' SQUARE"
           title="모험가 광장"
+          flank={{ left: { name: 'knight-coffee', width: 118 }, right: { name: 'knight-camera', width: 118 } }}
           description="부산 빵집에서 있었던 일, 새로 나온 메뉴, 오픈런 후기를 나눠요."
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
@@ -238,9 +239,10 @@ const Community = () => {
         </Box>
 
         {isLoading ? (
-          <StatusMessage title="글을 불러오고 있어요" description="잠시만 기다려 주세요." sx={{ mt: 3 }} />
+          <StatusMessage mood="loading" title="글을 불러오고 있어요" description="잠시만 기다려 주세요." sx={{ mt: 3 }} />
         ) : loadErrorMessage ? (
           <StatusMessage
+            mood="error"
             title="글을 불러오지 못했어요"
             description={loadErrorMessage}
             actionLabel="다시 시도"
@@ -249,6 +251,7 @@ const Community = () => {
           />
         ) : sortedPosts.length === 0 ? (
           <StatusMessage
+            mood="empty"
             title="아직 글이 없어요"
             description={
               selectedCategoryId === 'all' || !isKnownCategory

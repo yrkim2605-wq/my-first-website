@@ -162,11 +162,11 @@ const AccountRankingBoard = ({ boardId, label }) => {
       {hasMyRank && !isLoading && !result.errorMessage && <MyRankCard boardId={boardId} profile={profile} ready={ready} me={result.me} />}
 
       {isLoading ? (
-        <StatusMessage title="순위를 불러오고 있어요" description="잠시만 기다려 주세요." />
+        <StatusMessage mood="loading" title="순위를 불러오고 있어요" description="잠시만 기다려 주세요." />
       ) : result.errorMessage ? (
-        <StatusMessage title="순위를 불러오지 못했어요" description={result.errorMessage} actionLabel="다시 시도" onAction={() => setRetryCount((count) => count + 1)} />
+        <StatusMessage mood="error" title="순위를 불러오지 못했어요" description={result.errorMessage} actionLabel="다시 시도" onAction={() => setRetryCount((count) => count + 1)} />
       ) : items.length === 0 ? (
-        <StatusMessage title={EMPTY[boardId].title} description={EMPTY[boardId].description} />
+        <StatusMessage mood="empty" title={EMPTY[boardId].title} description={EMPTY[boardId].description} />
       ) : (
         <>
           <RankingPodium items={podiumItems} />

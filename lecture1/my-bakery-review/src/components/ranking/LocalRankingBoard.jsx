@@ -48,6 +48,7 @@ const LocalRankingBoard = () => {
 
       {ranking.length === 0 ? (
         <StatusMessage
+          mood="empty"
           title="아직 순위에 오른 모험가가 없어요"
           description="모험 일지를 하나라도 남기면 EXP가 쌓이고 이 순위에 이름이 올라가요."
         />

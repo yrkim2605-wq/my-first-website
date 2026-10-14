@@ -116,7 +116,7 @@ const BakeryCollection = ({ discovery }) => {
       </Typography>
 
       {error ? (
-        <StatusMessage title="빵집 도감을 불러오지 못했어요" description="잠시 후 다시 시도해주세요." actionLabel="다시 시도" onAction={reload} />
+        <StatusMessage mood="error" title="빵집 도감을 불러오지 못했어요" description="잠시 후 다시 시도해주세요." actionLabel="다시 시도" onAction={reload} />
       ) : (
         <>
           {!loading && <XpTrack size="sm" percent={ratio} aria-hidden="true" sx={{ mb: 2 }} />}

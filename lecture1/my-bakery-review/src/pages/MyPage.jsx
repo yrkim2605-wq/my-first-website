@@ -113,9 +113,10 @@ const MyPage = () => {
         <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 4, sm: 6 } }}>
           <SectionHeading variant="sign" eyebrow="MY ADVENTURER" title="내 모험가 상태창" description="레벨, 퀘스트, 빵집 도감, 모험 일지를 모아봤어요." sx={{ mb: { xs: 3, sm: 4 } }} />
           {game.isLoading ? (
-            <StatusMessage title="내 모험 기록을 불러오고 있어요" description="잠시만 기다려 주세요." />
+            <StatusMessage mood="loading" title="내 모험 기록을 불러오고 있어요" description="잠시만 기다려 주세요." />
           ) : (
             <StatusMessage
+              mood="error"
               title="내 모험 기록을 불러오지 못했어요"
               description={`${game.loadError} 서버에 저장된 기록은 그대로예요.`}
               actionLabel="다시 시도"
@@ -137,6 +138,7 @@ const MyPage = () => {
           eyebrow="MY ADVENTURER"
           title="내 모험가 상태창"
           description="레벨, 퀘스트, 빵집 도감, 모험 일지를 모아봤어요."
+          flank={{ left: { name: 'knight-pack', width: 112 }, right: { name: 'knight-book', width: 104 } }}
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
         <LocalProfileNotice

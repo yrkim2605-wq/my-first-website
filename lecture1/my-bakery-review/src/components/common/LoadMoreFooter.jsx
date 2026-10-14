@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
+import BreadRow from './decor/BreadRow'
 
 // 목록 아래의 "더 보기" 영역이에요 (버튼 방식).
 //  - hasMore: 다음 쪽이 있으면 버튼, 없으면 "마지막 글이에요"
@@ -20,7 +21,10 @@ const LoadMoreFooter = ({ hasMore, loading = false, errorMessage = null, pageSiz
         {loading ? '불러오는 중…' : errorMessage ? '다시 시도' : `더 보기 (${pageSize}개씩)`}
       </Button>
     ) : (
-      <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>마지막 글이에요</Typography>
+      <>
+        <BreadRow />
+        <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>마지막 글이에요</Typography>
+      </>
     )}
   </Box>
 )

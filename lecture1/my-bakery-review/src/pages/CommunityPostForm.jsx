@@ -263,7 +263,7 @@ const CommunityPostForm = () => {
     </Container>
   )
 
-  if (!ready) return wrap(<StatusMessage title="확인하고 있어요" description="잠시만 기다려 주세요." />)
+  if (!ready) return wrap(<StatusMessage mood="loading" title="확인하고 있어요" description="잠시만 기다려 주세요." />)
 
   if (!profile) {
     return wrap(
@@ -308,12 +308,12 @@ const CommunityPostForm = () => {
   }
 
   // 고치기
-  if (loaded.key !== loadKey) return wrap(<StatusMessage title="글을 불러오고 있어요" description="잠시만 기다려 주세요." />)
+  if (loaded.key !== loadKey) return wrap(<StatusMessage mood="loading" title="글을 불러오고 있어요" description="잠시만 기다려 주세요." />)
   if (loaded.errorMessage) {
-    return wrap(<StatusMessage title="글을 불러오지 못했어요" description={loaded.errorMessage} actionLabel="커뮤니티로 가기" onAction={() => navigate('/community')} />)
+    return wrap(<StatusMessage mood="error" title="글을 불러오지 못했어요" description={loaded.errorMessage} actionLabel="커뮤니티로 가기" onAction={() => navigate('/community')} />)
   }
   if (!loaded.post) {
-    return wrap(<StatusMessage title="글을 찾을 수 없어요" description="지워졌거나 주소가 잘못됐을 수 있어요." actionLabel="커뮤니티로 가기" onAction={() => navigate('/community')} />)
+    return wrap(<StatusMessage mood="notfound" title="글을 찾을 수 없어요" description="지워졌거나 주소가 잘못됐을 수 있어요." actionLabel="커뮤니티로 가기" onAction={() => navigate('/community')} />)
   }
   if (!loaded.post.isMine) {
     return wrap(<StatusMessage title="내가 쓴 글만 고칠 수 있어요" description="다른 모험가의 글은 고칠 수 없어요." actionLabel="글 보러 가기" onAction={() => navigate(`/community/${id}`)} />)

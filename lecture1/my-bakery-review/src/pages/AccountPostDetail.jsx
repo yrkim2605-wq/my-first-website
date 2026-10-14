@@ -220,7 +220,7 @@ const AccountPostDetail = () => {
       <Container maxWidth="md">
         <Box sx={{ py: { xs: 5, sm: 8 } }}>
           {backLink}
-          <StatusMessage title="글을 불러오고 있어요" description="잠시만 기다려 주세요." />
+          <StatusMessage mood="loading" title="글을 불러오고 있어요" description="잠시만 기다려 주세요." />
         </Box>
       </Container>
     )
@@ -231,7 +231,7 @@ const AccountPostDetail = () => {
       <Container maxWidth="md">
         <Box sx={{ py: { xs: 5, sm: 8 } }}>
           {backLink}
-          <StatusMessage title="글을 불러오지 못했어요" description={state.errorMessage} actionLabel="다시 시도" onAction={() => setRetryCount((count) => count + 1)} />
+          <StatusMessage mood="error" title="글을 불러오지 못했어요" description={state.errorMessage} actionLabel="다시 시도" onAction={() => setRetryCount((count) => count + 1)} />
         </Box>
       </Container>
     )
@@ -242,7 +242,7 @@ const AccountPostDetail = () => {
       <Container maxWidth="md">
         <Box sx={{ py: { xs: 5, sm: 8 } }}>
           {backLink}
-          <StatusMessage title="글을 찾을 수 없어요" description="지워졌거나 주소가 잘못됐을 수 있어요." actionLabel="커뮤니티로 가기" onAction={() => navigate('/community')} />
+          <StatusMessage mood="notfound" title="글을 찾을 수 없어요" description="지워졌거나 주소가 잘못됐을 수 있어요." actionLabel="커뮤니티로 가기" onAction={() => navigate('/community')} />
         </Box>
       </Container>
     )
