@@ -1,11 +1,15 @@
 import { RepositoryError } from './localStore'
 import { messages, toReviewError } from './supabaseShared'
+import { assertUploadablePhoto, getPhotoUrl, isRemoteUrl, listOrphanPhotos, removePhotoFile, retryOrphanCleanup, uploadPhoto } from './photoStorage'
 
 // 커뮤니티(게시글 · 댓글 · 좋아요) 저장소 — Supabase 버전이에요 (posts · comments · post_likes 표).
 //  - 읽기는 누구나(비로그인 포함), 쓰기는 이메일 인증을 마친 로그인 사용자만 할 수 있어요 (서버 권한으로 보장돼요).
 //  - 글은 작성자만 고치고 지울 수 있어요. 댓글은 작성 · 삭제만 되고 수정은 없어요. 좋아요는 계정당 글 1개에 1번이에요.
 //  - 작성자 · 작성일은 서버가 정해요. 이 파일은 글 내용(카테고리 · 제목 · 본문)만 보내요.
 //  - 글 · 댓글 · 좋아요는 EXP · 레벨에 영향을 주지 않아요.
+//  - 글에는 사진을 1장 붙일 수 있어요 (JPEG/WebP 1MB 이하, 올리기 전에 점검). 올리기 · 교체 · 삭제는 작성자만 되고(서버 정책 0003 · 0008),
+//    글을 쓰다 사진 올리기에 실패해도 글 내용은 호출한 쪽(화면)에 그대로 남아요. 글을 지우거나 사진을 바꾸면 옛 파일 정리도 시도하고,
+//    정리에 실패하면 남은 파일을 기록해 둬요(photoStorage의 listOrphanPhotos).
 //  - 연결에 실패하면 로컬에 대신 저장하지 않고 오류를 던져요.
 //
 // getClient: () => Promise<SupabaseClient>  (테스트에서는 가짜 클라이언트를 넣어요)
@@ -61,7 +65,7 @@ const validateComment = (rawContent) => {
   return content
 }
 
-const toPost = (row, myUserId) => ({
+const toPost = (row, myUserId, client) => ({
   id: row.id,
   categoryId: row.category_id,
   title: row.title,
@@ -73,6 +77,8 @@ const toPost = (row, myUserId) => ({
   commentCount: Number(row.comment_count ?? 0),
   likedByMe: Boolean(row.liked_by_me),
   isMine: Boolean(myUserId) && row.user_id === myUserId,
+  photoPath: row.photo_path ?? null,
+  photoUrl: getPhotoUrl(client, row.photo_path), // 사진이 없으면 null → 화면은 카테고리 이모지를 그대로 보여줘요
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 })
@@ -119,7 +125,7 @@ export const createSupabaseCommunityRepository = (getClient) => {
         const { data, error, count } = await query.range(offset, offset + limit) // limit + 1개 (맨 끝 1개는 "더 있는지" 확인용)
         if (error) throw error
         const rows = data ?? []
-        return { posts: rows.slice(0, limit).map((row) => toPost(row, myUserId)), hasMore: rows.length > limit, total: Number.isFinite(count) ? count : null }
+        return { posts: rows.slice(0, limit).map((row) => toPost(row, myUserId, client)), hasMore: rows.length > limit, total: Number.isFinite(count) ? count : null }
       } catch (error) {
         throw toCommunityError(error)
       }
@@ -132,7 +138,7 @@ export const createSupabaseCommunityRepository = (getClient) => {
         const myUserId = await currentUserId(client)
         const { data, error } = await client.from('post_feed').select('*').eq('id', String(postId)).maybeSingle()
         if (error) throw error
-        return data ? toPost(data, myUserId) : null
+        return data ? toPost(data, myUserId, client) : null
       } catch (error) {
         // 주소가 UUID 모양이 아니면 서버가 거부해요 → 없는 글로 취급
         if (error?.code === '22P02') return null
@@ -140,44 +146,109 @@ export const createSupabaseCommunityRepository = (getClient) => {
       }
     },
 
-    // 글쓰기. 저장에 성공한 새 글 ID를 돌려줘요.
+    // 글쓰기. 저장에 성공한 새 글 ID를 돌려줘요. input.photo: 사진 data URL(없으면 사진 없는 글)
+    // 순서: 사진 올리기 → 글 저장. 글 저장이 실패하면 방금 올린 사진 파일은 지워요(지우지 못하면 기록해 둬요).
     async createPost(input) {
       const payload = validatePost(input)
+      const photo = input.photo ?? null
+      if (photo) assertUploadablePhoto(photo) // 서버에 보내기 전에 형식 · 크기부터 확인
+      let client = null
+      let userId = null
+      let uploadedPath = null
       try {
-        const client = await getClient()
-        await requireUserId(client)
+        client = await getClient()
+        userId = await requireUserId(client)
+        if (photo) {
+          uploadedPath = await uploadPhoto(client, userId, photo)
+          payload.photo_path = uploadedPath
+        }
         const { data, error } = await client.from('posts').insert(payload).select('id').single()
         if (error) throw error
         return data.id
       } catch (error) {
+        if (uploadedPath) await removePhotoFile(client, userId, uploadedPath)
         throw toCommunityError(error)
       }
     },
 
     // 내 글 고치기. 작성자 · 작성일은 바뀌지 않아요 (서버가 막아요).
+    // input.photo: 없으면(undefined) 사진은 그대로 / null이면 사진 빼기 / data URL이면 새 사진으로 교체 / 이미 올라간 주소(https://…)면 그대로
+    // 교체 순서: 새 사진 올리기 → 글 고치기 → 옛 파일 지우기. 글 고치기가 실패하면 새로 올린 파일을 지워요.
+    // 돌려주는 값: { photoCleanup: 'none' | 'ok' | 'failed', orphanPath } (옛 파일 정리 결과)
     async updatePost(postId, input) {
       const payload = validatePost(input)
+      const photo = input.photo
+      const photoChange = photo === null ? 'remove' : typeof photo === 'string' && !isRemoteUrl(photo) ? 'replace' : 'keep'
+      if (photoChange === 'replace') assertUploadablePhoto(photo)
+      let client = null
+      let userId = null
+      let newPath = null
       try {
-        const client = await getClient()
-        const userId = await requireUserId(client)
+        client = await getClient()
+        userId = await requireUserId(client)
+        let oldPath = null
+        if (photoChange !== 'keep') {
+          const current = await client.from('posts').select('photo_path').eq('id', String(postId)).eq('user_id', userId).maybeSingle()
+          if (current.error) throw current.error
+          if (!current.data) throw new RepositoryError('POST_NOT_FOUND', communityMessages.POST_NOT_FOUND)
+          oldPath = current.data.photo_path ?? null
+        }
+        if (photoChange === 'replace') {
+          newPath = await uploadPhoto(client, userId, photo)
+          payload.photo_path = newPath
+        } else if (photoChange === 'remove') {
+          payload.photo_path = null
+        }
         const { data, error } = await client.from('posts').update(payload).eq('id', String(postId)).eq('user_id', userId).select('id')
         if (error) throw error
         // 한 줄도 바뀌지 않았다면 없는 글이거나 내 글이 아니에요
         if (!data || data.length === 0) throw new RepositoryError('POST_NOT_FOUND', communityMessages.POST_NOT_FOUND)
+        if (photoChange === 'keep' || !oldPath || oldPath === newPath) return { photoCleanup: 'none', orphanPath: null }
+        const cleanup = await removePhotoFile(client, userId, oldPath)
+        return { photoCleanup: cleanup.ok ? 'ok' : 'failed', orphanPath: cleanup.ok ? null : oldPath }
       } catch (error) {
+        if (newPath) await removePhotoFile(client, userId, newPath)
         throw toCommunityError(error)
       }
     },
 
     // 내 글 지우기 (댓글 · 좋아요도 함께 지워져요). 이미 없어도 성공이에요.
+    // 글을 지운 뒤 사진 파일도 지워 봐요. 파일 정리에 실패해도 글 삭제는 성공으로 두고, 남은 파일을 알려줘요.
+    // 돌려주는 값: { photoCleanup: 'none' | 'ok' | 'failed', orphanPath }
     async deletePost(postId) {
       try {
         const client = await getClient()
         const userId = await requireUserId(client)
-        const { error } = await client.from('posts').delete().eq('id', String(postId)).eq('user_id', userId)
+        const { data, error } = await client.from('posts').delete().eq('id', String(postId)).eq('user_id', userId).select('id, photo_path')
         if (error) throw error
+        const photoPath = data?.[0]?.photo_path ?? null
+        if (!photoPath) return { photoCleanup: 'none', orphanPath: null }
+        const cleanup = await removePhotoFile(client, userId, photoPath)
+        return { photoCleanup: cleanup.ok ? 'ok' : 'failed', orphanPath: cleanup.ok ? null : photoPath }
       } catch (error) {
         throw toCommunityError(error)
+      }
+    },
+
+    // 지난번에 못 지운 사진 파일을 다시 정리해 봐요. 돌려주는 값: 아직 남은 파일 목록 [{ path, reason, at }]
+    async retryPhotoCleanup() {
+      try {
+        const client = await getClient()
+        const userId = await currentUserId(client)
+        return userId ? await retryOrphanCleanup(client, userId) : []
+      } catch {
+        return []
+      }
+    },
+
+    // 정리하지 못해 남아 있는 사진 파일 목록 (이 브라우저에 기록된 것)
+    async listLeftoverPhotos() {
+      try {
+        const client = await getClient()
+        const userId = await currentUserId(client)
+        return userId ? listOrphanPhotos(userId) : []
+      } catch {
+        return []
       }
     },
 

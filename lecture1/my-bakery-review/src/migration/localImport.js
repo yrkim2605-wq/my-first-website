@@ -2,6 +2,7 @@ import { REVIEWS_STORAGE_KEY } from '../storage/reviewRepository'
 import { PROFILES_STORAGE_KEY } from '../storage/profileRepository'
 import { buildGameState, diffGameState, predictNewReviewExp } from '../utils/gameState'
 import { getReviewContentStatus } from '../utils/reviewContent'
+import { classifyPhoto, PHOTO_MAX_BYTES } from '../utils/photoCheck'
 
 // 이 브라우저(localStorage)에 남아 있던 기록을 내 계정으로 옮기는 로직이에요. 화면과 분리된 순수 로직이라 테스트로 안전 규칙을 고정해요.
 //
@@ -16,9 +17,6 @@ import { getReviewContentStatus } from '../utils/reviewContent'
 export const VISITED_STORAGE_KEY = 'my-bakery-review:visited-real-bakery-ids' // VisitedBakeriesContext가 쓰는 키와 같아요
 export const IMPORT_STATE_KEY_PREFIX = 'my-bakery-review:v1:import-state:'
 export const importStateKey = (accountUserId) => `${IMPORT_STATE_KEY_PREFIX}${accountUserId}`
-
-export const PHOTO_MAX_BYTES = 1048576 // 서버 사진 저장소(photos 버킷)의 1MB 제한 (0003_storage.sql)
-const PHOTO_ALLOWED_TYPES = ['image/jpeg', 'image/webp']
 
 const isDigits = (text) => {
   const value = String(text ?? '')
@@ -69,25 +67,8 @@ export const recordImportState = (accountUserId, key, status, storage = globalTh
   }
 }
 
-// ── 사진 점검 (서버 저장소 정책: JPEG/WebP, 1MB 이하) ──
-export const classifyPhoto = (photo) => {
-  if (!photo) return { hasPhoto: false, ok: false, reason: null, bytes: 0 }
-  if (typeof photo !== 'string' || !photo.startsWith('data:')) {
-    return { hasPhoto: true, ok: false, reason: '사진을 읽을 수 없어서 글만 가져와요', bytes: 0 }
-  }
-  const comma = photo.indexOf(',')
-  const header = comma < 0 ? '' : photo.slice(5, comma)
-  const mime = header.split(';')[0]
-  const payload = comma < 0 ? '' : photo.slice(comma + 1)
-  const padding = payload.endsWith('==') ? 2 : payload.endsWith('=') ? 1 : 0
-  const bytes = Math.max(Math.floor((payload.length * 3) / 4) - padding, 0)
-  if (!header.includes(';base64') || !payload) return { hasPhoto: true, ok: false, reason: '사진 형식을 읽을 수 없어서 글만 가져와요', bytes }
-  if (!PHOTO_ALLOWED_TYPES.includes(mime)) return { hasPhoto: true, ok: false, reason: `사진 형식(${mime || '알 수 없음'})을 서버 저장소가 받지 않아서 글만 가져와요 (JPEG · WebP만 가능)`, bytes }
-  if (bytes > PHOTO_MAX_BYTES) {
-    return { hasPhoto: true, ok: false, reason: `사진이 ${(bytes / 1048576).toFixed(1)}MB라서 서버 저장소 제한(1MB)을 넘어 글만 가져와요`, bytes }
-  }
-  return { hasPhoto: true, ok: true, reason: null, bytes }
-}
+// 사진 점검(서버 저장소 정책: JPEG/WebP, 1MB)은 src/utils/photoCheck.js에 있어요. 테스트와 화면이 이 파일에서 그대로 가져다 쓰도록 다시 내보내요.
+export { classifyPhoto, PHOTO_MAX_BYTES }
 
 // ── 미리보기 계획 ──
 // 입력
