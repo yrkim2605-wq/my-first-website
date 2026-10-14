@@ -33,17 +33,23 @@
 
 | 순서 | 항목 | 어디서 | 왜 필요한가 | 상태 |
 |---|---|---|---|---|
-| 1 | **이 앱용 Supabase 프로젝트 확정** | Supabase 대시보드 | `deploy.yml`에는 다른 사이트용 프로젝트 주소가 이미 있어요. 이 앱이 쓰는 프로젝트가 맞는지 확인해야 해요 (`env.example`의 주소 기준) | ⬜ |
-| 2 | **마이그레이션 0009, 0010 적용** | SQL Editor | 신고 · 운영자 기능의 표 · 규칙. 다시 실행해도 안전해요 | ⬜ |
-| 3 | **첫 운영자 등록** | SQL Editor | `insert into public.admins (user_id) values ('<내 계정 UUID>')`. UUID는 Authentication → Users에서 확인 | ⬜ |
-| 4 | **Edge Function `delete-account` 배포** | Edge Functions | 회원 탈퇴. 코드: `supabase/functions/delete-account/index.ts` (대시보드 편집기에 붙여넣기) | ⬜ |
-| 5 | `register-bakery` 함수가 최신인지 확인 | Edge Functions | 기존 함수 (이미 배포돼 있어요) | ⬜ |
-| 6 | **Custom SMTP 설정** | Authentication → SMTP Settings | 기본 메일 발송은 한도가 매우 낮아요 (시간당 2통 안팎이라는 자료가 있어요). 가입자 3번째부터 인증 메일이 막힐 수 있어요 | ⬜ |
+| 1 | **이 앱용 Supabase 프로젝트 확정** | Supabase 대시보드 | `deploy.yml`에는 다른 사이트용 프로젝트 주소가 이미 있어요. 이 앱이 쓰는 프로젝트가 맞는지 확인해야 해요 (`env.example`의 주소 기준) | ✅ `ujgklqbtoimazuzwjuhv` (이 앱 전용). Region · 상태는 아직 못 받았어요 |
+| 2 | **마이그레이션 0009, 0010 적용** | SQL Editor | 신고 · 운영자 기능의 표 · 규칙. 다시 실행해도 안전해요 | ✅ 적용 완료, 확인 쿼리 모두 기대값, `check-live.mjs` ⑤ 통과 |
+| 3 | **첫 운영자 등록** | SQL Editor | `insert into public.admins (user_id) values ('<내 계정 UUID>')`. UUID는 Authentication → Users에서 확인 | ✅ 등록 완료 |
+| 4 | **Edge Function `delete-account` 배포** | Edge Functions | 회원 탈퇴. 코드: `supabase/functions/delete-account/index.ts` (대시보드 편집기에 붙여넣기) | ✅ 배포, Verify JWT 끔, 비로그인 요청 10종 차단 확인. **실제 토큰의 `amr` · 실제 탈퇴는 시험 계정으로 아직 미확인** |
+| 5 | `register-bakery` 함수가 최신인지 확인 | Edge Functions | 기존 함수 (이미 배포돼 있어요) | ✅ Verify JWT 끔 (아래 "배포할 때 주의" 참고). 진짜 토큰으로 일지 저장 · 코드 최신 여부(`DB_PERMISSION`, `실패 단계` 검색)는 사용자 확인 대기 |
+| 6 | **Custom SMTP 설정** | Authentication → SMTP Settings | 기본 메일 발송은 한도가 매우 낮아요 (시간당 2통 안팎이라는 자료가 있어요). 가입자 3번째부터 인증 메일이 막힐 수 있어요 | 🔶 **진행 중**: 도메인이 없어 Brevo(무료, 하루 300통)로 먼저 연결해요. 보낸 사람이 일반 이메일이면 스팸 처리될 수 있어서 **공개 전에 도메인 + 메일 서비스로 교체해야 해요.** 저장 여부 · 발송 한도 숫자는 사용자 확인 대기 |
 | 7 | **Redirect URL / Site URL 등록** | Authentication → URL Configuration | `https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/` (인증 · 재설정 링크가 돌아올 곳). 이 주소 하나면 돼요 | ⬜ |
 | 8 | **GitHub Actions 환경변수 추가** | `.github/workflows/deploy.yml` + GitHub Settings | `VITE_DATA_BACKEND=supabase`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. publishable 키만 (비밀 키 `sb_secret_…`는 절대 넣지 않아요) | ⬜ |
 | 9 | **법률 문서의 "확인 필요" 채우기** | `src/constants/legalInfo.js` | 아래 3장 표 참고. 빈 칸은 화면에 노란 "[확인 필요]"로 보여요 | ⬜ |
 | 10 | 카카오 콘솔 확인 | Kakao Developers | JavaScript 키의 허용 도메인(이미 확인됨), 쿼터 확인 | ✅ 도메인 확인됨 |
 | 11 | 백업 · 모니터링 준비 | 아래 5장 | Free 플랜은 자동 백업이 없어요 (공식 문서로 확인 필요) | ⬜ |
+
+### 배포할 때 주의 (Edge Function)
+
+- **대시보드에서 함수 코드를 다시 배포하면 Verify JWT가 "켜짐"으로 되돌아갈 수 있어요.** `register-bakery`가 실제로 그랬어요. 두 함수(`register-bakery`, `delete-account`)는 모두 함수가 스스로 토큰을 검증하므로 **꺼 둔 상태가 기준**이에요.
+- 배포 뒤 확인법: 로그인 없이 `POST`를 보내서, 응답이 **앞단**(`code: UNAUTHORIZED_…`, "Missing authorization header")이면 켜짐이고, **함수**(`error.code: NOT_SIGNED_IN`)이면 꺼짐이에요. `node supabase/check-live.mjs`가 응답 모양까지 확인해요.
+- 설정 변경 직후에는 함수가 다시 뜨면서 **503이 한두 번 나올 수 있어요.** 반복되면 Edge Functions → 해당 함수 → Logs를 확인해요.
 
 ## 3. 법률 문서: 사용자가 확인해야 하는 항목
 
