@@ -303,6 +303,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
                     [개발용] 단계={errorDebug.step} 출처={errorDebug.source} 상태={String(errorDebug.status)} 코드={String(errorDebug.serverCode ?? errorDebug.code)}
                     {errorDebug.cause ? ` 원인=${errorDebug.cause}` : ''}
                     {errorDebug.probe ? ` 진단=${errorDebug.probe}` : ''}
+                    {errorDebug.elapsedMs != null ? ` 걸린시간=${errorDebug.elapsedMs}ms` : ''}
                   </Box>
                 )}
               </Alert>

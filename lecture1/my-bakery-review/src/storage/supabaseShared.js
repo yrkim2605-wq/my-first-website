@@ -32,6 +32,12 @@ export const messages = {
     '이 브라우저에서 서버(Supabase)에 연결되지 않아요. 인터넷 연결, VPN, 광고 · 보안 차단 확장 프로그램을 확인한 뒤 다시 시도해 주세요. 시크릿 창에서 확장 프로그램 없이 시도해 보는 것도 좋아요. (저장되지 않았어요)',
   FUNCTION_REQUEST_BLOCKED:
     '빵집 확인 서버는 응답하는데, 로그인 정보가 담긴 요청이 서버에 닿기 전에 막혔어요. 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 서버 관리자가 빵집 확인 함수의 접근(CORS) · 로그인 검사 설정을 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_HEADERS_BLOCKED:
+    '이 브라우저가 로그인 정보(인증 헤더)가 담긴 요청을 막았어요. 보안 프로그램 · 확장 프로그램 · 회사/학교 네트워크를 확인하거나, 시크릿 창이나 다른 네트워크(휴대폰 핫스팟)에서 시도해 보세요. (저장되지 않았어요)',
+  FUNCTION_NO_RESPONSE:
+    '서버가 로그인한 사용자의 요청을 처리하다가 응답하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 Supabase → Edge Functions → register-bakery의 Logs(호출 기록)를 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_TIMEOUT:
+    '빵집 확인 서버의 응답이 너무 늦어요(25초). 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 카카오 연결 상태와 Edge Functions Logs를 확인해야 해요. (저장되지 않았어요)',
   TOO_LARGE: '요청이 너무 커서 처리하지 못했어요. (저장되지 않았어요)',
   RATE_LIMITED: '빵집 확인 요청이 너무 많아요. 잠시 후 다시 시도해 주세요. (저장되지 않았어요)',
   BAKERY_REJECTED: '이 빵집은 확인하지 못했어요. 지도에서 다시 골라 주세요.',
@@ -119,12 +125,13 @@ export const toReviewError = (error, step) => {
 
 // 빵집 확인 서버 함수(register-bakery)의 오류 → 원인별 안내
 //  status: HTTP 상태 (연결 자체가 안 되면 undefined) / detail: 함수가 돌려준 { error: { code, message } }
-export const mapFunctionError = (error, status, detail, probe) => {
+export const mapFunctionError = (error, status, detail, probe, elapsedMs) => {
   const serverCode = detail?.error?.code ?? null
   const debug = {
     ...describeError(error, 'register', 'function'),
     status: status ?? null,
     probe: probe?.note ?? null,
+    elapsedMs: elapsedMs ?? null,
     serverCode,
     serverMessage: detail?.error?.message ? String(detail.error.message).slice(0, 200) : null,
   }
@@ -140,7 +147,12 @@ export const mapFunctionError = (error, status, detail, probe) => {
   // 상태가 없다 = 요청이 서버에 닿기 전에 실패했어요. 로그인 정보 없이 보낸 단순 요청(probe)으로 원인을 가려요.
   //  - 단순 요청도 실패 → 이 브라우저가 서버에 못 닿아요 (인터넷 · VPN · 차단 확장 프로그램)
   //  - 단순 요청은 응답 → 서버는 살아 있고, 로그인 정보가 담긴 요청만 막혔어요 (CORS · 로그인 검사 설정 · 토큰 문제)
+  //  - 요청 시간 제한(25초)에 걸렸다면 응답이 너무 늦은 거예요
+  //  - 인증 헤더가 있는 요청(CORS 사전 확인이 필요한 요청)은 막히는지, 아니면 서버가 로그인 사용자의 요청을 처리하다 응답을 못 줬는지 가려요
+  if (error?.context?.name === 'AbortError' || error?.cause?.name === 'AbortError') return fail('FUNCTION_TIMEOUT', messages.FUNCTION_TIMEOUT, debug)
   if (probe?.reachable === false) return fail('FUNCTION_NETWORK_BLOCKED', messages.FUNCTION_NETWORK_BLOCKED, debug)
+  if (probe?.reachable === true && probe.headersOk === false) return fail('FUNCTION_HEADERS_BLOCKED', messages.FUNCTION_HEADERS_BLOCKED, debug)
+  if (probe?.reachable === true && probe.headersOk === true) return fail('FUNCTION_NO_RESPONSE', messages.FUNCTION_NO_RESPONSE, debug)
   if (probe?.reachable === true) return fail('FUNCTION_REQUEST_BLOCKED', messages.FUNCTION_REQUEST_BLOCKED, debug)
   return fail('FUNCTION_UNREACHABLE', messages.FUNCTION_UNREACHABLE, debug)
 }
@@ -154,10 +166,29 @@ export const probeFunctionServer = async (client) => {
   const timer = controller ? setTimeout(() => controller.abort(), 4000) : null
   try {
     const root = base.endsWith('/') ? base.slice(0, -1) : base
-    const response = await fetch(`${root}/register-bakery`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{}', signal: controller?.signal })
-    return { reachable: true, note: `단순 요청은 응답함(HTTP ${response.status})` }
-  } catch (probeError) {
-    return { reachable: false, note: `단순 요청도 실패(${probeError?.name}: ${String(probeError?.message ?? '').slice(0, 100)})` }
+    const url = `${root}/register-bakery`
+    let simpleNote
+    try {
+      const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{}', signal: controller?.signal })
+      simpleNote = `단순 요청은 응답함(HTTP ${response.status})`
+    } catch (probeError) {
+      return { reachable: false, note: `단순 요청도 실패(${probeError?.name}: ${String(probeError?.message ?? '').slice(0, 100)})` }
+    }
+    // 2단계: 앱이 실제로 보내는 것과 같은 모양의 요청(인증 헤더 + JSON → 브라우저가 사전 확인(CORS preflight)을 먼저 보내요).
+    // 로그인 토큰 대신 공개 가능한 publishable 키를 넣어요 → 함수는 "로그인 필요"(401)로 답하고 아무것도 바뀌지 않아요.
+    const publicKey = client?.supabaseKey
+    if (!publicKey) return { reachable: true, note: simpleNote }
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: publicKey, Authorization: `Bearer ${publicKey}` },
+        body: '{}',
+        signal: controller?.signal,
+      })
+      return { reachable: true, headersOk: true, note: `${simpleNote} / 인증 헤더 요청도 응답함(HTTP ${response.status})` }
+    } catch (headerError) {
+      return { reachable: true, headersOk: false, note: `${simpleNote} / 인증 헤더 요청은 실패(${headerError?.name}: ${String(headerError?.message ?? '').slice(0, 100)})` }
+    }
   } finally {
     if (timer) clearTimeout(timer)
   }
@@ -169,7 +200,10 @@ export const ensureBakeryRegistered = async (client, input) => {
   const { data: existing, error: lookupError } = await client.from('bakeries').select('id').eq('id', input.bakeryId).maybeSingle()
   if (lookupError) throw lookupError
   if (existing) return
+  const startedAt = Date.now()
   const { error } = await client.functions.invoke('register-bakery', {
+    // 서버가 25초 안에 답하지 않으면 끊고 "너무 늦어요" 안내를 보여줘요 (끝없이 기다리지 않게)
+    timeout: 25000,
     body: {
       id: input.bakeryId,
       name: input.bakeryName,
@@ -189,5 +223,5 @@ export const ensureBakeryRegistered = async (client, input) => {
   }
   const status = error.context?.status
   const probe = status ? null : await probeFunctionServer(client)
-  throw mapFunctionError(error, status, detail, probe)
+  throw mapFunctionError(error, status, detail, probe, Date.now() - startedAt)
 }

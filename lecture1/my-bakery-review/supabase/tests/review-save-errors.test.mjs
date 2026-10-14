@@ -78,11 +78,13 @@ const makeFake = (state = {}) => {
     log,
     from,
     ...(s.noFunctionsUrl ? {} : { functionsUrl: new URL('https://x.supabase.co/functions/v1') }),
+    ...(s.withKey ? { supabaseKey: 'sb_publishable_test_key' } : {}),
     auth: { getSession: async () => ({ data: { session: s.session }, error: null }) },
     storage: { from: () => ({ getPublicUrl: (p) => ({ data: { publicUrl: 'https://cdn.test/' + p } }), upload: async () => ({ data: {}, error: null }), remove: async () => ({}) }) },
     functions: {
-      invoke: async (name, { body }) => {
-        log.invokes.push({ name, body })
+      invoke: async (name, options) => {
+        const { body } = options
+        log.invokes.push({ name, body, timeout: options.timeout })
         if (s.invokeError) return { data: null, error: s.invokeError }
         s.registered = true
         return { data: { ok: true }, error: null }
@@ -145,6 +147,31 @@ for (const [label, invokeError, expectedCode, pattern] of fnCases) {
   t = repoFor({ invokeError: fetchError() })
   error = await rejects(t.repo.create(baseInput))
   check('진단: 단순 요청도 실패 → "이 브라우저에서 서버에 연결되지 않아요(VPN · 차단 확장 프로그램 확인)"', error?.code === 'FUNCTION_NETWORK_BLOCKED' && /VPN/.test(error.message) && /단순 요청도 실패/.test(error.debug.probe), `${error?.code} ${error?.debug?.probe}`)
+
+  // (가-2) 인증 헤더가 있는 진단 요청까지 응답 → 서버가 로그인 사용자의 요청을 처리하다 응답을 못 준 경우(함수 오류 · 시간 초과)
+  fetchCalls.length = 0
+  fetchBehavior = () => Promise.resolve({ status: 401 })
+  t = repoFor({ invokeError: fetchError(), withKey: true })
+  error = await rejects(t.repo.create(baseInput))
+  check('진단 2단계: 인증 헤더 요청도 응답 → "서버가 응답하지 못했어요(Edge Functions Logs 확인)"', error?.code === 'FUNCTION_NO_RESPONSE' && /Logs/.test(error.message) && error.debug.probe.includes('인증 헤더 요청도 응답함'), `${error?.code} ${error?.debug?.probe}`)
+  const second = fetchCalls[1]
+  check('진단 2단계 요청: 공개 키만 쓰고(로그인 토큰 아님) 아무것도 바꾸지 않는 빈 요청', fetchCalls.length === 2 && second.init.headers.Authorization === 'Bearer sb_publishable_test_key' && second.init.headers.apikey === 'sb_publishable_test_key' && second.init.body === '{}')
+
+  // (가-3) 인증 헤더 진단만 실패 → 브라우저가 인증 헤더 요청을 막은 경우
+  let call = 0
+  fetchBehavior = () => (++call === 1 ? Promise.resolve({ status: 401 }) : Promise.reject(new TypeError('Failed to fetch')))
+  t = repoFor({ invokeError: fetchError(), withKey: true })
+  error = await rejects(t.repo.create(baseInput))
+  check('진단 2단계: 인증 헤더 요청만 실패 → "브라우저가 로그인 정보가 담긴 요청을 막았어요"', error?.code === 'FUNCTION_HEADERS_BLOCKED' && /시크릿 창/.test(error.message) && error.debug.probe.includes('인증 헤더 요청은 실패'), `${error?.code} ${error?.debug?.probe}`)
+
+  // (가-4) 시간 제한: 25초 안에 안 오면 끊어요
+  fetchBehavior = () => Promise.resolve({ status: 401 })
+  t = repoFor({ invokeError: Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError', context: Object.assign(new Error('aborted'), { name: 'AbortError' }) }), withKey: true })
+  error = await rejects(t.repo.create(baseInput))
+  check('시간 초과(AbortError) → "응답이 너무 늦어요(25초)"', error?.code === 'FUNCTION_TIMEOUT' && /25초/.test(error.message), `${error?.code}`)
+  check('빵집 확인 요청에는 25초 시간 제한을 걸어요', t.client.log.invokes[0].timeout === 25000)
+  check('개발용 정보에 걸린 시간(ms)이 담겨요', typeof error.debug.elapsedMs === 'number' && error.debug.elapsedMs >= 0)
+  fetchBehavior = () => Promise.reject(new TypeError('Failed to fetch'))
 
   // (다) 진단할 수 없으면(함수 주소를 모름) 예전의 일반 안내
   t = repoFor({ invokeError: fetchError(), noFunctionsUrl: true })
