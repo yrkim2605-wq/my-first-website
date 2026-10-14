@@ -62,6 +62,17 @@ const makeClient = (state = {}) => {
         }),
       }),
     }),
+    functions: {
+      invoke: async (name, options) => {
+        record('invoke', [name, options])
+        if (state.invokeNetworkDown) return { data: null, error: Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError' }) }
+        if (state.invokeErrorCode) {
+          const status = state.invokeStatus ?? 500
+          return { data: null, error: Object.assign(new Error('non-2xx'), { name: 'FunctionsHttpError', context: { status, json: async () => ({ error: { code: state.invokeErrorCode } }) } }) }
+        }
+        return { data: { ok: true }, error: null }
+      },
+    },
     auth: {
       signUp: async (args) => {
         record('signUp', args)
@@ -279,6 +290,37 @@ check('세션이 없으면 재설정 화면 거부', (await repoFor({ noSession:
   const error = await rejects(repo.updatePassword('samePassword1'))
   check('이전과 같은 비밀번호 안내 + 표식은 유지(다시 시도 가능)', error?.code === 'SAME_PASSWORD' && marker.fresh === true)
 }
+
+// ── 회원 탈퇴 ──
+{
+  const { repo, client } = repoFor({})
+  await repo.deleteAccount({ password: 'myPassword1' })
+  const names = client.calls.map(([name]) => name)
+  const invoke = client.calls.find(([name]) => name === 'invoke')[1]
+  const lastSignOut = client.calls.filter(([name]) => name === 'signOut').pop()
+  check('탈퇴: 비밀번호 재로그인 → 서버 함수 호출 → 이 브라우저 로그아웃 순서', names.indexOf('signIn') < names.indexOf('invoke') && names.indexOf('invoke') < names.lastIndexOf('signOut'))
+  check('탈퇴 함수에는 confirm만 보내요 (지울 사용자 id는 보내지 않아요)', invoke[0] === 'delete-account' && JSON.stringify(invoke[1]) === JSON.stringify({ body: { confirm: true } }))
+  check('탈퇴 후 로그아웃은 이 브라우저(local)만', lastSignOut[1].scope === 'local')
+}
+{
+  const { repo, client, authError } = repoFor({ signInError: Object.assign(new Error('bad'), { name: 'AuthApiError', code: 'invalid_credentials' }) })
+  const error = await rejects(repo.deleteAccount({ password: 'wrong' }))
+  check('비밀번호가 틀리면 서버 함수를 부르지 않아요', error?.code === 'INVALID_CREDENTIALS' && !client.calls.some(([name]) => name === 'invoke'))
+}
+check('비밀번호를 비우면 거부', (await rejects(repoFor({}).repo.deleteAccount({ password: '' })))?.code === 'INVALID_CREDENTIALS')
+check('로그인 상태가 아니면 거부', (await rejects(repoFor({ noSession: true }).repo.deleteAccount({ password: 'x1234567' })))?.code === 'NOT_SIGNED_IN')
+for (const [code, expected, pattern] of [
+  ['REAUTH_REQUIRED', 'REAUTH_REQUIRED', /다시/],
+  ['PHOTO_CLEANUP_FAILED', 'PHOTO_CLEANUP_FAILED', /계정은 그대로/],
+  ['DELETE_FAILED', 'DELETE_FAILED', /다시 시도/],
+]) {
+  const { repo, client } = repoFor({ invokeErrorCode: code })
+  const error = await rejects(repo.deleteAccount({ password: 'myPassword1' }))
+  const signedOutAfter = client.calls.filter(([name]) => name === 'signOut').length > 0
+  check(`탈퇴 서버 오류 ${code} → 안내 + 로그아웃하지 않아요(계정이 남아 있으니까)`, error?.code === expected && pattern.test(error.message) && !signedOutAfter)
+}
+check('탈퇴 함수가 아직 배포되지 않았으면(404) 설정 안내', (await rejects(repoFor({ invokeErrorCode: 'X', invokeStatus: 404 }).repo.deleteAccount({ password: 'myPassword1' })))?.code === 'FUNCTION_MISSING')
+check('탈퇴 중 네트워크 오류 안내', (await rejects(repoFor({ invokeNetworkDown: true }).repo.deleteAccount({ password: 'myPassword1' })))?.code === 'NETWORK')
 
 // ── 비밀 키 방어 / 로컬 몰래 저장 없음 ──
 const jwt = (role) => `h.${Buffer.from(JSON.stringify({ role })).toString('base64url')}.s`

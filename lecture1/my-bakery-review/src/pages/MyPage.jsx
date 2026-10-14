@@ -15,6 +15,7 @@ import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import StatusMessage from '../components/common/StatusMessage'
 import LocalImportCard from '../components/mypage/LocalImportCard'
+import AccountDangerZone from '../components/mypage/AccountDangerZone'
 import WoodButton from '../components/common/WoodButton'
 import Illustration from '../components/common/decor/Illustration'
 import { DISTRICTS } from '../constants/districts'
@@ -206,6 +207,8 @@ const MyPage = () => {
           </Box>
         )}
       </Box>
+
+      <AccountDangerZone />
 
       <LevelBookDialog open={levelBookOpen} onClose={() => setLevelBookOpen(false)} currentLevelId={game.progress.currentLevel.id} />
     </Container>

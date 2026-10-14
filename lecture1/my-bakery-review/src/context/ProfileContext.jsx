@@ -93,6 +93,10 @@ export const ProfileProvider = ({ children }) => {
     await accountRepository.updatePassword(newPassword)
     setProfile(null) // 모든 기기에서 로그아웃됐어요
   }, [])
+  const deleteAccount = useCallback(async (input) => {
+    await accountRepository.deleteAccount(input)
+    setProfile(null) // 계정이 지워졌어요
+  }, [])
   const isNicknameAvailable = useCallback((nickname) => accountRepository.isNicknameAvailable(nickname), [])
 
   const signOut = useCallback(async () => {
@@ -118,11 +122,12 @@ export const ProfileProvider = ({ children }) => {
       accountSignIn: IS_ACCOUNT_MODE ? accountSignIn : notAvailable,
       resendVerification: IS_ACCOUNT_MODE ? resendVerification : notAvailable,
       isNicknameAvailable: IS_ACCOUNT_MODE ? isNicknameAvailable : notAvailable,
+      deleteAccount: IS_ACCOUNT_MODE ? deleteAccount : notAvailable,
       requestPasswordReset: IS_ACCOUNT_MODE ? requestPasswordReset : notAvailable,
       hasRecoverySession: IS_ACCOUNT_MODE ? hasRecoverySession : notAvailable,
       updatePassword: IS_ACCOUNT_MODE ? updatePassword : notAvailable,
     }),
-    [profile, ready, backendProblem, authNotice, clearAuthNotice, signUp, signIn, signOut, accountSignUp, accountSignIn, resendVerification, isNicknameAvailable, requestPasswordReset, hasRecoverySession, updatePassword],
+    [profile, ready, backendProblem, authNotice, clearAuthNotice, signUp, signIn, signOut, accountSignUp, accountSignIn, resendVerification, isNicknameAvailable, requestPasswordReset, hasRecoverySession, updatePassword, deleteAccount],
   )
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

@@ -61,6 +61,28 @@ const defaultRecoveryMarker = {
   },
 }
 
+// 탈퇴 함수(delete-account)가 돌려준 오류를 사용자 안내로 바꿔요. (서버 응답의 { error: { code } }를 읽어요)
+const DELETE_ERRORS = {
+  REAUTH_REQUIRED: '안전을 위해 비밀번호를 다시 확인해야 해요. 비밀번호를 다시 입력해 주세요.',
+  PHOTO_CLEANUP_FAILED: '사진 파일을 정리하지 못했어요. 계정은 그대로 남아 있어요. 잠시 후 다시 시도해 주세요.',
+  DELETE_FAILED: '계정을 지우지 못했어요. 잠시 후 다시 시도해 주세요. (다시 시도해도 안전해요)',
+  NOT_SIGNED_IN: '로그인 상태가 풀렸어요. 다시 로그인한 뒤 시도해 주세요.',
+}
+export const toDeleteAccountError = async (error) => {
+  if (error instanceof RepositoryError) return error
+  if (error?.name === 'FunctionsFetchError' || looksLikeNetwork(error)) return toAuthError(new TypeError('Failed to fetch'))
+  let code = null
+  try {
+    code = (await error?.context?.json?.())?.error?.code ?? null
+  } catch {
+    // 응답을 읽지 못하면 일반 안내로 넘어가요
+  }
+  if (code && DELETE_ERRORS[code]) return new RepositoryError(code, DELETE_ERRORS[code])
+  if (error?.context?.status === 404) return new RepositoryError('FUNCTION_MISSING', '회원 탈퇴 기능이 아직 서버에 설정되지 않았어요. 문의처로 알려 주세요.')
+  return new RepositoryError('UNKNOWN', '탈퇴를 처리하지 못했어요. 잠시 후 다시 시도해 주세요.')
+}
+const looksLikeNetwork = (error) => error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(String(error?.message ?? ''))
+
 export const createAccountRepository = (getClient, { getRedirectUrl = () => undefined, recoveryMarker = defaultRecoveryMarker } = {}) => {
   // 로그인한 사용자의 공개 프로필(닉네임)을 가져와요. 없으면 null.
   const loadProfile = async (client, user) => {
@@ -189,6 +211,34 @@ export const createAccountRepository = (getClient, { getRedirectUrl = () => unde
         await client.auth.signOut({ scope: 'global' })
       } catch (error) {
         throw toAuthError(error)
+      }
+    },
+
+    // 회원 탈퇴. 순서: ① 비밀번호로 다시 로그인(본인 확인, 서버가 "최근 인증"인지 검사해요) ② 서버 함수가 사진 → 계정(DB 기록은 연쇄 삭제) 순으로 지움
+    // ③ 이 브라우저의 로그인 기록 지우기. 실패하면 계정은 그대로이고 이유를 알려요.
+    async deleteAccount({ password }) {
+      if (!password) throw new RepositoryError('INVALID_CREDENTIALS', '비밀번호를 입력해 주세요.')
+      try {
+        const client = await getClient()
+        const { data: session, error: sessionError } = await client.auth.getSession()
+        if (sessionError) throw sessionError
+        const email = session.session?.user?.email
+        if (!email) throw new RepositoryError('NOT_SIGNED_IN', DELETE_ERRORS.NOT_SIGNED_IN)
+
+        const { error: signInError } = await client.auth.signInWithPassword({ email, password })
+        if (signInError) throw signInError
+
+        const { error } = await client.functions.invoke('delete-account', { body: { confirm: true } })
+        if (error) throw error
+      } catch (error) {
+        throw String(error?.name ?? '').startsWith('Auth') ? toAuthError(error) : await toDeleteAccountError(error)
+      }
+      // 서버에서 계정이 지워졌어요. 이 브라우저의 로그인 기록도 지워요 (이미 없는 계정이라 서버 응답은 무시해요)
+      try {
+        const client = await getClient()
+        await client.auth.signOut({ scope: 'local' })
+      } catch {
+        // 계정은 이미 지워졌어요
       }
     },
 
