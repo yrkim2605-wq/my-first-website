@@ -21,6 +21,7 @@ const AccountLogin = lazy(() => import('./pages/AccountLogin'))
 const AccountSignup = lazy(() => import('./pages/AccountSignup'))
 const PrivacyPolicyPage = lazy(() => import('./pages/LegalDocument').then((m) => ({ default: m.PrivacyPolicyPage })))
 const TermsOfServicePage = lazy(() => import('./pages/LegalDocument').then((m) => ({ default: m.TermsOfServicePage })))
+const AdminReports = lazy(() => import('./pages/AdminReports'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 import { IS_ACCOUNT_MODE } from './lib/backend'
@@ -67,6 +68,7 @@ function App() {
                       <Route path="/terms" element={<TermsOfServicePage />} />
                       <Route path="/login" element={IS_ACCOUNT_MODE ? <AccountLogin /> : <Login />} />
                       <Route path="/signup" element={IS_ACCOUNT_MODE ? <AccountSignup /> : <Signup />} />
+                      {IS_ACCOUNT_MODE && <Route path="/admin/reports" element={<AdminReports />} />}
                       {IS_ACCOUNT_MODE && <Route path="/forgot-password" element={<ForgotPassword />} />}
                       {IS_ACCOUNT_MODE && <Route path="/reset-password" element={<ResetPassword />} />}
                     </Route>
