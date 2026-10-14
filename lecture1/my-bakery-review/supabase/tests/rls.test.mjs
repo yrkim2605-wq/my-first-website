@@ -21,6 +21,7 @@ const sql = (file) => fs.readFileSync(path.join(here, file), 'utf8')
 await db.exec(sql('supabase_stub.sql'))
 await db.exec(sql('../migrations/0001_schema.sql'))
 await db.exec(sql('../migrations/0002_rls.sql'))
+await db.exec(sql('../migrations/0004_community.sql'))
 
 let passed = 0
 const failures = []
@@ -196,6 +197,102 @@ check('피드: 좋아요 1 · 댓글 2 · 작성자 닉네임/레벨', feedA.l =
 check('피드: 내가 눌렀는지는 사용자별로 달라요', feedA.liked_by_me === false && feedB.liked_by_me === true)
 check('좋아요 취소', (await as(B).q(`delete from public.post_likes where post_id=$1 returning post_id`, [post.id])).rows.length === 1)
 check('A가 글을 지우면 댓글도 함께 삭제', (await as(A).q(`delete from public.posts where id=$1 returning id`, [post.id])).rows.length === 1 && (await admin('select count(*)::int n from public.comments'))[0].n === 0)
+
+// ── 커뮤니티 보안 (6단계): 글 · 댓글 · 좋아요 권한, 비로그인 차단, 하루 작성 상한, EXP 무관 ──
+const expBeforeCommunity = await mineExp(A)
+const expBeforeReviewCount = (await admin(`select count(*)::int n from public.reviews`))[0].n
+const tryPost = (u, title = '제목', content = '내용', cat = 'recommend') =>
+  as(u).q(`insert into public.posts (category_id, title, content) values ($1,$2,$3) returning id`, [cat, title, content])
+
+check('비로그인은 글을 쓸 수 없어요', (await tryPost(null)).error !== null)
+check('비로그인은 댓글을 쓸 수 없어요', (await as(null).q(`insert into public.comments (post_id, content) values (gen_random_uuid(),'x')`)).error !== null)
+check('비로그인은 좋아요를 누를 수 없어요', (await as(null).q(`insert into public.post_likes (post_id) values (gen_random_uuid())`)).error !== null)
+check('이메일 미인증은 좋아요 · 댓글 불가', await (async () => {
+  const p = (await tryPost(A)).rows[0]
+  const cm = await as(C).q(`insert into public.comments (post_id, content) values ($1,'x')`, [p.id])
+  const lk = await as(C).q(`insert into public.post_likes (post_id) values ($1)`, [p.id])
+  await as(A).q(`delete from public.posts where id=$1`, [p.id])
+  return cm.error?.message.includes('EMAIL_NOT_VERIFIED') && lk.error?.message.includes('EMAIL_NOT_VERIFIED')
+})())
+
+check('제목 80자 초과 거부', (await tryPost(A, 'ㅁ'.repeat(81))).error !== null)
+check('빈 제목(공백만) 거부', (await tryPost(A, '   ')).error !== null)
+check('본문 2000자 초과 거부', (await tryPost(A, '제목', 'ㅁ'.repeat(2001))).error !== null)
+check('글에 사진 경로를 남의 폴더로 지정 불가', (await as(A).q(`insert into public.posts (category_id, title, content, photo_path) values ('photo','t','c',$1)`, [`${B}/x.jpg`])).error !== null)
+check('댓글 500자 초과 거부', await (async () => {
+  const p = (await tryPost(A)).rows[0]
+  const r = await as(B).q(`insert into public.comments (post_id, content) values ($1,$2)`, [p.id, 'ㅁ'.repeat(501)])
+  await as(A).q(`delete from public.posts where id=$1`, [p.id])
+  return r.error !== null
+})())
+check('없는 글에는 댓글 · 좋아요 불가', (await as(B).q(`insert into public.comments (post_id, content) values (gen_random_uuid(),'x')`)).error !== null
+  && (await as(B).q(`insert into public.post_likes (post_id) values (gen_random_uuid())`)).error !== null)
+
+const cp = (await tryPost(A, '커뮤니티 글', '본문')).rows[0]
+const cc = (await as(B).q(`insert into public.comments (post_id, content) values ($1,'B의 댓글') returning id`, [cp.id])).rows[0]
+const cr = (await as(A).q(`insert into public.comments (post_id, parent_id, content) values ($1,$2,'A의 답글') returning id`, [cp.id, cc.id])).rows[0]
+check('글의 작성자(user_id) · 작성일은 바꿀 수 없어요', (await as(A).q(`update public.posts set user_id=$2 where id=$1`, [cp.id, B])).error !== null
+  && (await as(A).q(`update public.posts set created_at = now() - interval '9 days' where id=$1`, [cp.id])).error !== null)
+check('내 글은 수정할 수 있고 본문이 바뀌어요', await (async () => {
+  const r = (await as(A).q(`update public.posts set content='수정한 본문' where id=$1 returning content`, [cp.id])).rows[0]
+  return r?.content === '수정한 본문'
+})())
+check('비로그인은 남의 글을 수정 · 삭제할 수 없어요(0행)',
+  (await as(null).q(`update public.posts set title='x' where id=$1 returning id`, [cp.id])).rows.length === 0
+  && (await as(null).q(`delete from public.posts where id=$1 returning id`, [cp.id])).rows.length === 0)
+check('이메일 미인증 사용자는 글 수정 불가', (await as(C).q(`update public.posts set title='x' where id=$1 returning id`, [cp.id])).rows.length === 0)
+check('B는 A의 글을 다른 카테고리로도 바꿀 수 없어요', (await as(B).q(`update public.posts set category_id='photo' where id=$1 returning id`, [cp.id])).rows.length === 0)
+check('다른 사람의 좋아요를 대신 지울 수 없어요', await (async () => {
+  await as(B).q(`insert into public.post_likes (post_id) values ($1)`, [cp.id])
+  const r = await as(A).q(`delete from public.post_likes where post_id=$1 and user_id=$2 returning post_id`, [cp.id, B])
+  await as(B).q(`delete from public.post_likes where post_id=$1`, [cp.id])
+  return r.rows.length === 0
+})())
+
+// 댓글 목록 뷰(0004)
+const feedRows = (await as(A).q(`select id, parent_id, author_nickname, author_level_index::int lv, is_mine from public.comment_feed where post_id=$1 order by created_at`, [cp.id])).rows
+check('댓글 뷰: 작성자 닉네임 · 레벨 · 답글 연결', feedRows.length === 2 && feedRows[0].author_nickname === '빵덕후B' && feedRows[1].parent_id === cc.id && feedRows.every((r) => Number.isInteger(r.lv)), JSON.stringify(feedRows))
+check('댓글 뷰: 내 댓글 표시는 사용자별로 달라요', feedRows[0].is_mine === false && feedRows[1].is_mine === true
+  && (await as(B).q(`select is_mine from public.comment_feed where id=$1`, [cc.id])).rows[0].is_mine === true)
+check('댓글 뷰: 비로그인도 읽을 수 있고 is_mine은 false', await (async () => {
+  const r = await as(null).q(`select is_mine from public.comment_feed where post_id=$1`, [cp.id])
+  return r.error === null && r.rows.length === 2 && r.rows.every((x) => x.is_mine === false)
+})())
+check('글 목록 뷰도 비로그인이 읽을 수 있어요', (await as(null).q(`select id from public.post_feed where id=$1`, [cp.id])).rows.length === 1)
+check('뷰로는 댓글을 쓰거나 지울 수 없어요', (await as(A).q(`insert into public.comment_feed (post_id, content) values ($1,'x')`, [cp.id])).error !== null
+  && (await as(A).q(`delete from public.comment_feed where id=$1`, [cr.id])).error !== null)
+check('A는 B의 댓글을 지울 수 없고, B는 자기 댓글을 지울 수 있어요(답글도 함께 삭제)',
+  (await as(A).q(`delete from public.comments where id=$1 returning id`, [cc.id])).rows.length === 0
+  && (await as(B).q(`delete from public.comments where id=$1 returning id`, [cc.id])).rows.length === 1
+  && (await admin(`select count(*)::int n from public.comments where post_id=$1`, [cp.id]))[0].n === 0)
+
+// 하루 작성 상한: 글 10개 · 댓글 50개 · 좋아요 200개 (한국 시간 기준)
+await as(A).q(`delete from public.posts where user_id=$1`, [A])
+const postResults = []
+for (let i = 0; i < 11; i += 1) postResults.push(await tryPost(A, `상한 시험 ${i}`))
+check('하루 글 10개까지, 11번째는 거부', postResults.slice(0, 10).every((r) => r.error === null) && postResults[10].error?.message.includes('DAILY_LIMIT'))
+const limitPost = postResults[0].rows[0]
+const commentResults = []
+for (let i = 0; i < 51; i += 1) commentResults.push(await as(B).q(`insert into public.comments (post_id, content) values ($1,$2)`, [limitPost.id, `댓글 ${i}`]))
+check('하루 댓글 50개까지, 51번째는 거부', commentResults.slice(0, 50).every((r) => r.error === null) && commentResults[50].error?.message.includes('DAILY_LIMIT'))
+// 좋아요 200개 상한: 시험용 글 201개를 서버 권한으로 만들어요 (글 작성 트리거를 잠깐 꺼요)
+await admin(`alter table public.posts disable trigger posts_before_insert`)
+await admin(`insert into public.posts (user_id, category_id, title, content) select $1, 'recommend', 't' || g, 'c' from generate_series(1, 201) g`, [A])
+await admin(`alter table public.posts enable trigger posts_before_insert`)
+const likePosts = (await admin(`select id from public.posts where user_id=$1 and title like 't%' order by title`, [A])).map((r) => r.id)
+let likeOk = 0
+let lastLike = null
+for (const id of likePosts) {
+  lastLike = await as(B).q(`insert into public.post_likes (post_id) values ($1)`, [id])
+  if (lastLike.error === null) likeOk += 1
+}
+check('하루 좋아요 200개까지, 201번째는 거부', likeOk === 200 && lastLike.error?.message.includes('DAILY_LIMIT'), `성공 ${likeOk}`)
+await as(B).q(`delete from public.post_likes where user_id=$1`, [B])
+await as(A).q(`delete from public.posts where user_id=$1`, [A])
+
+const expAfterCommunity = await mineExp(A)
+check('글 · 댓글 · 좋아요는 EXP · 레벨에 영향을 주지 않아요', expAfterCommunity.exp === expBeforeCommunity.exp && expAfterCommunity.level_index === expBeforeCommunity.level_index, JSON.stringify([expBeforeCommunity, expAfterCommunity]))
+check('커뮤니티 시험이 리뷰 기록을 건드리지 않았어요', (await admin(`select count(*)::int n from public.reviews`))[0].n === expBeforeReviewCount)
 
 // ── 다녀왔어요 체크 ──
 check('방문 체크', (await as(A).q(`insert into public.bakery_visits (bakery_id) values ('k9')`)).error === null)
