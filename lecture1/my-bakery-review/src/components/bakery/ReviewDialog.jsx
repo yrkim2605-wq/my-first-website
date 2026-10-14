@@ -219,7 +219,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
                     alt="첨부한 사진 미리보기"
                     sx={{ width: 96, height: 96, borderRadius: RADIUS.md, objectFit: 'cover', border: '2px solid #c9a56a' }}
                   />
-                  <Button onClick={() => setPhoto(null)} size="small" color="inherit" sx={{ minHeight: 36 }}>
+                  <Button onClick={() => setPhoto(null)} size="small" color="inherit" sx={{ minHeight: 44 }}>
                     사진 빼기
                   </Button>
                 </Box>

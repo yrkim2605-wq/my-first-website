@@ -39,6 +39,8 @@ const WoodButton = ({ children, size = 'md', showStar = true, component = 'butto
         '&:hover': { transform: 'translateY(-2px)', boxShadow: SHADOW(isSmall ? 3 : 6), filter: 'brightness(1.06)' },
         '&:active': { transform: 'translateY(2px)', boxShadow: SHADOW(isSmall ? 0 : 1) },
         '&:focus-visible': { outline: '3px solid', outlineColor: 'gold.main', outlineOffset: 3 },
+        // 손가락(터치) 기기에서는 작은 크기도 최소 44px
+        '@media (pointer: coarse)': { minHeight: 44 },
         ...sx,
       }}
     >

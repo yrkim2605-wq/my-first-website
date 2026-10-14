@@ -68,10 +68,10 @@ const ReviewJournalCard = ({ card, onEdit, onDelete }) => (
       )}
       {card.isMine && (
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Button size="small" startIcon={<EditIcon />} onClick={onEdit} sx={{ minHeight: 36 }}>
+          <Button size="small" startIcon={<EditIcon />} onClick={onEdit} sx={{ minHeight: 44 }}>
             고쳐 쓰기
           </Button>
-          <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={onDelete} sx={{ minHeight: 36 }}>
+          <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={onDelete} sx={{ minHeight: 44 }}>
             지우기
           </Button>
         </Box>

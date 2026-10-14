@@ -23,7 +23,7 @@ const Layout = () => {
         component={Link}
         to="/signup"
         sx={{
-          minHeight: 38,
+          minHeight: 44,
           bgcolor: 'primary.main',
           color: 'primary.contrastText',
           flexShrink: 0,

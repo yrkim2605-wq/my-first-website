@@ -35,7 +35,7 @@ const MyLogList = ({ reviews }) => (
         {reviews.map((review) => (
           <Box component="li" key={review.id} sx={{ ...JOURNAL_PAPER_SX, borderRadius: RADIUS.lg, p: 2, pl: '32px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap', mb: 0.75 }}>
-              <Box component={Link} to={`/bakery/${review.bakeryId}`} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, minWidth: 0, minHeight: 40, color: 'primary.main', textDecoration: 'none', fontWeight: 800, '&:hover': { textDecoration: 'underline' } }}>
+              <Box component={Link} to={`/bakery/${review.bakeryId}`} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, minWidth: 0, minHeight: 44, color: 'primary.main', textDecoration: 'none', fontWeight: 800, '&:hover': { textDecoration: 'underline' } }}>
                 <PlaceIcon sx={{ fontSize: '1.05rem' }} />
                 <Box component="span" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900 }}>
                   {review.bakeryName}
@@ -51,7 +51,7 @@ const MyLogList = ({ reviews }) => (
               {review.content}
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
-              <Button component={Link} to={`/bakery/${review.bakeryId}`} size="small" sx={{ minHeight: 36 }}>
+              <Button component={Link} to={`/bakery/${review.bakeryId}`} size="small" sx={{ minHeight: 44 }}>
                 보러 가기 / 고쳐 쓰기
               </Button>
             </Box>

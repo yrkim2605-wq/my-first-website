@@ -43,7 +43,7 @@ const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
           display: 'flex',
           alignItems: 'center',
           gap: 0.4,
-          minHeight: 40,
+          minHeight: 44,
           px: 0.75,
           border: 'none',
           background: 'none',
@@ -71,7 +71,7 @@ const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
           display: 'flex',
           alignItems: 'center',
           gap: 0.4,
-          minHeight: 40,
+          minHeight: 44,
           px: 0.75,
           border: 'none',
           background: 'none',
@@ -418,7 +418,7 @@ const CommunityPostDetail = () => {
                           setReplyingToId(replyingToId === comment.id ? null : comment.id)
                           setReplyDraft('')
                         }}
-                        sx={{ minWidth: 0, minHeight: 36, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
+                        sx={{ minWidth: 0, minHeight: 44, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
                       >
                         답글 달기
                       </Button>
@@ -427,7 +427,7 @@ const CommunityPostDetail = () => {
                           <Button
                             size="small"
                             onClick={() => handleStartEdit(comment)}
-                            sx={{ minWidth: 0, minHeight: 36, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
+                            sx={{ minWidth: 0, minHeight: 44, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
                           >
                             수정
                           </Button>
@@ -435,7 +435,7 @@ const CommunityPostDetail = () => {
                             size="small"
                             color="error"
                             onClick={() => handleDeleteComment(comment.id)}
-                            sx={{ minWidth: 0, minHeight: 36, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
+                            sx={{ minWidth: 0, minHeight: 44, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
                           >
                             삭제
                           </Button>
@@ -512,7 +512,7 @@ const CommunityPostDetail = () => {
                                   <Button
                                     size="small"
                                     onClick={() => handleStartEdit(reply)}
-                                    sx={{ minWidth: 0, minHeight: 36, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
+                                    sx={{ minWidth: 0, minHeight: 44, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
                                   >
                                     수정
                                   </Button>
@@ -520,7 +520,7 @@ const CommunityPostDetail = () => {
                                     size="small"
                                     color="error"
                                     onClick={() => handleDeleteReply(comment.id, reply.id)}
-                                    sx={{ minWidth: 0, minHeight: 36, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
+                                    sx={{ minWidth: 0, minHeight: 44, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }}
                                   >
                                     삭제
                                   </Button>

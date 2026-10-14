@@ -116,6 +116,8 @@ const theme = createTheme({
           textTransform: 'none',
           boxShadow: 'none',
           minHeight: 40,
+          // 손가락(터치) 기기에서는 모든 버튼이 최소 44px예요 (작은 버튼 포함)
+          '@media (pointer: coarse)': { minHeight: 44, minWidth: 44 },
           transition: 'transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, background-color 0.15s ease',
           '&:hover': {
             boxShadow: '0 8px 18px rgba(51,36,25,0.18)',

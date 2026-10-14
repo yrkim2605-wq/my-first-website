@@ -32,7 +32,7 @@ import { RADIUS } from '../theme'
 //  - 저장에 성공한 뒤에만 화면이 바뀌고, 실패하면 이유를 알려요.
 //  - 글 · 댓글 · 좋아요는 EXP에 반영되지 않아요.
 
-const TEXT_BUTTON_SX = { minWidth: 0, minHeight: 36, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }
+const TEXT_BUTTON_SX = { minWidth: 44, minHeight: 44, px: 1.25, py: 1, fontSize: '0.75rem', fontWeight: 700 }
 
 const CommentCard = ({ comment, isReply = false, canReply, isReplying, replyDraft, isBusy, onToggleReply, onChangeReply, onSubmitReply, onDelete }) => (
   <Box>
