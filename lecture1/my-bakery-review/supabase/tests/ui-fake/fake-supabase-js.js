@@ -40,6 +40,30 @@ if (typeof window !== 'undefined') {
     },
     db: () => load(),
     // 다른 사용자의 리뷰를 서버에 넣어 두기 (공개 목록 · 작성자 레벨 확인용)
+    // 커뮤니티: 다른 모험가의 글 · 댓글을 서버에 넣어 두기 → 글 id를 돌려줘요
+    seedPost: (title = '다른 모험가의 글', categoryId = 'recommend', content = '다른 모험가가 쓴 본문이에요.\n두 번째 줄이에요.') => {
+      const db = load()
+      ensureCommunity(db)
+      const now = new Date().toISOString()
+      const id = newId('post')
+      db.posts.push({ id, user_id: 'u-other', category_id: categoryId, title, content, created_at: now, updated_at: now })
+      save(db)
+      return id
+    },
+    seedComment: (postId, content = '다른 모험가의 댓글', parentId = null) => {
+      const db = load()
+      ensureCommunity(db)
+      const id = newId('c')
+      db.comments.push({ id, post_id: postId, user_id: 'u-other', parent_id: parentId, content, created_at: new Date().toISOString() })
+      save(db)
+      return id
+    },
+    setSignedIn: (value) => {
+      const db = load()
+      db.signedIn = Boolean(value)
+      save(db)
+      location.reload()
+    },
     seedOther: (bakeryId, content = '다른 모험가의 후기') => {
       const db = load()
       if (!db.bakeries.some((b) => b.id === bakeryId)) db.bakeries.push({ id: bakeryId, name: `빵집${bakeryId}`, district_id: 'seomyeon' })
@@ -68,6 +92,141 @@ const progressOf = (db, userId) => {
 }
 
 const dbError = (message, code) => Object.assign(new Error(message), { code })
+
+// ── 커뮤니티: 서버 트리거 · RLS와 같은 규칙을 흉내 내요 (작성자 고정 · 하루 상한 글 10/댓글 50/좋아요 200 · 삭제 연쇄) ──
+const CATEGORY_IDS = ['today-visit', 'new-menu', 'open-run', 'recommend', 'photo']
+const ensureCommunity = (db) => {
+  db.posts ??= []
+  db.comments ??= []
+  db.likes ??= []
+}
+const nick = (db, id) => db.profiles.find((p) => p.id === id)?.nickname ?? '알 수 없음'
+const postFeedRow = (db, post) => ({
+  id: post.id, category_id: post.category_id, title: post.title, content: post.content, photo_path: null,
+  created_at: post.created_at, updated_at: post.updated_at, user_id: post.user_id,
+  author_nickname: nick(db, post.user_id), author_level_index: progressOf(db, post.user_id).level_index,
+  like_count: db.likes.filter((l) => l.post_id === post.id).length,
+  comment_count: db.comments.filter((c) => c.post_id === post.id).length,
+  liked_by_me: Boolean(db.signedIn) && db.likes.some((l) => l.post_id === post.id && l.user_id === ME.id),
+})
+const todayCount = (rows) => rows.filter((r) => r.user_id === ME.id && KST_DAY(r.created_at) === KST_DAY(new Date())).length
+const consumeFailure = (key) => {
+  if (!failures[key]) return null
+  const message = failures[key]
+  delete failures[key]
+  return dbError(message, 'XX000')
+}
+const newId = (prefix) => prefix + '-' + Date.now() + '-' + Math.floor(Math.random() * 100000)
+
+const runCommunity = (db, q) => {
+  ensureCommunity(db)
+  const table = q.table
+  const signedIn = Boolean(db.signedIn)
+  const needLogin = () => (signedIn ? null : { data: null, error: dbError('NOT_SIGNED_IN', '28000') })
+
+  if (q.op === 'select') {
+    if (table === 'post_feed') {
+      let rows = db.posts.map((post) => postFeedRow(db, post))
+      if (q.filters.category_id) rows = rows.filter((r) => r.category_id === q.filters.category_id)
+      if (q.filters.id) rows = rows.filter((r) => r.id === q.filters.id)
+      for (const [column, dir] of [...q.orders].reverse()) {
+        rows.sort((a, b) => (a[column] < b[column] ? -1 : a[column] > b[column] ? 1 : 0) * (dir === 'desc' ? -1 : 1))
+      }
+      return q.single ? { data: rows[0] ?? null, error: null } : { data: rows, error: null }
+    }
+    if (table === 'comment_feed') {
+      const rows = db.comments
+        .filter((c) => c.post_id === q.filters.post_id)
+        .map((c) => ({ ...c, author_nickname: nick(db, c.user_id), author_level_index: progressOf(db, c.user_id).level_index, is_mine: signedIn && c.user_id === ME.id }))
+        .sort((a, b) => (a.created_at < b.created_at ? -1 : 1))
+      return { data: rows, error: null }
+    }
+    return { data: [], error: null }
+  }
+
+  const loginError = needLogin()
+  if (loginError) return loginError
+
+  if (table === 'posts') {
+    if (q.op === 'insert') {
+      const failed = consumeFailure('post')
+      if (failed) return { data: null, error: failed }
+      const { category_id, title, content } = q.payload
+      if (!CATEGORY_IDS.includes(category_id) || !String(title).trim() || String(title).length > 80 || !String(content).trim() || String(content).length > 2000) {
+        return { data: null, error: dbError('check', '23514') }
+      }
+      if (todayCount(db.posts) >= 10) return { data: null, error: dbError('DAILY_LIMIT', 'P0001') }
+      const now = new Date().toISOString()
+      const row = { id: newId('post'), user_id: ME.id, category_id, title: String(title).trim(), content: String(content).trim(), created_at: now, updated_at: now }
+      db.posts.push(row)
+      save(db)
+      return { data: { id: row.id }, error: null }
+    }
+    if (q.op === 'update') {
+      const failed = consumeFailure('postUpdate')
+      if (failed) return { data: null, error: failed }
+      const row = db.posts.find((r) => r.id === q.filters.id && r.user_id === q.filters.user_id && q.filters.user_id === ME.id)
+      if (!row) return { data: [], error: null }
+      Object.assign(row, q.payload, { updated_at: new Date().toISOString() })
+      save(db)
+      return { data: [{ id: row.id }], error: null }
+    }
+    if (q.op === 'delete') {
+      const failed = consumeFailure('postDelete')
+      if (failed) return { data: null, error: failed }
+      const gone = db.posts.filter((r) => r.id === q.filters.id && r.user_id === q.filters.user_id && q.filters.user_id === ME.id)
+      db.posts = db.posts.filter((r) => !gone.includes(r))
+      const goneIds = gone.map((r) => r.id)
+      db.comments = db.comments.filter((c) => !goneIds.includes(c.post_id))
+      db.likes = db.likes.filter((l) => !goneIds.includes(l.post_id))
+      save(db)
+      return { data: null, error: null }
+    }
+  }
+
+  if (table === 'comments') {
+    if (q.op === 'insert') {
+      const failed = consumeFailure('comment')
+      if (failed) return { data: null, error: failed }
+      const { post_id, parent_id, content } = q.payload
+      if (!db.posts.some((p) => p.id === post_id)) return { data: null, error: dbError('fk', '23503') }
+      if (!String(content).trim() || String(content).length > 500) return { data: null, error: dbError('check', '23514') }
+      if (parent_id) {
+        const parent = db.comments.find((c) => c.id === parent_id)
+        if (!parent || parent.post_id !== post_id || parent.parent_id) return { data: null, error: dbError('INVALID_PARENT', '23514') }
+      }
+      if (todayCount(db.comments) >= 50) return { data: null, error: dbError('DAILY_LIMIT', 'P0001') }
+      db.comments.push({ id: newId('c'), post_id, user_id: ME.id, parent_id: parent_id ?? null, content: String(content).trim(), created_at: new Date().toISOString() })
+      save(db)
+      return { data: null, error: null }
+    }
+    if (q.op === 'delete') {
+      const gone = db.comments.filter((c) => c.id === q.filters.id && c.user_id === q.filters.user_id && q.filters.user_id === ME.id)
+      const goneIds = gone.map((c) => c.id)
+      db.comments = db.comments.filter((c) => !goneIds.includes(c.id) && !goneIds.includes(c.parent_id))
+      save(db)
+      return { data: null, error: null }
+    }
+  }
+
+  if (table === 'post_likes') {
+    if (q.op === 'insert') {
+      const failed = consumeFailure('like')
+      if (failed) return { data: null, error: failed }
+      if (!db.posts.some((p) => p.id === q.payload.post_id)) return { data: null, error: dbError('fk', '23503') }
+      if (db.likes.some((l) => l.post_id === q.payload.post_id && l.user_id === ME.id)) return { data: null, error: dbError('dup', '23505') }
+      db.likes.push({ post_id: q.payload.post_id, user_id: ME.id })
+      save(db)
+      return { data: null, error: null }
+    }
+    if (q.op === 'delete') {
+      db.likes = db.likes.filter((l) => !(l.post_id === q.filters.post_id && l.user_id === q.filters.user_id))
+      save(db)
+      return { data: null, error: null }
+    }
+  }
+  return { data: null, error: null }
+}
 
 // 서버 트리거(reviews_before_insert)와 같은 계산
 const insertReview = (db, payload) => {
@@ -103,7 +262,7 @@ const insertReview = (db, payload) => {
 
 export const createClient = () => {
   const makeBuilder = (table) => {
-    const q = { table, op: 'select', filters: {}, payload: null, single: false, returning: false }
+    const q = { table, op: 'select', filters: {}, payload: null, single: false, returning: false, orders: [] }
     const run = async () => {
       await new Promise((resolve) => setTimeout(resolve, 150)) // 네트워크 지연 흉내
       const db = load()
@@ -139,6 +298,7 @@ export const createClient = () => {
           .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
         return { data: rows, error: null }
       }
+      if (['post_feed', 'comment_feed', 'posts', 'comments', 'post_likes'].includes(table)) return runCommunity(db, q)
       if (table !== 'reviews') return { data: [], error: null }
 
       if (q.op === 'insert') {
@@ -175,7 +335,7 @@ export const createClient = () => {
       select: () => builder,
       eq: (key, value) => ((q.filters[key] = value), builder),
       gt: () => builder,
-      order: () => builder,
+      order: (column, opts) => (q.orders.push([column, opts?.ascending === false ? 'desc' : 'asc']), builder),
       limit: () => builder,
       insert: (payload) => ((q.op = 'insert'), (q.payload = payload), builder),
       update: (payload) => ((q.op = 'update'), (q.payload = payload), builder),

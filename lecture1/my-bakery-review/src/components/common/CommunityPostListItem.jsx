@@ -22,9 +22,18 @@ const CommunityPostListItem = ({
   commentCount,
   createdAt,
   photoBakeryId,
+  placeholderEmoji,
   isSample = false,
 }) => {
   const photoSrc = BAKERY_PHOTO_BY_ID[photoBakeryId] || DEFAULT_BAKERY_PHOTO
+  const thumbnailSx = {
+    width: { xs: 80, sm: 132 },
+    height: { xs: 80, sm: 132 },
+    flexShrink: 0,
+    // 위쪽이 둥근 아치 모양 썸네일
+    borderRadius: '999px 999px 12px 12px',
+    alignSelf: 'center',
+  }
 
   return (
     <Box
@@ -135,21 +144,24 @@ const CommunityPostListItem = ({
         </Box>
       </Box>
 
-      <Box
-        component="img"
-        src={photoSrc}
-        alt=""
-        loading="lazy"
-        sx={{
-          width: { xs: 80, sm: 132 },
-          height: { xs: 80, sm: 132 },
-          flexShrink: 0,
-          objectFit: 'cover',
-          // 위쪽이 둥근 아치 모양 썸네일
-          borderRadius: '999px 999px 12px 12px',
-          alignSelf: 'center',
-        }}
-      />
+      {/* 실제 글은 사진이 없어서 가짜 빵집 사진 대신 카테고리 이모지를 아치에 담아요 */}
+      {placeholderEmoji ? (
+        <Box
+          aria-hidden="true"
+          sx={{
+            ...thumbnailSx,
+            display: 'grid',
+            placeItems: 'center',
+            fontSize: { xs: '2rem', sm: '3.2rem' },
+            bgcolor: 'rgba(143,166,126,0.22)',
+            border: '2px solid rgba(201,165,106,0.7)',
+          }}
+        >
+          {placeholderEmoji}
+        </Box>
+      ) : (
+        <Box component="img" src={photoSrc} alt="" loading="lazy" sx={{ ...thumbnailSx, objectFit: 'cover' }} />
+      )}
     </Box>
   )
 }

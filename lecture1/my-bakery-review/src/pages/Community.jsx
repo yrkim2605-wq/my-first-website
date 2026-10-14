@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -9,11 +9,17 @@ import CommunityPostListItem from '../components/common/CommunityPostListItem'
 import StatusMessage from '../components/common/StatusMessage'
 import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
+import WoodButton from '../components/common/WoodButton'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_POSTS } from '../constants/communityPosts'
 import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
 import { getAuthorLevel } from '../utils/authorLevel'
+import { formatPostDate, levelFromIndex } from '../utils/communityFormat'
 import { PAGE_TABS_SX } from '../constants/tabStyles'
+import { IS_ACCOUNT_MODE, getBackendConfigProblem } from '../lib/backend'
+import { communityRepository } from '../storage/communityRepository'
+import { POST_LIST_LIMIT } from '../storage/supabaseCommunityRepository'
+import { useProfile } from '../hooks/useProfile'
 
 const SORT_OPTIONS = [
   { id: 'latest', label: '최신순' },
@@ -25,25 +31,61 @@ const CATEGORY_TABS = [{ id: 'all', label: '전체' }, ...COMMUNITY_CATEGORIES]
 
 const Community = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const { profile, ready } = useProfile()
   const selectedCategoryId = searchParams.get('category') || 'all'
-  const [sortBy, setSortBy] = useState('heart')
+  // 예시 글은 좋아요순이 보기 좋고, 실제 글은 새 글이 먼저 보이는 최신순이 자연스러워요
+  const [sortBy, setSortBy] = useState(IS_ACCOUNT_MODE ? 'latest' : 'heart')
+  const [retryCount, setRetryCount] = useState(0)
+
+  const isKnownCategory = CATEGORY_TABS.some((c) => c.id === selectedCategoryId)
+  const userId = profile?.userId ?? null
+
+  // 계정 모드: 서버의 실제 글을 불러와요. 어떤 조건의 결과인지(key)를 같이 들고 있어서,
+  // 조건이 바뀌면 이전 결과가 새 조건의 결과처럼 보이지 않고 "불러오는 중"이 돼요.
+  const requestKey = `${isKnownCategory ? selectedCategoryId : 'all'}|${sortBy}|${userId}|${retryCount}`
+  const [result, setResult] = useState({ key: null, posts: [], errorMessage: null })
+
+  useEffect(() => {
+    if (!IS_ACCOUNT_MODE) return undefined
+    let isCancelled = false
+    const [categoryId] = requestKey.split('|')
+    const configProblem = getBackendConfigProblem()
+    if (configProblem) {
+      Promise.resolve().then(() => !isCancelled && setResult({ key: requestKey, posts: [], errorMessage: configProblem }))
+      return () => {
+        isCancelled = true
+      }
+    }
+    communityRepository
+      .listPosts({ categoryId, sortBy })
+      .then((posts) => !isCancelled && setResult({ key: requestKey, posts, errorMessage: null }))
+      .catch((error) => !isCancelled && setResult({ key: requestKey, posts: [], errorMessage: error.message }))
+    return () => {
+      isCancelled = true
+    }
+  }, [requestKey, sortBy])
+
+  const isLoading = IS_ACCOUNT_MODE && result.key !== requestKey
+  const loadErrorMessage = IS_ACCOUNT_MODE && !isLoading ? result.errorMessage : null
 
   // 선택한 카테고리는 주소(?category=)에만 저장해요. 헤더 메뉴로 들어와도, 탭을 눌러도 같은 값을 봐요.
   const handleSelectCategory = (_, categoryId) => {
     setSearchParams(categoryId === 'all' ? {} : { category: categoryId }, { replace: true })
   }
 
-  const filteredPosts =
-    selectedCategoryId === 'all'
-      ? COMMUNITY_POSTS
-      : COMMUNITY_POSTS.filter((post) => post.categoryId === selectedCategoryId)
-
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (sortBy === 'latest') return b.createdAt.localeCompare(a.createdAt) || b.id - a.id
-    return sortBy === 'heart' ? b.heartCount - a.heartCount : b.commentCount - a.commentCount
-  })
-
-  const isKnownCategory = CATEGORY_TABS.some((c) => c.id === selectedCategoryId)
+  let sortedPosts
+  if (IS_ACCOUNT_MODE) {
+    sortedPosts = result.posts // 서버가 이미 고른 카테고리·정렬대로 줬어요
+  } else {
+    const filteredPosts =
+      selectedCategoryId === 'all'
+        ? COMMUNITY_POSTS
+        : COMMUNITY_POSTS.filter((post) => post.categoryId === selectedCategoryId)
+    sortedPosts = [...filteredPosts].sort((a, b) => {
+      if (sortBy === 'latest') return b.createdAt.localeCompare(a.createdAt) || b.id - a.id
+      return sortBy === 'heart' ? b.heartCount - a.heartCount : b.commentCount - a.commentCount
+    })
+  }
 
   return (
     <Container maxWidth="md">
@@ -56,10 +98,31 @@ const Community = () => {
           sx={{ mb: { xs: 3, sm: 4 } }}
         />
 
-        {/* 정직한 안내: 게시판 글은 예시이고, 글쓰기 기능은 아직 없어요 */}
-        <LocalProfileNotice always sx={{ mb: 3 }}>
-          게시판의 글은 모두 <b>예시 데이터</b>예요. 아직 글쓰기 기능은 없고, 글 상세의 댓글도 이 화면에서만 보여요(저장되지 않아요).
-        </LocalProfileNotice>
+        {IS_ACCOUNT_MODE ? (
+          <LocalProfileNotice
+            sx={{ mb: 3 }}
+            accountChildren={
+              <>
+                여기 글은 가입한 모험가들이 남긴 <b>실제 글</b>이에요. 글 · 댓글 · 좋아요는 계정에 저장되고 <b>EXP에는 반영되지 않아요</b>.
+                글쓰기에 사진 첨부는 아직 없어요.
+              </>
+            }
+          />
+        ) : (
+          /* 정직한 안내: 게시판 글은 예시이고, 글쓰기는 계정 모드에서만 돼요 */
+          <LocalProfileNotice always sx={{ mb: 3 }}>
+            게시판의 글은 모두 <b>예시 데이터</b>예요. 이 브라우저의 임시 프로필로는 글을 쓸 수 없고, 글 상세의 댓글도 이 화면에서만
+            보여요(저장되지 않아요). 글쓰기는 이메일 계정 모드에서 쓸 수 있어요.
+          </LocalProfileNotice>
+        )}
+
+        {IS_ACCOUNT_MODE && ready && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+            <WoodButton component={Link} to={profile ? '/community/write' : '/login'} size="sm">
+              {profile ? '새 글 쓰기' : '로그인하고 글쓰기'}
+            </WoodButton>
+          </Box>
+        )}
 
         <Box
           sx={{
@@ -92,7 +155,9 @@ const Community = () => {
           }}
         >
           <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
-            글 {sortedPosts.length}개
+            {isLoading || loadErrorMessage
+              ? ' '
+              : `글 ${sortedPosts.length}개${IS_ACCOUNT_MODE && sortedPosts.length >= POST_LIST_LIMIT ? ` (최근 ${POST_LIST_LIMIT}개까지 보여요)` : ''}`}
           </Typography>
           <Box role="group" aria-label="정렬" sx={{ display: 'flex', gap: 0.5, mr: -1.25 }}>
             {SORT_OPTIONS.map((option) => (
@@ -121,12 +186,26 @@ const Community = () => {
           </Box>
         </Box>
 
-        {sortedPosts.length === 0 ? (
+        {isLoading ? (
+          <StatusMessage title="글을 불러오고 있어요" description="잠시만 기다려 주세요." sx={{ mt: 3 }} />
+        ) : loadErrorMessage ? (
+          <StatusMessage
+            title="글을 불러오지 못했어요"
+            description={loadErrorMessage}
+            actionLabel="다시 시도"
+            onAction={() => setRetryCount((count) => count + 1)}
+            sx={{ mt: 3 }}
+          />
+        ) : sortedPosts.length === 0 ? (
           <StatusMessage
             title="아직 글이 없어요"
-            description="이 카테고리의 첫 글을 기다리고 있어요."
-            actionLabel="전체 글 보기"
-            onAction={() => handleSelectCategory(null, 'all')}
+            description={
+              selectedCategoryId === 'all' || !isKnownCategory
+                ? '첫 글의 주인공이 되어 보세요.'
+                : '이 카테고리의 첫 글을 기다리고 있어요.'
+            }
+            actionLabel={selectedCategoryId === 'all' || !isKnownCategory ? undefined : '전체 글 보기'}
+            onAction={selectedCategoryId === 'all' || !isKnownCategory ? undefined : () => handleSelectCategory(null, 'all')}
             sx={{ mt: 3 }}
           />
         ) : (
@@ -135,12 +214,27 @@ const Community = () => {
               const category = COMMUNITY_CATEGORIES.find((c) => c.id === post.categoryId)
               return (
                 <Box component="li" key={post.id}>
-                  <CommunityPostListItem
-                    {...post}
-                    categoryLabel={category?.label}
-                    authorLevel={getAuthorLevel(post.author)}
-                    photoBakeryId={getPostPhotoBakeryId(post)}
-                  />
+                  {IS_ACCOUNT_MODE ? (
+                    <CommunityPostListItem
+                      id={post.id}
+                      categoryLabel={category?.label}
+                      title={post.title}
+                      author={post.author}
+                      authorLevel={levelFromIndex(post.authorLevelIndex)}
+                      content={post.content}
+                      heartCount={post.heartCount}
+                      commentCount={post.commentCount}
+                      createdAt={formatPostDate(post.createdAt)}
+                      placeholderEmoji={category?.emoji ?? '🍞'}
+                    />
+                  ) : (
+                    <CommunityPostListItem
+                      {...post}
+                      categoryLabel={category?.label}
+                      authorLevel={getAuthorLevel(post.author)}
+                      photoBakeryId={getPostPhotoBakeryId(post)}
+                    />
+                  )}
                 </Box>
               )
             })}

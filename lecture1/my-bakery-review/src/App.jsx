@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ReactLenis } from 'lenis/react'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import Layout from './components/layout/Layout'
@@ -8,6 +8,9 @@ import Home from './pages/Home'
 // 첫 화면(Home)만 바로 불러오고, 나머지 페이지는 들어갈 때 따로 불러와요.
 const Community = lazy(() => import('./pages/Community'))
 const CommunityPostDetail = lazy(() => import('./pages/CommunityPostDetail'))
+// 계정 모드에서는 서버에 저장된 실제 글을 보여주는 화면과 글쓰기 · 글 고치기 화면을 써요
+const AccountPostDetail = lazy(() => import('./pages/AccountPostDetail'))
+const CommunityPostForm = lazy(() => import('./pages/CommunityPostForm'))
 const MyPage = lazy(() => import('./pages/MyPage'))
 const Ranking = lazy(() => import('./pages/Ranking'))
 const BakeryDetail = lazy(() => import('./pages/BakeryDetail'))
@@ -40,7 +43,19 @@ function App() {
                     <Route element={<Layout />}>
                       <Route path="/" element={<Home />} />
                       <Route path="/community" element={<Community />} />
-                      <Route path="/community/:id" element={<CommunityPostDetail />} />
+                      {IS_ACCOUNT_MODE ? (
+                        <>
+                          <Route path="/community/write" element={<CommunityPostForm />} />
+                          <Route path="/community/:id/edit" element={<CommunityPostForm />} />
+                          <Route path="/community/:id" element={<AccountPostDetail />} />
+                        </>
+                      ) : (
+                        <>
+                          {/* 로컬 모드에는 글쓰기가 없어요 (예시 글만 보여줘요) */}
+                          <Route path="/community/write" element={<Navigate to="/community" replace />} />
+                          <Route path="/community/:id" element={<CommunityPostDetail />} />
+                        </>
+                      )}
                       <Route path="/mypage" element={<MyPage />} />
                       <Route path="/ranking" element={<Ranking />} />
                       <Route path="/bakery/:id" element={<BakeryDetail />} />
