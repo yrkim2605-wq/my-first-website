@@ -121,6 +121,30 @@ export const createSupabaseReviewRepository = (getClient) => {
       }
     },
 
+    // 빵집별 평균 별점 · 리뷰 개수: 서버가 모든 사용자의 리뷰로 계산한 값이에요 (ranking_bakeries 뷰, 0005).
+    // 결과: { '<빵집 ID>': { average: 4.3, count: 3 } } — 리뷰가 없는 빵집은 들어 있지 않아요(= 0개).
+    // 한 번에 1000줄까지만 줘서 여러 번에 나눠 모두 가져와요 (일부가 조용히 빠지지 않게).
+    async listRatingStats() {
+      try {
+        const client = await getClient()
+        const stats = {}
+        const PAGE = 1000
+        for (let page = 0; page < 20; page += 1) {
+          const { data, error } = await client
+            .from('ranking_bakeries')
+            .select('bakery_id, review_count, avg_rating')
+            .order('bakery_id', { ascending: true })
+            .range(page * PAGE, page * PAGE + PAGE - 1)
+          if (error) throw error
+          for (const row of data ?? []) stats[String(row.bakery_id)] = { average: Number(row.avg_rating), count: Number(row.review_count) }
+          if (!data || data.length < PAGE) break
+        }
+        return stats
+      } catch (error) {
+        throw toReviewError(error, 'read')
+      }
+    },
+
     // 서버 게임 설정 (하루 EXP 상한 등). 화면의 예상 EXP 미리보기가 서버 값을 따라가게 해요.
     async getSettings() {
       try {

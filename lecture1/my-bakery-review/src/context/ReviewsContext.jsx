@@ -22,25 +22,40 @@ export const ReviewsProvider = ({ children }) => {
   const [loadedUserId, setLoadedUserId] = useState(undefined) // 마지막으로 불러오기를 끝낸 사용자 (undefined = 아직 한 번도 안 끝남)
   const [levelIndexByUserId, setLevelIndexByUserId] = useState(null) // 계정 모드: 서버가 계산한 작성자 레벨
   const [gameSettings, setGameSettings] = useState(null) // 계정 모드: 서버의 하루 EXP 상한 등
+  // 계정 모드: 빵집별 평균 별점 · 리뷰 개수 (서버 집계). 로컬 모드는 쓰지 않아요(status 'off').
+  const [ratingStats, setRatingStats] = useState(null)
+  const [ratingStatsStatus, setRatingStatsStatus] = useState(IS_ACCOUNT_MODE ? 'loading' : 'off')
 
   const reload = useCallback(() => {
     if (IS_ACCOUNT_MODE && getBackendConfigProblem()) {
-      return Promise.resolve().then(() => setLoaded(true))
+      return Promise.resolve().then(() => {
+        setRatingStatsStatus('error')
+        setLoaded(true)
+      })
     }
     return Promise.all([
       reviewRepository.list(),
       reviewRepository.listLevels?.() ?? null,
       reviewRepository.getSettings?.() ?? null,
+      // 별점 집계를 못 가져와도 리뷰 불러오기 전체가 실패하지 않게 따로 감싸요 (그 경우 화면은 불러온 리뷰로 대신 계산해요)
+      reviewRepository.listRatingStats
+        ? reviewRepository.listRatingStats().then((value) => ({ ok: true, value }), () => ({ ok: false }))
+        : null,
     ])
-      .then(([items, levels, settings]) => {
+      .then(([items, levels, settings, ratingResult]) => {
         setReviews(items)
         if (levels) setLevelIndexByUserId(levels)
         if (settings) setGameSettings(settings)
+        if (ratingResult) {
+          setRatingStats(ratingResult.ok ? ratingResult.value : null)
+          setRatingStatsStatus(ratingResult.ok ? 'ready' : 'error')
+        }
         setLoadError(null)
       })
       .catch((error) => {
         // 계정 모드에서 불러오기에 실패해도 로컬 기록으로 바꿔치기하지 않아요
         setLoadError(error.message)
+        setRatingStatsStatus((previous) => (previous === 'loading' ? 'error' : previous))
       })
       .finally(() => setLoaded(true))
   }, [])
@@ -95,8 +110,8 @@ export const ReviewsProvider = ({ children }) => {
   )
 
   const value = useMemo(
-    () => ({ reviews, loaded, loadError, loadedUserId, levelsByUserId, gameSettings, reload, createReview, updateReview, removeReview }),
-    [reviews, loaded, loadError, loadedUserId, levelsByUserId, gameSettings, reload, createReview, updateReview, removeReview],
+    () => ({ reviews, loaded, loadError, loadedUserId, levelsByUserId, gameSettings, ratingStats, ratingStatsStatus, reload, createReview, updateReview, removeReview }),
+    [reviews, loaded, loadError, loadedUserId, levelsByUserId, gameSettings, ratingStats, ratingStatsStatus, reload, createReview, updateReview, removeReview],
   )
 
   return <ReviewsContext.Provider value={value}>{children}</ReviewsContext.Provider>

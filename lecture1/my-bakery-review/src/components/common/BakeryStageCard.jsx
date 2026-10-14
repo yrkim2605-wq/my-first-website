@@ -29,6 +29,7 @@ const BakeryStageCard = ({
   rating,
   heartCount,
   reviewCount = 0,
+  ratingStatus, // 계정 모드: 'ready'(평균 있음) | 'empty'(리뷰 없음) | 'loading' | 'error'. 없으면(로컬 모드) 예전 방식 그대로예요
   isNew = false,
   tags = [],
   variant = 'default',
@@ -42,7 +43,7 @@ const BakeryStageCard = ({
   const { photosByBakeryId } = useRealBakeryPhotos()
   const photoSrc = getBakeryPhoto(id, photosByBakeryId, photoSlot)
   const [bookmarked, setBookmarked] = useState(false)
-  const hasReviews = reviewCount > 0 || rating > 0
+  const hasReviews = ratingStatus ? ratingStatus === 'ready' : reviewCount > 0 || rating > 0
 
   const handleBookmarkClick = (event) => {
     event.preventDefault()
@@ -288,7 +289,7 @@ const BakeryStageCard = ({
         ) : (
           // 평점 줄과 같은 높이로 맞춰서, 카드마다 아래쪽 정보 위치가 같아요
           <Typography sx={{ display: 'flex', alignItems: 'center', minHeight: 24, fontSize: '0.8125rem', color: 'primary.main', fontWeight: 600 }} noWrap>
-            아직 리뷰가 없어요 · 첫 리뷰를 남겨주세요
+            {ratingStatus === 'loading' ? '별점을 불러오는 중이에요…' : ratingStatus === 'error' ? '별점을 불러오지 못했어요' : ratingStatus === 'empty' ? '아직 별점이 없어요 · 첫 리뷰를 남겨주세요' : '아직 리뷰가 없어요 · 첫 리뷰를 남겨주세요'}
           </Typography>
         )}
 

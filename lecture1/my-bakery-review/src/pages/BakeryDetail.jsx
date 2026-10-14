@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
@@ -31,6 +31,7 @@ import { IS_ACCOUNT_MODE } from '../lib/backend'
 import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { useProfile } from '../hooks/useProfile'
 import { useReviews } from '../hooks/useReviews'
+import { useBakeryRatings } from '../hooks/useBakeryRatings'
 import { buildLevelsByUser, kstDate } from '../utils/gameState'
 import { getAuthorLevel } from '../utils/authorLevel'
 import WoodButton from '../components/common/WoodButton'
@@ -40,6 +41,7 @@ import ReviewDialog from '../components/bakery/ReviewDialog'
 import RewardDialog from '../components/bakery/RewardDialog'
 import LevelUpDialog from '../components/bakery/LevelUpDialog'
 import ReviewJournalCard from '../components/bakery/ReviewJournalCard'
+import BakeryRatingSummary from '../components/bakery/BakeryRatingSummary'
 import { DISPLAY_FONT, RADIUS } from '../theme'
 
 const STAR_SX = { '& .MuiRating-iconFilled': { color: 'mustard.main' } }
@@ -68,7 +70,13 @@ const BakeryDetail = () => {
   const { visitedIds, toggleVisited, pendingIds } = useVisitedBakeries()
   const { photosByBakeryId } = useRealBakeryPhotos()
   const { profile } = useProfile()
-  const { reviews: allReviews, removeReview, levelsByUserId } = useReviews()
+  const { reviews: allReviews, removeReview, levelsByUserId, reload: reloadReviews } = useReviews()
+  const { isEnabled: ratingsEnabled, getRating } = useBakeryRatings()
+
+  // 계정 모드: 상세를 열 때마다 서버의 최신 리뷰 · 평균 별점을 다시 불러와요 (다른 사용자가 남긴 리뷰도 반영돼요)
+  useEffect(() => {
+    if (IS_ACCOUNT_MODE) reloadReviews()
+  }, [id, reloadReviews])
 
   const mockBakery = BAKERIES.find((b) => String(b.id) === id)
   const realBakery = realBakeries.find((b) => String(b.id) === id)
@@ -308,7 +316,10 @@ const BakeryDetail = () => {
           {bakery.description && <Typography sx={{ mb: 2 }}>{bakery.description}</Typography>}
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap', fontSize: '0.9rem' }}>
-            {bakery.rating > 0 ? (
+            {ratingsEnabled && isRealBakery ? (
+              // 계정 모드의 실제 빵집: 서버 집계(모든 사용자의 리뷰)의 평균 별점 · 리뷰 개수
+              <BakeryRatingSummary info={getRating(bakery.id)} />
+            ) : bakery.rating > 0 ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Rating value={bakery.rating} precision={0.5} readOnly size="small" sx={STAR_SX} />
                 <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 700 }}>

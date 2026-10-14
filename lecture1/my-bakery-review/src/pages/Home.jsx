@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTheme } from '@mui/material/styles'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
@@ -29,6 +29,7 @@ import { FILTER_CHIP_SX } from '../constants/chipStyles'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import { useGameState } from '../hooks/useGameState'
+import { useBakeryRatings } from '../hooks/useBakeryRatings'
 
 // "전체 빵집"은 처음에 이만큼만 보여주고, "빵집 더 보기"로 같은 수만큼 이어서 보여줘요.
 const BAKERY_PAGE_SIZE = 12
@@ -74,6 +75,17 @@ const Home = () => {
   const { stats: myStats } = useGameState()
   const discoveredIds = myStats.discoveredBakeryIds
 
+  // 빵집 카드의 평균 별점 · 리뷰 개수: 계정 모드는 서버 집계, 로컬 모드는 예전 방식(예시 데이터 표) 그대로예요
+  const { isEnabled: ratingsEnabled, getRating } = useBakeryRatings()
+  const ratingProps = useCallback(
+    (bakery) => {
+      if (!ratingsEnabled) return { reviewCount: REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0 }
+      const info = getRating(bakery.id)
+      return { rating: info.average, reviewCount: info.count, ratingStatus: info.status }
+    },
+    [ratingsEnabled, getRating],
+  )
+
   const { palette } = theme
   const sageColor = palette.secondary.main
   const wineColor = palette.primary.main
@@ -90,11 +102,11 @@ const Home = () => {
       popularBakeries.map((bakery) => ({
         ...bakery,
         districtLabel: DISTRICTS.find((d) => d.id === bakery.districtId)?.name,
-        reviewCount: REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0,
+        ...ratingProps(bakery),
         isNew: newBakeryIds.has(bakery.id),
         discovered: discoveredIds.has(String(bakery.id)),
       })),
-    [popularBakeries, newBakeryIds, discoveredIds],
+    [popularBakeries, newBakeryIds, discoveredIds, ratingProps],
   )
 
   const marqueeBakeries = useMemo(
@@ -105,11 +117,11 @@ const Home = () => {
         .map((bakery) => ({
           ...bakery,
           districtLabel: DISTRICTS.find((d) => d.id === bakery.districtId)?.name,
-          reviewCount: REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0,
+          ...ratingProps(bakery),
           isNew: newBakeryIds.has(bakery.id),
           discovered: discoveredIds.has(String(bakery.id)),
         })),
-    [realBakeries, newBakeryIds, discoveredIds],
+    [realBakeries, newBakeryIds, discoveredIds, ratingProps],
   )
 
   const filteredBakeries = realBakeries.filter((b) => {
@@ -378,7 +390,7 @@ const Home = () => {
                   key={bakery.id}
                   {...bakery}
                   districtLabel={DISTRICTS.find((d) => d.id === bakery.districtId)?.name}
-                  reviewCount={REVIEW_COUNT_BY_BAKERY_ID[bakery.id] || 0}
+                  {...ratingProps(bakery)}
                   isNew={newBakeryIds.has(bakery.id)}
                   discovered={discoveredIds.has(String(bakery.id))}
                 />

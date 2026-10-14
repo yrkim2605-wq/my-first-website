@@ -9,6 +9,8 @@ import { Link } from 'react-router-dom'
 import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { DISTRICTS } from '../../constants/districts'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
+import { useBakeryRatings } from '../../hooks/useBakeryRatings'
+import { formatAverage } from '../../utils/bakeryRating'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
@@ -20,7 +22,11 @@ const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose
   const { photosByBakeryId } = useRealBakeryPhotos()
   const district = DISTRICTS.find((d) => d.id === bakery.districtId)
   const isCompact = variant === 'compact'
-  const hasRating = bakery.rating > 0
+  // 계정 모드: 서버 집계의 평균 별점 · 리뷰 개수 / 로컬 모드: 예전 방식(빵집 정보의 rating)
+  const { isEnabled: ratingsEnabled, getRating } = useBakeryRatings()
+  const ratingInfo = ratingsEnabled ? getRating(bakery.id) : null
+  const average = ratingInfo ? ratingInfo.average : bakery.rating
+  const hasRating = ratingInfo ? ratingInfo.status === 'ready' : bakery.rating > 0
 
   return (
     <Box
@@ -91,15 +97,17 @@ const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose
         {hasRating && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
             <Rating
-              value={bakery.rating}
+              value={average}
               precision={0.5}
               readOnly
               size="small"
               sx={{ fontSize: '1rem', '& .MuiRating-iconFilled': { color: 'mustard.main' } }}
             />
-            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700 }}>{bakery.rating.toFixed(1)}</Typography>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700 }}>{formatAverage(average)}</Typography>
+            {ratingInfo && <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>({ratingInfo.count})</Typography>}
           </Box>
         )}
+        {ratingInfo?.status === 'empty' && <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'terracotta.main', mt: 0.5 }}>아직 별점이 없어요</Typography>}
         {!isCompact && (
           <Button
             component={Link}
