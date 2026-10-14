@@ -164,7 +164,8 @@ const LocalImportCard = () => {
           {step === 'loading' && <Typography role="status">내 계정의 기록을 확인하고 있어요… (읽기만 해요)</Typography>}
           {step === 'error' && (
             <Alert severity="error">
-              {errorMessage || '기록을 확인하지 못했어요.'} (아무것도 저장되지 않았어요)
+              {errorMessage || '기록을 확인하지 못했어요.'}
+              {!errorMessage?.includes('아무것도 저장되지 않았어요') && ' (아무것도 저장되지 않았어요)'}
             </Alert>
           )}
           {step === 'preview' && plan && (
