@@ -22,10 +22,10 @@
 | 3 | 커뮤니티 사진 작성 · 수정 · 삭제 | **정상 (가짜 서버)** / 실서버 **미검증** | 사진 고르기 → 줄이기(JPEG) → 올리기 실패 시 글 보존 + 선택 안내 → 저장 → 상세 표시 → 사진 빼고 수정 → 삭제까지 실제 브라우저에서 통과. 진짜 Storage 업로드 · 다른 사용자에게 보이는지는 사용자 확인 필요 |
 | 4 | 로컬 기록 → 계정 이전 · 중복 방지 | **정상 (시험 · 화면)** / 실제 가져오기 **미검증** | 시험 82개 통과, 미리보기 화면 정상(날짜 안내 · 원본 보존 · 이전 불가 이유). 실제 가져오기 실행은 계정이 필요해 사용자 확인 필요 |
 | 5 | PC · 태블릿 · 모바일 반응형 + 44px | **수정함** | 가로 넘침 0건. 터치 모드에서 44px 미만이던 곳(헤더 메뉴 35px, 푸터 링크 20px, 지역 버튼 35px, 칩 32px, 아이콘 버튼 36~40px, 입력칸 40px, 지도 버튼 36px, 상세 링크 22px)을 고쳐 **재측정 시 0건** (남은 1건은 카카오 지도가 넣는 저작권 표기로 우리 코드 밖) |
-| 6 | Storage / RLS 보안 | **정상** (0008은 미검증) | 비로그인 업로드 · 덮어쓰기는 RLS로 거절, 삭제 · 목록은 빈 결과, 시험 파일 남지 않음. RLS 시험 102 · 정책 시험 35 · 서비스 권한 시험 33 통과. 비로그인 쓰기 16가지 차단 |
+| 6 | Storage / RLS 보안 | **정상** (0008 적용 후 비로그인 재점검도 통과) | 비로그인 업로드 · 덮어쓰기는 RLS로 거절, 삭제 · 목록은 빈 결과, 시험 파일 남지 않음. RLS 시험 102 · 정책 시험 35 · 서비스 권한 시험 33 통과. 비로그인 쓰기 16가지 차단 |
 | 7 | 환경변수 · Redirect URL · 카카오 도메인 | 카카오 **정상** / Redirect URL **미검증** | 카카오 JS 키가 `localhost:5173`과 배포 주소(`yrkim2605-wq.github.io`)에서 허용(200), 다른 도메인은 거절(401). Supabase Redirect URL은 대시보드에서만 확인 가능 |
 | 8 | 개발용 오류 · 디버그 정보 노출 | **정상** (참고 1건) | 운영 번들에 `[개발용]` · `[빵덕후 저장 오류]` 출력 없음(개발 서버에서만 나와요). 비밀 키 값 없음(publishable 키만, 공개용). 참고: 서버 설정이 안 끝났을 때 보이는 안내문에 마이그레이션 파일명 · 설정 이름이 들어 있어요 (아래 참고) |
-| 9 | SQL 마이그레이션 적용 | 0001~0007 **정상** / 0008 **미검증** | `check-live.mjs`가 0005 · 0006 · 0007 효과를 확인. 0008(사진 내 폴더 읽기 정책)은 로그인 없이 확인할 수 없어요 |
+| 9 | SQL 마이그레이션 적용 | 0001~0008 **정상** | `check-live.mjs`가 0005 · 0006 · 0007 효과를 확인. 0008은 사용자가 pg_policies에서 4개 정책(insert · update · delete · select own)을 확인함 |
 
 ## 이번 점검에서 고친 것
 
@@ -35,7 +35,7 @@
 
 ## 사용자가 확인해야 하는 것 (내가 못 하는 것)
 
-- [ ] **0008 적용 여부**: SQL Editor에서 `select policyname, cmd from pg_policies where schemaname='storage' and tablename='objects';` → `photos_select_own`(SELECT)이 있어야 해요. 없으면 `supabase/migrations/0008_storage_select_own.sql` 적용.
+- [x] **0008 적용 여부** (완료): SQL Editor에서 `select policyname, cmd from pg_policies where schemaname='storage' and tablename='objects';` → `photos_select_own`(SELECT)이 있어야 해요. 없으면 `supabase/migrations/0008_storage_select_own.sql` 적용.
 - [ ] Authentication → URL Configuration의 Redirect URLs / Site URL에 `https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/` 등록 여부 (계정 모드를 운영에서 켤 때만 필요)
 - [ ] 새 이메일로 가입 → 인증 메일 → 로그인 → 첫 리뷰 → 랭킹
 - [ ] 커뮤니티에서 사진 글 쓰기 · 수정 · 삭제, 다른 계정에서 사진이 보이는지, 다른 계정이 내 글 · 사진을 못 고치는지

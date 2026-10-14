@@ -12,7 +12,7 @@
 | 마이그레이션 0001~0005 | ✅ 적용됨 | |
 | 0006 리뷰 글자 수 서버 검사 | ✅ 적용됨 | 사용자 확인 (`check-live.mjs`가 글자 수 함수 존재 확인) |
 | 0007 service_role 최소 권한 (빵집 등록) | ✅ 적용됨 | 리뷰 저장 성공으로 확인 |
-| **0008 사진 저장소 내 폴더 읽기 정책** | ⬜ **적용 필요** | 사진 파일 정리(글 삭제/교체)에 필요 → `docs/supabase-step9-community-photo.md` 4장 |
+| **0008 사진 저장소 내 폴더 읽기 정책** | ✅ 적용됨 | 사용자 확인: pg_policies에 photos_insert_own · update_own · delete_own · select_own 4개 (2026-10-14). 실제 사진 정리 동작은 아래 4장에서 확인 |
 | `register-bakery` 함수 최신 코드 재배포 | ✅ 완료 | 실패 단계 로그 + DB 권한 오류 구분 포함. Verify JWT는 켜져 있어도 꺼져 있어도 안전 |
 | Edge Function 시크릿 `KAKAO_REST_API_KEY` | ✅ 있음 | |
 | 이메일 인증 필수 (Confirm email) | ✅ 켜짐 | `check-connection.mjs`로 확인 |
