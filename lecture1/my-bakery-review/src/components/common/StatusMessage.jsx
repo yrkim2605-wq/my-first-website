@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import WoodPanel from './WoodPanel'
 import Sticker from './decor/Sticker'
+import Sparkle from './decor/Sparkle'
 import mascotLogo from '../../assets/logo-mascot-photo.webp'
 
 // 상황(mood)마다 빵 기사가 다른 모습으로 나와요.
@@ -18,7 +19,8 @@ const MOODS = {
 
 // 오류가 났거나 결과가 없을 때 보여주는 안내 상자예요.
 // actionLabel과 onAction을 넘기면 "다시 시도" 같은 버튼이 함께 나와요.
-const StatusMessage = ({ title, description, actionLabel, onAction, mood, sx }) => {
+// sparkles를 켜면 상자 양옆 구석에 작은 금빛 별 몇 개를 달아요. children은 맨 아래(버튼 자리)에 그대로 들어가요.
+const StatusMessage = ({ title, description, actionLabel, onAction, mood, sparkles = false, children, sx }) => {
   const moodStyle = MOODS[mood]
   return (
     <WoodPanel
@@ -35,6 +37,13 @@ const StatusMessage = ({ title, description, actionLabel, onAction, mood, sx }) 
         ...sx,
       }}
     >
+      {sparkles && (
+        <>
+          <Sparkle size={18} twinkle sx={{ position: 'absolute', top: 22, left: { xs: 16, sm: '22%' } }} />
+          <Sparkle size={12} twinkle delay={1} sx={{ position: 'absolute', top: 50, left: { xs: 40, sm: 'calc(22% + 26px)' } }} />
+          <Sparkle size={14} twinkle delay={1.8} sx={{ position: 'absolute', top: 30, right: { xs: 18, sm: '22%' } }} />
+        </>
+      )}
       {moodStyle ? (
         <Sticker name={moodStyle.sticker} width={moodStyle.width} float={moodStyle.float} sx={{ mb: 0.5 }} />
       ) : (
@@ -51,6 +60,7 @@ const StatusMessage = ({ title, description, actionLabel, onAction, mood, sx }) 
           {actionLabel}
         </Button>
       )}
+      {children}
     </WoodPanel>
   )
 }

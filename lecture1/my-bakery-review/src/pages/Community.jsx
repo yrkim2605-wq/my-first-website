@@ -131,14 +131,14 @@ const Community = () => {
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 8, sm: 10 } }}>
+      <Box sx={{ pt: { xs: 3, sm: 4.5 }, pb: { xs: 6, sm: 8 } }}>
         <SectionHeading
           variant="sign"
           eyebrow="ADVENTURERS' SQUARE"
           title="모험가 광장"
           flank={{ left: { name: 'knight-coffee', width: 118 }, right: { name: 'knight-camera', width: 118 } }}
           description="부산 빵집에서 있었던 일, 새로 나온 메뉴, 오픈런 후기를 나눠요."
-          sx={{ mb: { xs: 3, sm: 4 } }}
+          sx={{ mb: { xs: 2, sm: 2.5 } }}
         />
 
         {navNotice && (
@@ -150,7 +150,7 @@ const Community = () => {
 
         {IS_ACCOUNT_MODE ? (
           <LocalProfileNotice
-            sx={{ mb: 3 }}
+            sx={{ mb: 2 }}
             accountChildren={
               <>
                 여기 글은 가입한 모험가들이 남긴 <b>실제 글</b>이에요. 글 · 댓글 · 좋아요는 계정에 저장되고 <b>EXP에는 반영되지 않아요</b>.
@@ -160,15 +160,20 @@ const Community = () => {
           />
         ) : (
           /* 정직한 안내: 게시판 글은 예시이고, 글쓰기는 계정 모드에서만 돼요 */
-          <LocalProfileNotice always sx={{ mb: 3 }}>
+          <LocalProfileNotice always sx={{ mb: 2 }}>
             게시판의 글은 모두 <b>예시 데이터</b>예요. 이 브라우저의 임시 프로필로는 글을 쓸 수 없고, 글 상세의 댓글도 이 화면에서만
             보여요(저장되지 않아요). 글쓰기는 이메일 계정 모드에서 쓸 수 있어요.
           </LocalProfileNotice>
         )}
 
         {IS_ACCOUNT_MODE && ready && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-            <WoodButton component={Link} to={profile ? '/community/write' : '/login'} size="sm">
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+            {/* 보통 크기 나무 버튼: 작은 크기보다 눈에 띄되, 글 목록보다 커지지 않게 글자 · 여백만 줄였어요 */}
+            <WoodButton
+              component={Link}
+              to={profile ? '/community/write' : '/login'}
+              sx={{ width: { xs: '100%', sm: 'auto' }, fontSize: { xs: '1rem', sm: '1.05rem' }, px: { xs: 2.5, sm: 3.5 }, py: { xs: 1, sm: 1.1 } }}
+            >
               {profile ? '새 글 쓰기' : '로그인하고 글쓰기'}
             </WoodButton>
           </Box>
@@ -260,8 +265,16 @@ const Community = () => {
             }
             actionLabel={selectedCategoryId === 'all' || !isKnownCategory ? undefined : '전체 글 보기'}
             onAction={selectedCategoryId === 'all' || !isKnownCategory ? undefined : () => handleSelectCategory(null, 'all')}
-            sx={{ mt: 3 }}
-          />
+            sparkles
+            sx={{ mt: 2 }}
+          >
+            {/* 글쓰기는 계정 모드에서만 돼요. 위의 '새 글 쓰기'와 같은 곳으로 이어져요 */}
+            {IS_ACCOUNT_MODE && ready && (selectedCategoryId === 'all' || !isKnownCategory) && (
+              <WoodButton component={Link} to={profile ? '/community/write' : '/login'} sx={{ mt: 1.5 }}>
+                {profile ? '첫 번째 모험 기록 남기기' : '로그인하고 첫 기록 남기기'}
+              </WoodButton>
+            )}
+          </StatusMessage>
         ) : (
           <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
             {sortedPosts.map((post) => {
