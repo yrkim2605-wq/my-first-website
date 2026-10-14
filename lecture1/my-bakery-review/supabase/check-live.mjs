@@ -7,6 +7,7 @@
 //   ② 저장된 데이터가 공개 목록 · 랭킹에 반영되는지 (빵집 등록 → 일지 → 랭킹)
 //   ③ 비로그인으로는 모든 표에 쓰기가 막히는지 (RLS · 권한)
 //   ④ 빵집 확인 서버 함수가 살아 있고 로그인 없이는 거절하는지
+//   ⑤ 신고 · 운영자(0009 · 0010): 비로그인으로는 읽기 · 쓰기 · 운영자 함수가 모두 막히는지
 // 키 값 · 이메일은 출력하지 않아요. 로그인이 필요한 확인(저장 성공 여부, 내 순위 등)은 앱 화면에서 하세요.
 
 import fs from 'node:fs'
@@ -171,6 +172,24 @@ console.log('— ④ 빵집 확인 서버 함수(register-bakery) —')
   const getRes = await fetch(fn, { method: 'GET', headers })
   const getBody = await getRes.json().catch(() => null)
   report(getRes.status === 405 && getBody?.error?.code === 'METHOD_NOT_ALLOWED' ? 'ok' : 'warn', 'POST 외 요청은 거절(405)', `HTTP ${getRes.status}`)
+}
+
+// ⑤ 신고 · 운영자 (0009 · 0010): 비로그인으로는 읽기 · 쓰기 · 운영자 함수가 모두 막혀야 해요 (조건이 절대 맞지 않는 요청 · 거부돼야 정상)
+console.log('— ⑤ 신고 · 운영자 (0009 · 0010) —')
+{
+  const post = (target, body) => fetch(`${base}/rest/v1/${target}`, { method: 'POST', headers: { ...headers, Prefer: 'return=minimal' }, body: JSON.stringify(body) })
+  const denied = async (label, makeRequest) => {
+    const res = await makeRequest()
+    report(res.status >= 400 && res.status !== 404 ? 'ok' : 'fail', label, res.status === 404 ? 'HTTP 404 — 0009를 적용했는지 확인하세요' : `HTTP ${res.status}`)
+  }
+  await denied('비로그인은 신고 목록을 읽을 수 없음 (reports)', () => fetch(`${base}/rest/v1/reports?select=id&limit=1`, { headers }))
+  await denied('비로그인은 운영자 목록을 읽을 수 없음 (admins)', () => fetch(`${base}/rest/v1/admins?select=user_id&limit=1`, { headers }))
+  await denied('비로그인은 신고를 쓸 수 없음', () => post('reports', { target_type: 'post', target_id: NIL, reason: 'spam' }))
+  await denied('비로그인은 운영자 목록에 쓸 수 없음', () => post('admins', { user_id: NIL }))
+  await denied('비로그인은 신고를 고칠 수 없음', () => fetch(`${base}/rest/v1/reports?id=eq.${NIL}`, { method: 'PATCH', headers, body: JSON.stringify({ status: 'resolved' }) }))
+  await denied('비로그인은 신고를 지울 수 없음', () => fetch(`${base}/rest/v1/reports?id=eq.${NIL}`, { method: 'DELETE', headers }))
+  await denied('비로그인은 운영자 확인 함수(is_admin)를 쓸 수 없음', () => post('rpc/is_admin', {}))
+  await denied('비로그인은 신고 처리 함수(admin_handle_report)를 쓸 수 없음', () => post('rpc/admin_handle_report', { p_report_id: NIL, p_action: 'dismiss', p_note: null }))
 }
 
 console.log(`\n통과 ${ok} · 실패 ${fail} · 주의 ${warn}`)
