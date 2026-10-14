@@ -301,6 +301,8 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
                 {import.meta.env.DEV && errorDebug && (
                   <Box component="code" sx={{ display: 'block', mt: 0.75, fontSize: '0.72rem', opacity: 0.8, wordBreak: 'break-all' }}>
                     [개발용] 단계={errorDebug.step} 출처={errorDebug.source} 상태={String(errorDebug.status)} 코드={String(errorDebug.serverCode ?? errorDebug.code)}
+                    {errorDebug.cause ? ` 원인=${errorDebug.cause}` : ''}
+                    {errorDebug.probe ? ` 진단=${errorDebug.probe}` : ''}
                   </Box>
                 )}
               </Alert>

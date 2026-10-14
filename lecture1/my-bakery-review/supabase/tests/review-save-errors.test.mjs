@@ -12,6 +12,14 @@ const localRepo = await server.ssrLoadModule('/src/storage/reviewRepository.js')
 const logs = []
 shared.setDebugLogger((info) => logs.push(info))
 
+// 연결 진단(probe)이 쓰는 fetch를 가짜로 바꿔요. 기본은 "서버에 못 닿음"이에요.
+const fetchCalls = []
+let fetchBehavior = () => Promise.reject(new TypeError('Failed to fetch'))
+globalThis.fetch = (url, init) => {
+  fetchCalls.push({ url: String(url), init })
+  return fetchBehavior()
+}
+
 const store = {}
 globalThis.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => (store[k] = String(v)), removeItem: (k) => delete store[k] }
 
@@ -69,6 +77,7 @@ const makeFake = (state = {}) => {
   return {
     log,
     from,
+    ...(s.noFunctionsUrl ? {} : { functionsUrl: new URL('https://x.supabase.co/functions/v1') }),
     auth: { getSession: async () => ({ data: { session: s.session }, error: null }) },
     storage: { from: () => ({ getPublicUrl: (p) => ({ data: { publicUrl: 'https://cdn.test/' + p } }), upload: async () => ({ data: {}, error: null }), remove: async () => ({}) }) },
     functions: {
@@ -100,7 +109,7 @@ const fnCases = [
   ['로그인 만료(401)', fnError(401, 'NOT_SIGNED_IN'), 'SESSION_EXPIRED', /로그인/],
   ['함수가 배포되지 않음(404)', fnError(404, null), 'FUNCTION_MISSING', /빵집 확인 기능/],
   ['카카오가 빵집으로 인정하지 않음(400)', fnError(400, 'BAKERY_NOT_FOUND', '실제 제과 · 베이커리로 확인되지 않았어요.'), 'BAKERY_REJECTED', /확인되지/],
-  ['서버에 닿지 못함(연결 · 접근 차단)', Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError', context: new TypeError('Failed to fetch') }), 'FUNCTION_UNREACHABLE', /빵집 확인 서버에 연결/],
+  ['서버에 닿지 못함(진단도 실패 → 이 브라우저가 못 닿음)', Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError', context: new TypeError('Failed to fetch') }), 'FUNCTION_NETWORK_BLOCKED', /이 브라우저에서 서버/],
 ]
 for (const [label, invokeError, expectedCode, pattern] of fnCases) {
   logs.length = 0
@@ -114,6 +123,40 @@ for (const [label, invokeError, expectedCode, pattern] of fnCases) {
   const { repo } = repoFor({ invokeError: fnError(502, 'KAKAO_UNAVAILABLE', '서버 쪽 설명') })
   const error = await rejects(repo.create(baseInput))
   check('개발용 정보에 HTTP 상태 · 서버 오류 코드 · 서버 메시지가 담겨요', error.debug.status === 502 && error.debug.serverCode === 'KAKAO_UNAVAILABLE' && error.debug.serverMessage === '서버 쪽 설명')
+}
+
+// ── 1-2. 연결 오류(상태 없음)의 원인 진단 ──
+{
+  const fetchError = () => Object.assign(new Error('Failed to send a request to the Edge Function'), { name: 'FunctionsFetchError', context: new TypeError('Failed to fetch') })
+
+  // (가) 로그인 정보 없는 단순 요청은 서버가 응답 → 서버는 살아 있고 인증 헤더가 있는 요청만 막힌 경우
+  fetchCalls.length = 0
+  fetchBehavior = () => Promise.resolve({ status: 401 })
+  logs.length = 0
+  let t = repoFor({ invokeError: fetchError() })
+  let error = await rejects(t.repo.create(baseInput))
+  check('진단: 단순 요청은 응답 → "서버는 응답하는데 로그인 정보가 담긴 요청이 막혔어요"', error?.code === 'FUNCTION_REQUEST_BLOCKED' && /서버는 응답/.test(error.message) && /로그아웃했다가 다시 로그인/.test(error.message), `${error?.code} ${error?.message}`)
+  check('진단: 진단 요청은 로그인 정보 · 키 없이 보내요 (POST · text/plain · 헤더 1개)', fetchCalls.length === 1 && fetchCalls[0].url === 'https://x.supabase.co/functions/v1/register-bakery' && fetchCalls[0].init.method === 'POST' && JSON.stringify(Object.keys(fetchCalls[0].init.headers)) === '["Content-Type"]' && fetchCalls[0].init.body === '{}')
+  check('개발용 정보에 원래 원인(TypeError: Failed to fetch)과 진단 결과가 담겨요', error.debug.cause === 'TypeError: Failed to fetch' && error.debug.probe.includes('단순 요청은 응답함') && error.debug.probe.includes('HTTP 401') && logs[0].probe === error.debug.probe)
+  check('진단 결과가 나와도 저장 요청은 보내지 않아요', t.client.log.inserts.length === 0)
+
+  // (나) 단순 요청도 실패 → 이 브라우저가 서버에 못 닿음
+  fetchBehavior = () => Promise.reject(new TypeError('Failed to fetch'))
+  t = repoFor({ invokeError: fetchError() })
+  error = await rejects(t.repo.create(baseInput))
+  check('진단: 단순 요청도 실패 → "이 브라우저에서 서버에 연결되지 않아요(VPN · 차단 확장 프로그램 확인)"', error?.code === 'FUNCTION_NETWORK_BLOCKED' && /VPN/.test(error.message) && /단순 요청도 실패/.test(error.debug.probe), `${error?.code} ${error?.debug?.probe}`)
+
+  // (다) 진단할 수 없으면(함수 주소를 모름) 예전의 일반 안내
+  t = repoFor({ invokeError: fetchError(), noFunctionsUrl: true })
+  error = await rejects(t.repo.create(baseInput))
+  check('진단 불가 → 일반 연결 안내', error?.code === 'FUNCTION_UNREACHABLE' && error.debug.probe === '확인하지 못함')
+
+  // (라) HTTP 상태가 있는 오류에는 진단 요청을 보내지 않아요
+  fetchCalls.length = 0
+  t = repoFor({ invokeError: fnError(502, 'KAKAO_UNAVAILABLE') })
+  await rejects(t.repo.create(baseInput))
+  check('상태가 있는 서버 오류(502 등)에는 진단 요청을 보내지 않아요', fetchCalls.length === 0)
+  fetchBehavior = () => Promise.reject(new TypeError('Failed to fetch'))
 }
 
 // ── 2. 일지 저장(insert) 오류: 원인별 안내 ──

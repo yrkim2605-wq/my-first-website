@@ -28,6 +28,10 @@ export const messages = {
   FUNCTION_ERROR: '빵집 확인 서버에서 문제가 생겼어요. 잠시 후 다시 시도해 주세요. (저장되지 않았어요)',
   FUNCTION_UNREACHABLE:
     '빵집 확인 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 잠시 후 다시 시도해 주세요. 계속되면 서버 관리자가 빵집 확인 함수의 배포 · 접근 설정을 확인해야 해요. (저장되지 않았어요)',
+  FUNCTION_NETWORK_BLOCKED:
+    '이 브라우저에서 서버(Supabase)에 연결되지 않아요. 인터넷 연결, VPN, 광고 · 보안 차단 확장 프로그램을 확인한 뒤 다시 시도해 주세요. 시크릿 창에서 확장 프로그램 없이 시도해 보는 것도 좋아요. (저장되지 않았어요)',
+  FUNCTION_REQUEST_BLOCKED:
+    '빵집 확인 서버는 응답하는데, 로그인 정보가 담긴 요청이 서버에 닿기 전에 막혔어요. 로그아웃했다가 다시 로그인한 뒤 시도해 보세요. 계속되면 서버 관리자가 빵집 확인 함수의 접근(CORS) · 로그인 검사 설정을 확인해야 해요. (저장되지 않았어요)',
   TOO_LARGE: '요청이 너무 커서 처리하지 못했어요. (저장되지 않았어요)',
   RATE_LIMITED: '빵집 확인 요청이 너무 많아요. 잠시 후 다시 시도해 주세요. (저장되지 않았어요)',
   BAKERY_REJECTED: '이 빵집은 확인하지 못했어요. 지도에서 다시 골라 주세요.',
@@ -52,6 +56,11 @@ export const setDebugLogger = (logger) => {
   debugLogger = logger
 }
 
+const describeCause = (error) => {
+  const inner = error?.cause ?? (error?.context instanceof Error ? error.context : null)
+  return inner ? `${inner.name ?? 'Error'}: ${String(inner.message ?? '').slice(0, 200)}` : null
+}
+
 // 오류에서 원인을 찾을 수 있는 정보만 뽑아요 (토큰 · 키는 포함하지 않아요)
 export const describeError = (error, step, source = 'database') => ({
   step: step ?? 'unknown',
@@ -62,6 +71,8 @@ export const describeError = (error, step, source = 'database') => ({
   message: String(error?.message ?? '').slice(0, 300),
   details: error?.details ? String(error.details).slice(0, 300) : null,
   hint: error?.hint ? String(error.hint).slice(0, 300) : null,
+  // 연결 오류는 겉 메시지("Failed to send a request…") 뒤에 진짜 원인(TypeError: Failed to fetch 등)이 숨어 있어요
+  cause: describeCause(error),
 })
 
 const fail = (code, message, debug) => {
@@ -108,11 +119,12 @@ export const toReviewError = (error, step) => {
 
 // 빵집 확인 서버 함수(register-bakery)의 오류 → 원인별 안내
 //  status: HTTP 상태 (연결 자체가 안 되면 undefined) / detail: 함수가 돌려준 { error: { code, message } }
-export const mapFunctionError = (error, status, detail) => {
+export const mapFunctionError = (error, status, detail, probe) => {
   const serverCode = detail?.error?.code ?? null
   const debug = {
     ...describeError(error, 'register', 'function'),
     status: status ?? null,
+    probe: probe?.note ?? null,
     serverCode,
     serverMessage: detail?.error?.message ? String(detail.error.message).slice(0, 200) : null,
   }
@@ -125,8 +137,30 @@ export const mapFunctionError = (error, status, detail) => {
   if (status === 502 || serverCode === 'KAKAO_UNAVAILABLE') return fail('KAKAO_UNAVAILABLE', messages.KAKAO_UNAVAILABLE, debug)
   if (serverCode === 'NOT_CONFIGURED') return fail('FUNCTION_NOT_CONFIGURED', messages.FUNCTION_NOT_CONFIGURED, debug)
   if (status && status >= 500) return fail('FUNCTION_ERROR', `${messages.FUNCTION_ERROR} (오류 코드: register/${status}${serverCode ? '/' + serverCode : ''})`, debug)
-  // 상태가 없다 = 서버에 닿지 못했어요 (인터넷 끊김 · 함수 미배포 · 접근 차단 등)
+  // 상태가 없다 = 요청이 서버에 닿기 전에 실패했어요. 로그인 정보 없이 보낸 단순 요청(probe)으로 원인을 가려요.
+  //  - 단순 요청도 실패 → 이 브라우저가 서버에 못 닿아요 (인터넷 · VPN · 차단 확장 프로그램)
+  //  - 단순 요청은 응답 → 서버는 살아 있고, 로그인 정보가 담긴 요청만 막혔어요 (CORS · 로그인 검사 설정 · 토큰 문제)
+  if (probe?.reachable === false) return fail('FUNCTION_NETWORK_BLOCKED', messages.FUNCTION_NETWORK_BLOCKED, debug)
+  if (probe?.reachable === true) return fail('FUNCTION_REQUEST_BLOCKED', messages.FUNCTION_REQUEST_BLOCKED, debug)
   return fail('FUNCTION_UNREACHABLE', messages.FUNCTION_UNREACHABLE, debug)
+}
+
+// 서버 함수에 닿는지 확인하는 가벼운 진단 (연결 오류가 났을 때만 써요).
+// 로그인 정보 · 특별한 헤더가 없는 단순 POST라서 사전 요청(CORS preflight) 없이 가요. 함수는 로그인이 없다고 401로 답해요(아무것도 바뀌지 않아요).
+export const probeFunctionServer = async (client) => {
+  const base = client?.functionsUrl?.href
+  if (!base || typeof fetch !== 'function') return { reachable: null, note: '확인하지 못함' }
+  const controller = typeof AbortController === 'function' ? new AbortController() : null
+  const timer = controller ? setTimeout(() => controller.abort(), 4000) : null
+  try {
+    const root = base.endsWith('/') ? base.slice(0, -1) : base
+    const response = await fetch(`${root}/register-bakery`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{}', signal: controller?.signal })
+    return { reachable: true, note: `단순 요청은 응답함(HTTP ${response.status})` }
+  } catch (probeError) {
+    return { reachable: false, note: `단순 요청도 실패(${probeError?.name}: ${String(probeError?.message ?? '').slice(0, 100)})` }
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
 }
 
 // 빵집이 DB에 있는지 확인하고, 없으면 서버 함수(register-bakery)로 등록해요 (카카오로 실제 존재를 확인한 뒤에만 등록돼요).
@@ -153,5 +187,7 @@ export const ensureBakeryRegistered = async (client, input) => {
   } catch {
     // 본문이 JSON이 아니면 무시
   }
-  throw mapFunctionError(error, error.context?.status, detail)
+  const status = error.context?.status
+  const probe = status ? null : await probeFunctionServer(client)
+  throw mapFunctionError(error, status, detail, probe)
 }
