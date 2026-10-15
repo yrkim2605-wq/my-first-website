@@ -4,6 +4,8 @@
 
 \set u2 '00000000-0000-4000-8000-000000000002'
 \set u3 '00000000-0000-4000-8000-000000000003'
+\set u5 '00000000-0000-4000-8000-000000000005'
+\set u6 '00000000-0000-4000-8000-000000000006'
 
 create temp table t_res (id text, ok boolean, detail text);
 
@@ -116,6 +118,45 @@ insert into t_res
 select 'Q11.u3_confirm_결과', pg_temp.as_user(:'u3'::uuid, 'select public.confirm_restore()') = 'ok', 'ok 여야 해요';
 insert into t_res
 select 'Q11.u3_댓글_공개됨', (select count(*) from public.comments where user_id = :'u3') >= 1, 'public 댓글(u3)=' || (select count(*) from public.comments where user_id = :'u3');
+-- 좋아요: u3이 u2의 글에 누른 것은 공개되고, 아직 확인 안 한 u6(탈퇴 예정)의 좋아요 · u6의 글에 누른 u3의 좋아요는 공개되지 않아야 해요
+insert into t_res
+select 'Q11.u3_좋아요_공개됨_탈퇴자_관련_좋아요는_없음',
+       (select count(*) from public.post_likes where user_id = :'u3') = 1
+       and (select count(*) from public.post_likes where user_id = :'u6') = 0
+       and not exists (select 1 from public.post_likes l join quarantine.posts qp on qp.id = l.post_id where qp.user_id = :'u6'),
+       'u3 좋아요(공개)=' || (select count(*) from public.post_likes where user_id = :'u3') || ' (기대 1), u6 좋아요(공개)=' || (select count(*) from public.post_likes where user_id = :'u6') || ' (기대 0)';
+
+-- Q13) 외래키 검사를 끈 채 옮기는 함수의 방어: 격리에 일부러 "없는 빵집"을 가리키는 방문 기록을 넣고(시험 전용, 외래키 검사를 끈 상태로),
+--      u5가 확인하면 ORPHAN_AFTER_RESTORE 로 거부되고 u5는 공개되지 않아야 해요 (함수가 한 일이 전부 되돌아가야 해요)
+begin;
+set local session_replication_role = replica;
+insert into quarantine.bakery_visits (user_id, bakery_id, created_at) values (:'u5', 'NO-SUCH-BAKERY', now());
+commit;
+insert into t_res
+select 'Q13.없는_빵집을_가리키는_기록이_있으면_확인_거부', r like 'ERROR:%' and r like '%ORPHAN_AFTER_RESTORE%', r
+  from (select pg_temp.as_user(:'u5'::uuid, 'select public.confirm_restore()') as r) s;
+insert into t_res
+select 'Q13.거부된_뒤_u5는_공개되지_않고_복구_모드도_원상복귀',
+       (select count(*) from public.profiles where id = :'u5') = 0
+       and (select count(*) from public.bakery_visits where user_id = :'u5') = 0
+       and current_setting('session_replication_role') = 'origin',
+       'u5 공개 프로필=' || (select count(*) from public.profiles where id = :'u5') || ', session_replication_role=' || current_setting('session_replication_role');
+
+-- Q14) 공개 쪽에 "가리키는 대상이 없는 행(고아)"이 하나도 없어야 해요 (외래키 검사를 끈 채로 옮겼으므로 직접 확인)
+create temp view v_orphans as
+select (select count(*) from public.reviews r where not exists (select 1 from public.profiles p where p.id = r.user_id))
+     + (select count(*) from public.reviews r where not exists (select 1 from public.bakeries b where b.id = r.bakery_id))
+     + (select count(*) from public.bakery_visits v where not exists (select 1 from public.profiles p where p.id = v.user_id))
+     + (select count(*) from public.bakery_visits v where not exists (select 1 from public.bakeries b where b.id = v.bakery_id))
+     + (select count(*) from public.posts po where not exists (select 1 from public.profiles p where p.id = po.user_id))
+     + (select count(*) from public.comments c where not exists (select 1 from public.posts po where po.id = c.post_id))
+     + (select count(*) from public.comments c where not exists (select 1 from public.profiles p where p.id = c.user_id))
+     + (select count(*) from public.comments c where c.parent_id is not null and not exists (select 1 from public.comments pc where pc.id = c.parent_id))
+     + (select count(*) from public.post_likes l where not exists (select 1 from public.posts po where po.id = l.post_id))
+     + (select count(*) from public.post_likes l where not exists (select 1 from public.profiles p where p.id = l.user_id))
+     + (select count(*) from public.profiles p where not exists (select 1 from auth.users u where u.id = p.id)) as n;
+insert into t_res
+select 'Q14.확인_뒤_공개쪽_고아_행_0', n = 0, '고아 행 합계=' || n from v_orphans;
 
 -- Q12) 정리: 확인하지 않은 계정만 삭제되고, 확인한 u2 · u3은 남아요
 create temp table t_users_before as select count(*) as n from auth.users;
@@ -140,4 +181,18 @@ insert into t_res
 select 'Q12.정리_후_확인한_사용자의_공개_데이터_유지', (select count(*) from public.reviews where user_id = :'u2') = (select n from t_u2_reviews_before),
        'u2 일지 ' || (select count(*) from public.reviews where user_id = :'u2') || ' / 정리 전 ' || (select n from t_u2_reviews_before);
 
-select 'RESULT|' || id || '|' || ok::text || '|' || coalesce(detail, '') from t_res order by id;
+-- Q14b) 정리 뒤에도 공개 쪽 고아 행이 없어야 해요
+insert into t_res
+select 'Q14.정리_뒤에도_공개쪽_고아_행_0', n = 0, '고아 행 합계=' || n from v_orphans;
+
+-- Q15) 신고(reports): 정리 뒤 확인 안 한 계정(탈퇴했을 수 있는 사람)에 대한 신고의 내용 앞부분 기록이 격리에 남아 있으면 안 돼요
+insert into t_res
+select 'Q15a.정리_뒤_탈퇴자_대상_신고_기록이_격리에_남지_않음',
+       (select count(*) from quarantine.reports r where r.target_user_id is not null and not exists (select 1 from public.profiles p where p.id = r.target_user_id)) = 0,
+       '남은 기록=' || (select count(*) from quarantine.reports r where r.target_user_id is not null and not exists (select 1 from public.profiles p where p.id = r.target_user_id));
+-- 알려진 설계 공백(프로토타입이 일부러 처리하지 않음): 신고는 공개 쪽으로 자동 복원되지 않아요 → ❌ 로 남아요 (설계 결정 필요)
+insert into t_res
+select 'Q15b', (select count(*) from public.reports) >= 1,
+       '운영자의 열린 신고가 복원 뒤 공개 쪽에 ' || (select count(*) from public.reports) || '개 (원본 백업에는 대상이 살아 있는 사용자의 글에 대한 신고가 1개 있었어요)';
+
+select 'RESULT|' || id || '|' || coalesce(ok, false)::text || '|' || coalesce(detail, '') from t_res order by id;

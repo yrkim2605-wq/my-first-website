@@ -44,6 +44,10 @@ as $$
 declare
   n int;
 begin
+  -- 안전장치: 이 함수는 confirm_restore() 안에서만 써요. 그 밖에서 부르면(트리거가 켜진 상태) 데이터를 잘못 바꿀 수 있어서 거부해요.
+  if current_setting('session_replication_role') <> 'replica' then
+    raise exception 'ONLY_INSIDE_CONFIRM_RESTORE' using errcode = '42501';
+  end if;
   -- 댓글: 최상위 먼저, 답글은 부모가 공개된 뒤에 (한 번에 못 옮기면 여러 번 반복)
   loop
     with moved as (
@@ -99,7 +103,26 @@ begin
   insert into public.posts          select * from quarantine.posts          where user_id = v;
   -- 격리 쪽 내 행은 지우지 않아요 (내 글에 달린 다른 사람의 대기 중 댓글이 연쇄 삭제되지 않게). 아래 flush가 대기 중인 댓글 · 좋아요를 옮겨요.
   perform quarantine.flush_dependents();
-  set local session_replication_role = origin;
+
+  -- 외래키 자동 검사를 껐으므로 "직접" 검증해요: 옮긴 행이 가리키는 대상이 공개 쪽에 모두 있어야 해요.
+  -- 하나라도 없으면 예외 → 이 함수가 한 일(복사 · session_replication_role 변경)이 전부 되돌아가요.
+  if exists (select 1 from public.reviews r where r.user_id = v and not exists (select 1 from public.bakeries b where b.id = r.bakery_id))
+     or exists (select 1 from public.bakery_visits x where x.user_id = v and not exists (select 1 from public.bakeries b where b.id = x.bakery_id))
+     or exists (select 1 from public.posts po where po.user_id = v and not exists (select 1 from public.profiles p where p.id = po.user_id))
+     or exists (select 1 from public.comments c
+                 where (c.user_id = v or c.post_id in (select id from public.posts where user_id = v))
+                   and (not exists (select 1 from public.posts po where po.id = c.post_id)
+                        or not exists (select 1 from public.profiles p where p.id = c.user_id)
+                        or (c.parent_id is not null and not exists (select 1 from public.comments pc where pc.id = c.parent_id))))
+     or exists (select 1 from public.post_likes l
+                 where (l.user_id = v or l.post_id in (select id from public.posts where user_id = v))
+                   and (not exists (select 1 from public.posts po where po.id = l.post_id)
+                        or not exists (select 1 from public.profiles p where p.id = l.user_id)))
+  then
+    raise exception 'ORPHAN_AFTER_RESTORE' using errcode = '23503';
+  end if;
+
+  set local session_replication_role = origin;   -- 정상 경로에서는 여기서 원래대로 되돌려요 (예외 경로에서는 트랜잭션 롤백이 되돌려요)
   return 'ok';
 end;
 $$;
@@ -116,6 +139,11 @@ as $$
 declare
   n int;
 begin
+  -- 확인하지 않은 계정(탈퇴했을 수 있는 사람)에 대한 신고의 "내용 앞부분" 기록(target_snapshot)도 같이 지워요.
+  -- (신고 표는 계정 삭제로 연쇄 삭제되지 않고 신고자 연결만 끊기기 때문에 따로 지워야 격리에 남지 않아요)
+  delete from quarantine.reports r
+   where r.target_user_id is not null
+     and not exists (select 1 from public.profiles p where p.id = r.target_user_id);
   with pending as (
     select q.id from quarantine.profiles q
      where not exists (select 1 from public.profiles p where p.id = q.id)

@@ -80,6 +80,10 @@ insert into public.posts (category_id, title, content) values
   ('photo', '가짜 글 제목 3 (탈퇴 예정)', '가짜 글 내용 3 입니다 탈퇴 예정 가짜 회원의 시험용 글이에요');
 insert into public.post_likes (post_id) select id from public.posts where title = '가짜 글 제목 1';
 
+-- u3이 (탈퇴 예정) u6의 글에도 좋아요 → 복원 때 "탈퇴자 글에 누른 좋아요"가 잘못 되살아나지 않는지 보려는 거예요
+select set_config('request.jwt.claim.sub', :'u3', false);
+insert into public.post_likes (post_id) select id from public.posts where title like '가짜 글 제목 3%';
+
 -- u2가 u3의 댓글에 답글, u2가 (탈퇴 예정) u6의 글에 댓글 → 복원 때 "탈퇴자의 글에 단 댓글"이 외래키 때문에 어떻게 되는지 보려는 거예요
 select set_config('request.jwt.claim.sub', :'u2', false);
 insert into public.comments (post_id, parent_id, content)
