@@ -132,3 +132,15 @@
 | 정적 검사 | `gateC.ps1` 파서 오류 0개, 정의 없는 우리 함수 호출 0개, DB 이름 하드코딩 0개, SQL 3개 금지 표현 0개 · 괄호/따옴표/`$f$` 짝 정상. **새 SQL의 실제 문법은 서버에서 실행해 봐야 알 수 있어요(미검증).** |
 | 운영 워크플로 | `backup-db.yml.draft` 수정만 했고 **켜지 않았어요**(비공개 저장소 · 비밀값 · 운영 키 모두 아직 없음) |
 | 다음 | 재시험(`RETEST-PLAN.md`)은 서버 시작 · SQL 실행 · 새 임시 키 생성이 필요하므로 별도 승인 후에만 |
+
+## 2026-10-15 · 9단계(2차 재시험 중단 → SQL 수정 → 보고서 단독 검증 → 2차 산출물 정리)
+
+| 항목 | 내용 |
+|---|---|
+| 2차 재시험 | T01a · T01b · T02 통과 후 `20-report.sql` 오류(`acldefault(text, oid)`)로 INFRA 중단. 나머지는 **미실행**(통과로 계산하지 않음) |
+| 수정 | `acldefault` 3곳 첫 인자 `"char"` 명시 변환 (`45e06e8`) |
+| 단독 검증 | `bakery_rehearsal_run2` 에서 `20-report.sql` 만 실행: 종료 코드 0, 625줄, 13개 구역 모두 출력. 기록: `rehearsal/STANDALONE-CHECK-20-report.md` (보존 사본 SHA-256 `DDFB0ECD…6284C3`). **21 · 22번 SQL은 아직 실행 검증 안 됨** |
+| 스크립트 수정 | 종료 확인의 `$pid`(읽기 전용 자동 변수) 충돌 → `$pidFileExists`, `rehearsal/report-only.ps1` 로 저장. 정적 검사 통과 |
+| 2차 산출물 정리(승인됨) | 삭제: DB `bakery_rehearsal_run2` 1개, 폴더 `rehearsal-files-run2` · `rehearsal-keys-run2`. 삭제 전 대상 경로 · DB 이름 · 폴더 내용(파일 3개 / 빈 폴더)을 확인했고, 첫 시도는 파일 이름 정렬 순서 차이로 점검에서 중단(아무것도 삭제 안 됨) 후 집합 비교로 고쳐 재실행 |
+| 정리 후 확인 | 1차 `rehearsal-files`(27개) · `rehearsal-keys`(3개) 파일 지문 동일, 1차 DB 5개 그대로, 데이터 클러스터 · 비밀번호 파일 · 설치 파일 · 스냅샷 · 로그 그대로. 서버 종료 확인(프로세스 0 · 리스닝 없음 · pid 없음) |
+| 보존 | `C:\bakery-secure\pg\rehearsal-evidence\` (단독 검증 보고서 사본, 중단된 2차 시도의 시작 전 스냅샷 사본) |
