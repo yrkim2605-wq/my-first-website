@@ -1,8 +1,12 @@
-# ⚠️ 초안이에요. 이 파일은 "비공개" 백업 전용 저장소의 .github/workflows/backup-db.yml 로 옮겨 쓸 거예요.
-#    이 공개 저장소(my-first-website)에는 절대 넣지 않아요. (설정 방법: docs/backup/README.md)
+# ⚠️ 초안이에요 (2차 개정). 이 파일은 "비공개" 백업 전용 저장소의 .github/workflows/backup-db.yml 로 옮겨 쓸 거예요.
+#    이 공개 저장소(my-first-website)에는 절대 넣지 않아요. (설정 방법 · 한계: docs/backup/README.md)
 #
-# 하는 일: 주 1회 Supabase DB(public + auth)를 내보내서 → 암호화하고 → 30일 보관 후 자동 삭제되는 Artifact로 올려요.
-# 방침과의 연결: 개인정보처리방침 "백업본은 만든 날부터 30일이 지나면 삭제해요" = 아래 retention-days: 30
+# 하는 일: 주 1회 Supabase DB를 내보내서 → 암호화(키 2개로)하고 → Artifact로 올려요.
+#   - public 스키마 전체 (앱 데이터)
+#   - auth.users · auth.identities "데이터만" (가입 계정). 세션 · 토큰 · 감사 로그는 일부러 뺐어요
+#   ※ 사진 파일(Storage)은 백업하지 않아요 (미구현). 자세한 내용은 README
+# 30일 보관은 이중 장치예요: ① 아래 retention-days: 30 (GitHub 자동 만료) ② cleanup-backups 가 매일 28일 넘은 것을 직접 삭제
+#   → GitHub는 만료된 파일을 언제 실제로 지우는지 공식 문서에 밝히지 않아서, 자동 만료만 믿지 않아요
 
 name: backup-db
 
@@ -23,7 +27,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - name: PostgreSQL 17 클라이언트 설치
+      - name: PostgreSQL 17 클라이언트 · age 설치
         # Supabase 서버 버전보다 같거나 높은 pg_dump가 필요해요 (낮으면 거부돼요)
         run: |
           set -euo pipefail
@@ -36,44 +40,67 @@ jobs:
           sudo apt-get install -y -q postgresql-client-17
           pg_dump --version
 
-      - name: DB 내보내기 (public + auth)
+      - name: 암호화 키 설정 확인 (2개 모두 있고 서로 달라야 해요)
+        env:
+          AGE_PUBLIC_KEY_1: ${{ secrets.AGE_PUBLIC_KEY_1 }}
+          AGE_PUBLIC_KEY_2: ${{ secrets.AGE_PUBLIC_KEY_2 }}
+        run: |
+          set -euo pipefail
+          # 키가 하나만 설정된 채로 백업이 만들어지면, 그 키를 잃을 때 전부 못 열어요 → 시작 전에 막아요
+          case "$AGE_PUBLIC_KEY_1" in age1*) ;; *) echo "AGE_PUBLIC_KEY_1 이 올바르지 않아요"; exit 1;; esac
+          case "$AGE_PUBLIC_KEY_2" in age1*) ;; *) echo "AGE_PUBLIC_KEY_2 가 올바르지 않아요"; exit 1;; esac
+          test "$AGE_PUBLIC_KEY_1" != "$AGE_PUBLIC_KEY_2"
+
+      - name: DB 내보내기 (public 전체 + 계정 데이터)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
           umask 077
           # 접속 주소는 환경변수로만 쓰고, 로그에 값을 찍지 않아요 (set -x 금지)
-          # public: 앱 데이터(일지 · 글 · 댓글 …) / auth: 가입 계정(이메일 · 비밀번호 해시). 사진 파일(Storage)은 포함되지 않아요
+          # 1) 앱 데이터: 표 구조 + 데이터 + 함수 · 트리거 · 보기(view)
           pg_dump "$SUPABASE_DB_URL" \
             --format=custom --no-owner --no-privileges \
-            --schema=public --schema=auth \
-            --file=backup.dump
+            --schema=public \
+            --file=public.dump
+          # 2) 가입 계정: 이메일 · 비밀번호 해시 · 로그인 방식 정보만 (데이터만). 로그인 세션 · 토큰 · 감사 로그(IP)는 받지 않아요
+          #    ※ -n(스키마)과 -t(표)를 같이 쓰면 -n이 무시되어서 덤프를 둘로 나눴어요
+          pg_dump "$SUPABASE_DB_URL" \
+            --format=custom --no-owner --no-privileges --data-only \
+            --table=auth.users --table=auth.identities \
+            --file=auth-users.dump
 
-      - name: 내보낸 파일이 정상인지 확인
+      - name: 내보낸 파일이 정상인지 확인 (내용은 출력하지 않아요)
         run: |
           set -euo pipefail
-          test -s backup.dump
-          # 목차를 읽을 수 있으면 파일이 깨지지 않은 거예요 (내용은 출력하지 않고 개수만 확인)
-          count=$(pg_restore --list backup.dump | wc -l)
-          echo "목차 항목 수: ${count}"
-          test "${count}" -gt 20
+          test -s public.dump
+          test -s auth-users.dump
+          pub=$(pg_restore --list public.dump | wc -l)
+          echo "public 목차 항목 수: ${pub}"
+          test "${pub}" -gt 20
+          # 계정 덤프에는 표 데이터 항목이 정확히 2개(users, identities)여야 해요
+          auth=$(pg_restore --list auth-users.dump | grep -c "TABLE DATA" || true)
+          echo "계정 덤프 표 데이터 항목 수: ${auth}"
+          test "${auth}" -eq 2
 
-      - name: 암호화 (age)
+      - name: 묶기 + 암호화 (age, 받는 사람 2명)
         env:
-          AGE_PUBLIC_KEY: ${{ secrets.AGE_PUBLIC_KEY }}
+          AGE_PUBLIC_KEY_1: ${{ secrets.AGE_PUBLIC_KEY_1 }}
+          AGE_PUBLIC_KEY_2: ${{ secrets.AGE_PUBLIC_KEY_2 }}
         run: |
           set -euo pipefail
           umask 077
           stamp=$(date -u +%Y%m%d-%H%M)
-          age --recipient "$AGE_PUBLIC_KEY" --output "bakery-db-${stamp}.dump.age" backup.dump
-          rm -f backup.dump # 암호화하지 않은 파일은 바로 지워요
-          ls -l bakery-db-*.dump.age
-          echo "ARTIFACT_FILE=bakery-db-${stamp}.dump.age" >> "$GITHUB_ENV"
+          tar -cf bundle.tar public.dump auth-users.dump
+          age -r "$AGE_PUBLIC_KEY_1" -r "$AGE_PUBLIC_KEY_2" -o "bakery-db-${stamp}.tar.age" bundle.tar
+          rm -f public.dump auth-users.dump bundle.tar # 암호화하지 않은 파일은 바로 지워요
+          ls -l bakery-db-*.tar.age
+          echo "ARTIFACT_FILE=bakery-db-${stamp}.tar.age" >> "$GITHUB_ENV"
 
-      - name: 올리기 (30일 뒤 자동 삭제)
+      - name: 올리기 (GitHub 자동 만료 30일 + 별도 삭제 작업이 28일에 지워요)
         uses: actions/upload-artifact@v4
         with:
           name: bakery-db-backup
           path: ${{ env.ARTIFACT_FILE }}
-          retention-days: 30 # ← 방침의 "30일"과 같은 값이에요. 바꾸면 방침도 함께 바꿔야 해요
+          retention-days: 30 # ← 방침의 "30일"과 같은 값이에요. 바꾸면 방침 · cleanup-backups 도 함께 바꿔요
           if-no-files-found: error
