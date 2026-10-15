@@ -39,7 +39,7 @@
 | 4 | **Edge Function `delete-account` 배포** | Edge Functions | 회원 탈퇴. 코드: `supabase/functions/delete-account/index.ts` (대시보드 편집기에 붙여넣기) | ✅ 배포, Verify JWT 끔, 비로그인 요청 10종 차단 확인. **실제 토큰의 `amr` · 실제 탈퇴는 시험 계정으로 아직 미확인** |
 | 5 | `register-bakery` 함수가 최신인지 확인 | Edge Functions | 기존 함수 (이미 배포돼 있어요) | ✅ Verify JWT 끔 (아래 "배포할 때 주의" 참고). 진짜 토큰으로 일지 저장 · 코드 최신 여부(`DB_PERMISSION`, `실패 단계` 검색)는 사용자 확인 대기 |
 | 6 | **Custom SMTP 설정** | Authentication → SMTP Settings | 기본 메일 발송은 한도가 매우 낮아요 (시간당 2통 안팎이라는 자료가 있어요). 가입자 3번째부터 인증 메일이 막힐 수 있어요 | ✅ **Brevo 연결 · 발신자 인증 완료, 로컬에서 비밀번호 재설정 · 가입 인증 메일 수신 확인 (2026-10-15).** 처음에 `525 5.7.1 Unauthorized IP address`로 막혔고 Brevo → Security → Authorized IPs에서 `43.203.89.220`을 허용해 해결. 🔶 **공개 전 남은 것**: ① **IP 허용 목록은 Supabase 발송 IP가 바뀌면 같은 525가 다시 나요** → 공개 전에 IP 제한을 끄거나(SMTP 키가 인증 수단) 주기 점검 ② 보낸 사람이 일반 이메일이면 스팸 처리될 수 있어 **도메인 + 메일 서비스로 교체** ③ 발송 한도 숫자(Rate Limits) 확인 ④ Sender name 변경 후 받은편지함 표시 확인 |
-| 6-1 | **메일 템플릿 (Confirm sign up · Reset Password)** | Authentication → Emails → Templates | 영어 기본 템플릿 대신 한국어 안내 | ✅ **가입 인증은 단순 HTML 템플릿으로 정상 작동 확인** (제목 · 링크 · 한 줄 안내). ⚠️ 긴 인라인 스타일 HTML을 붙였더니 가입이 500(`html/template: "<" in unquoted attr: "<a"`)으로 실패해서 단순 템플릿으로 교체함 — **복잡한 HTML은 쓰지 않아요.** 디자인 개선은 베타 후. 비밀번호 재설정 템플릿이 어떤 버전인지 · 실제 발송이 되는지는 확인 대기 |
+| 6-1 | **메일 템플릿 (Confirm sign up · Reset Password)** | Authentication → Emails → Templates | 영어 기본 템플릿 대신 한국어 안내 | ✅ **가입 인증은 단순 HTML 템플릿으로 정상 작동 확인** (제목 · 링크 · 한 줄 안내). ⚠️ 긴 인라인 스타일 HTML을 붙였더니 가입이 500(`html/template: "<" in unquoted attr: "<a"`)으로 실패해서 단순 템플릿으로 교체함 — **복잡한 HTML은 쓰지 않아요.** 디자인 개선은 베타 후. **Reset Password도 단순 한국어 HTML로 교체 후 로컬에서 발송 · 링크 · 새 비밀번호 로그인까지 정상 확인 (2026-10-15)** |
 | 7 | **Redirect URL / Site URL 등록** | Authentication → URL Configuration | Site URL = `https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/`, Redirect URLs = 이 주소 + `http://localhost:5173/my-first-website/my-bakery-review/` (인증 · 재설정 링크가 돌아올 곳, 끝의 `/`까지 정확히) | 🔶 **사용자가 등록했다고 보고함. 로컬 주소로는 가입 인증 링크 → 로그인까지 성공**(= localhost 허용은 간접 확인). **배포 주소(github.io)로 돌아오는 링크는 아직 검증 안 됨** — 8번(운영 계정 모드) 적용 뒤 운영 주소에서 가입 · 재설정 메일의 `redirect_to`와 복귀를 확인해야 해요. 대시보드에 저장된 실제 값(오타 · 끝 `/`)도 한 번 더 눈으로 확인 |
 | 8 | **GitHub Actions 환경변수 추가** | `.github/workflows/deploy.yml` + GitHub Settings | `VITE_DATA_BACKEND=supabase`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. publishable 키만 (비밀 키 `sb_secret_…`는 절대 넣지 않아요) | ⬜ |
 | 9 | **법률 문서의 "확인 필요" 채우기** | `src/constants/legalInfo.js` | 아래 3장 표 참고. 빈 칸은 화면에 노란 "[확인 필요]"로 보여요 | ⬜ |
@@ -82,7 +82,7 @@
 - [x] 새 이메일 가입 → 인증 메일 도착 → 링크 → 로그인 (**로컬에서 성공, 2026-10-15**. 운영 주소에서는 공개 직후 다시)
   - 약관 동의 체크가 필수로 동작했는지는 사용자 보고에 없어요 → 확인 필요
 - [ ] 계정 정보에 `terms_version` · `terms_agreed_at`이 기록됐는지 (Authentication → Users → 해당 사용자 → User Metadata)
-- [ ] **비밀번호 찾기** → 메일 → (같은 브라우저에서) 링크 → 새 비밀번호 → 다른 기기 로그아웃됨 → 새 비밀번호로 로그인 (**메일 도착까지만 확인됨**, 링크 이후 단계는 미확인)
+- [x] **비밀번호 찾기** → 메일 → (같은 브라우저에서) 링크 → 새 비밀번호 → 새 비밀번호로 로그인 · 옛 비밀번호 거부 (**로컬에서 성공, 2026-10-15**, 단순 한국어 템플릿). 아직 안 본 것: "다른 기기 로그아웃됨", 운영 주소에서의 동작
 - [ ] 리뷰 작성 · 사진 · EXP · 랭킹 (기존 흐름)
 - [ ] **신고**: A가 B의 글 · 댓글 · 리뷰 신고 → 중복 신고 거부 → 내 글에는 버튼이 없음
 - [ ] **운영자 처리**: B로 `#/admin/reports` 주소로 접속 → 반려 / 삭제하고 처리 → 사진 파일까지 지워지는지 (Storage 확인)
