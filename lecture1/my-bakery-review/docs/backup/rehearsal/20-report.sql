@@ -84,7 +84,7 @@ select * from (
     from (select n.nspname || '.' || c.relname as item,
                  (case a.grantee when 0 then 'PUBLIC' else a.grantee::regrole::text end) || ':' || a.privilege_type as g
             from pg_class c join pg_namespace n on n.oid = c.relnamespace,
-                 aclexplode(coalesce(c.relacl, acldefault(case when c.relkind = 'S' then 's' else 'r' end, c.relowner))) a
+                 aclexplode(coalesce(c.relacl, acldefault((case when c.relkind = 'S' then 's' else 'r' end)::"char", c.relowner))) a
            where n.nspname in ('public', 'storage', 'quarantine') and c.relkind in ('r', 'v', 'm', 'p', 'S')) s
    group by item
   union all
@@ -103,7 +103,7 @@ select * from (
     from (select n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' as fn,
                  (case a.grantee when 0 then 'PUBLIC' else a.grantee::regrole::text end) || ':' || a.privilege_type as g
             from pg_proc p join pg_namespace n on n.oid = p.pronamespace,
-                 aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+                 aclexplode(coalesce(p.proacl, acldefault('f'::"char", p.proowner))) a
            where n.nspname in ('public', 'quarantine') and p.prokind = 'f') s
    group by fn
   union all
@@ -113,7 +113,7 @@ select * from (
   select '6.acl', 'schema ' || sch, string_agg(g, ',' order by g)
     from (select n.nspname as sch,
                  (case a.grantee when 0 then 'PUBLIC' else a.grantee::regrole::text end) || ':' || a.privilege_type as g
-            from pg_namespace n, aclexplode(coalesce(n.nspacl, acldefault('n', n.nspowner))) a
+            from pg_namespace n, aclexplode(coalesce(n.nspacl, acldefault('n'::"char", n.nspowner))) a
            where n.nspname in ('public', 'auth', 'storage', 'quarantine')) s
    group by sch
   union all
