@@ -207,7 +207,7 @@ Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue   # 5) 현재 창의 �
 - 열린 포트: `Get-NetTCPConnection -State Listen`
 - PATH: `[Environment]::GetEnvironmentVariable('Path','Machine')`
 - 폴더: `C:\Program Files\PostgreSQL`, 시작 메뉴 항목
-- 결과는 `C:\bakery-secure\pg\snapshot-before.txt` 같은 파일에 저장 (개인정보 없음)
+- 스크립트: `docs/backup/snapshot.ps1` (읽기 전용, 비관리자로 약 6초). 실행 예: `& ([scriptblock]::Create((Get-Content -Raw docs\backup\snapshot.ps1 -Encoding UTF8))) -Out C:\bakery-secure\pg\snapshots\before.txt` (결과에 개인정보 없음). 2026-10-15 예행 연습 결과는 `C:\bakery-secure\pg\snapshots\dryrun-nonelevated.txt` (PostgreSQL 흔적 없음 = 기준선)
 
 ### 9-7. 추천과 결정 사항
 - **F2(UAC 승인 + `--extract-only`)를 먼저 권해요.** 서비스 · OS 계정 · 방화벽 변경이 없거나 적을 것으로 예상되고, 제거는 폴더 삭제로 끝나고, 서명된 설치 프로그램에서 꺼낸 파일과 기존 zip을 비교해서 출처를 확인할 수 있어요. 단 동작이 문서마다 엇갈려서 실행 전후 스냅샷 비교가 필수예요.
