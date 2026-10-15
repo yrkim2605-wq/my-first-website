@@ -64,7 +64,7 @@ const AdventurerStatusWindow = ({ game, discoveredCount, onOpenLevelBook }) => {
         </Box>
 
         <Box sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: 'terracotta.main' }}>
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: 'terracotta.dark' }}>
             Lv.{progress.currentIndex + 1} {level.name}
           </Typography>
           <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '1.6rem', sm: '1.9rem' }, lineHeight: 1.3, color: 'text.primary', wordBreak: 'break-all' }}>

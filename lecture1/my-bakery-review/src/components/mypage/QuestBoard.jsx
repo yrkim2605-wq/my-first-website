@@ -77,7 +77,7 @@ const QuestBoard = ({ quests }) => (
                 {quest.current}/{quest.target}
                 {quest.unit}
               </span>
-              <Box component="span" sx={{ color: quest.done ? 'gold.dark' : 'primary.main' }}>
+              <Box component="span" sx={{ color: quest.done ? 'gold.text' : 'primary.main' }}>
                 {quest.done ? `보너스 EXP +${quest.bonusExp} 받음` : `완료하면 EXP +${quest.bonusExp}`}
               </Box>
             </Box>

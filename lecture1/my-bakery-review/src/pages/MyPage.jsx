@@ -14,6 +14,7 @@ import LevelBookDialog from '../components/common/LevelBookDialog'
 import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import StatusMessage from '../components/common/StatusMessage'
+import BookmarkedBakeryList from '../components/mypage/BookmarkedBakeryList'
 import LocalImportCard from '../components/mypage/LocalImportCard'
 import AccountDangerZone from '../components/mypage/AccountDangerZone'
 import WoodButton from '../components/common/WoodButton'
@@ -25,6 +26,7 @@ import { useGameState } from '../hooks/useGameState'
 import { useDiscovery } from '../hooks/useDiscovery'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
 import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
+import { useBookmarks } from '../hooks/useBookmarks'
 import { evaluateBadges } from '../utils/badgeRules'
 import { DISPLAY_FONT, RADIUS } from '../theme'
 
@@ -59,6 +61,22 @@ const CheckedBakeryRow = ({ bakery, photoSrc }) => (
   </Box>
 )
 
+// 찜한 빵집: 나만 보는 메모예요 (이 브라우저에만 저장, EXP · 도감 · 퀘스트와 무관). 로그인 전에도 담아 둔 찜은 볼 수 있어요.
+const BookmarkedSection = ({ count }) => (
+  <Box component="section" aria-label="찜한 빵집" sx={{ mb: 6 }}>
+    <Typography variant="h2" sx={{ ...SUBHEAD_SX, mb: 0.75 }}>
+      찜한 빵집
+      <Box component="span" sx={{ fontFamily: 'inherit', fontSize: '1rem', color: 'terracotta.dark' }}>
+        {count}곳
+      </Box>
+    </Typography>
+    <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary', mb: 1.75, wordBreak: 'keep-all' }}>
+      가 보고 싶은 빵집을 담아 두는 나만의 메모예요. 이 브라우저에만 저장되고, EXP · 도감 · 퀘스트에는 반영되지 않아요.
+    </Typography>
+    <BookmarkedBakeryList />
+  </Box>
+)
+
 // 마이페이지 = 모험가 상태창. 모든 값은 이 브라우저에 저장된 모험 일지로 계산한 실제 값이에요.
 const MyPage = () => {
   const [levelBookOpen, setLevelBookOpen] = useState(false)
@@ -66,6 +84,7 @@ const MyPage = () => {
   const discovery = useDiscovery()
   const { visitedIds, visits, loadError: visitsError } = useVisitedBakeries()
   const { photosByBakeryId } = useRealBakeryPhotos()
+  const { items: bookmarkedItems } = useBookmarks()
 
   const badges = useMemo(() => evaluateBadges(game.myReviews, discovery.discoveredCount), [game.myReviews, discovery.discoveredCount])
   // 체크한 빵집: 지금 지도 목록에 있는 빵집 + (계정 모드) 목록에는 없지만 내가 체크해 둔 빵집(서버에 저장된 이름으로 보여줘요)
@@ -102,6 +121,11 @@ const MyPage = () => {
             </Box>
             <LocalProfileNotice />
           </Box>
+          {bookmarkedItems.length > 0 && (
+            <Box sx={{ mt: 5 }}>
+              <BookmarkedSection count={bookmarkedItems.length} />
+            </Box>
+          )}
         </Box>
       </Container>
     )
@@ -162,7 +186,7 @@ const MyPage = () => {
 
         <Typography variant="h2" sx={SUBHEAD_SX}>
           획득 배지
-          <Box component="span" sx={{ fontFamily: 'inherit', fontSize: '1rem', color: 'terracotta.main' }}>
+          <Box component="span" sx={{ fontFamily: 'inherit', fontSize: '1rem', color: 'terracotta.dark' }}>
             {earnedBadgeCount}/{badges.length}
           </Box>
         </Typography>
@@ -184,9 +208,11 @@ const MyPage = () => {
 
         <MyLogList reviews={game.myReviews} />
 
+        <BookmarkedSection count={bookmarkedItems.length} />
+
         <Typography variant="h2" sx={SUBHEAD_SX}>
           다녀왔어요 체크한 빵집
-          <Box component="span" sx={{ fontFamily: 'inherit', fontSize: '1rem', color: 'terracotta.main' }}>
+          <Box component="span" sx={{ fontFamily: 'inherit', fontSize: '1rem', color: 'terracotta.dark' }}>
             {checkedBakeries.length}곳
           </Box>
         </Typography>

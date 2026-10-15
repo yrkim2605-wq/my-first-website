@@ -107,7 +107,7 @@ const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose
             {ratingInfo && <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>({ratingInfo.count})</Typography>}
           </Box>
         )}
-        {ratingInfo?.status === 'empty' && <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'terracotta.main', mt: 0.5 }}>아직 별점이 없어요</Typography>}
+        {ratingInfo?.status === 'empty' && <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'terracotta.dark', mt: 0.5 }}>아직 별점이 없어요</Typography>}
         {!isCompact && (
           <Button
             component={Link}

@@ -224,14 +224,15 @@ const clean = (html) => html.replace(/<!-- -->/g, '')
   const { default: theme } = await server.ssrLoadModule('/src/theme.js')
   const { ReviewsContext } = await server.ssrLoadModule('/src/context/contexts.js')
   const { RealBakeryPhotosProvider } = await server.ssrLoadModule('/src/context/RealBakeryPhotosContext.jsx')
-  const Summary = (await server.ssrLoadModule('/src/components/bakery/BakeryRatingSummary.jsx')).default
+  const { BookmarksProvider } = await server.ssrLoadModule('/src/context/BookmarksContext.jsx') // 실제 앱처럼 찜 목록 Provider 안에서 그려요 (빵집 카드가 찜 버튼을 써요)
+  const Summary =(await server.ssrLoadModule('/src/components/bakery/BakeryRatingSummary.jsx')).default
   const StageCard = (await server.ssrLoadModule('/src/components/common/BakeryStageCard.jsx')).default
   const PreviewCard = (await server.ssrLoadModule('/src/components/home/BakeryMapPreviewCard.jsx')).default
   const { useBakeryRatings } = await server.ssrLoadModule('/src/hooks/useBakeryRatings.js')
   const wrap = (stats, node, statsStatus = 'ready') =>
     clean(
       renderToString(
-        h(ThemeProvider, { theme }, h(MemoryRouter, null, h(ReviewsContext.Provider, { value: { reviews: [], loaded: true, ratingStats: stats, ratingStatsStatus: statsStatus } }, h(RealBakeryPhotosProvider, null, node)))),
+        h(ThemeProvider, { theme }, h(MemoryRouter, null, h(ReviewsContext.Provider, { value: { reviews: [], loaded: true, ratingStats: stats, ratingStatsStatus: statsStatus } }, h(BookmarksProvider, null, h(RealBakeryPhotosProvider, null, node))))),
       ),
     )
   const bakery = { id: '111', name: '시험 빵집', districtId: 'seomyeon', address: '부산', rating: 0, heartCount: 0, tags: [], signatureMenu: '', lat: 35, lng: 129 }
@@ -277,10 +278,11 @@ const clean = (html) => html.replace(/<!-- -->/g, '')
   const { default: theme } = await localServer.ssrLoadModule('/src/theme.js')
   const { ReviewsContext } = await localServer.ssrLoadModule('/src/context/contexts.js')
   const { RealBakeryPhotosProvider } = await localServer.ssrLoadModule('/src/context/RealBakeryPhotosContext.jsx')
+  const { BookmarksProvider } = await localServer.ssrLoadModule('/src/context/BookmarksContext.jsx')
   const StageCard = (await localServer.ssrLoadModule('/src/components/common/BakeryStageCard.jsx')).default
   const PreviewCard = (await localServer.ssrLoadModule('/src/components/home/BakeryMapPreviewCard.jsx')).default
   const wrap = (node) =>
-    clean(renderToString(h(ThemeProvider, { theme }, h(MemoryRouter, null, h(ReviewsContext.Provider, { value: { reviews: [], loaded: true, ratingStats: null, ratingStatsStatus: 'off' } }, h(RealBakeryPhotosProvider, null, node))))))
+    clean(renderToString(h(ThemeProvider, { theme }, h(MemoryRouter, null, h(ReviewsContext.Provider, { value: { reviews: [], loaded: true, ratingStats: null, ratingStatsStatus: 'off' } }, h(BookmarksProvider, null, h(RealBakeryPhotosProvider, null, node)))))))
   const bakery = { id: '111', name: '시험 빵집', districtId: 'seomyeon', address: '부산', rating: 4, heartCount: 2, tags: [], signatureMenu: '', lat: 35, lng: 129 }
   const withRating = wrap(h(StageCard, { ...bakery, id: 111, reviewCount: 5, districtLabel: '서면' }))
   check('로컬 모드 목록 카드: 빵집 정보의 rating(4.0)과 예시 리뷰 수 그대로', withRating.includes('>4.0<') && withRating.includes('>5<'))

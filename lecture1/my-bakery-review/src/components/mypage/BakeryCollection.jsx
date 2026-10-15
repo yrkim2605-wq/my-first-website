@@ -105,7 +105,7 @@ const BakeryCollection = ({ discovery }) => {
           빵집 도감
         </Typography>
         {!loading && !error && (
-          <Typography component="span" sx={{ fontWeight: 800, color: 'terracotta.main' }}>
+          <Typography component="span" sx={{ fontWeight: 800, color: 'terracotta.dark' }}>
             {discoveredInListCount} / {totalCount}
           </Typography>
         )}

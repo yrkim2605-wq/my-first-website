@@ -5,5 +5,6 @@ import { createContext } from 'react'
 export const BusanBakeriesContext = createContext(null)
 export const RealBakeryPhotosContext = createContext(null)
 export const VisitedBakeriesContext = createContext(null)
+export const BookmarksContext = createContext(null)
 export const ProfileContext = createContext(null)
 export const ReviewsContext = createContext(null)

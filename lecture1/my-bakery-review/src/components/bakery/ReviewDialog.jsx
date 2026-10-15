@@ -128,7 +128,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
       slotProps={{ paper: { sx: { ...PARCHMENT_SX, borderRadius: '22px', m: { xs: 1.5, sm: 4 }, width: { xs: 'calc(100% - 24px)', sm: undefined } } } }}
     >
       <Box sx={{ px: 3, pt: 2.5, pb: 0.5 }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.14em', color: 'terracotta.main' }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.14em', color: 'terracotta.dark' }}>
           {isEdit ? 'EDIT YOUR LOG' : 'ADVENTURE LOG'}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.25 }}>
@@ -192,7 +192,7 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
                     aria-live="polite"
                     sx={{
                       fontWeight: contentStatus.isTooShort && content ? 700 : 500,
-                      color: !content ? 'text.secondary' : contentStatus.isTooShort ? 'terracotta.main' : 'secondary.dark',
+                      color: !content ? 'text.secondary' : contentStatus.isTooShort ? 'terracotta.dark' : 'secondary.dark',
                       wordBreak: 'keep-all',
                     }}
                   >

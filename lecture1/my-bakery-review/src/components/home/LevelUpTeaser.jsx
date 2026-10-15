@@ -150,7 +150,7 @@ const LevelUpTeaser = () => {
                         sx={{ width: '82%', height: '82%', objectFit: 'contain', transform: `scale(${level.iconScale ?? 1})` }}
                       />
                     </Box>
-                    <Typography sx={{ mt: 0.75, fontSize: '0.7rem', fontWeight: 800, color: 'terracotta.main', lineHeight: 1.2 }}>
+                    <Typography sx={{ mt: 0.75, fontSize: '0.7rem', fontWeight: 800, color: 'terracotta.dark', lineHeight: 1.2 }}>
                       Lv.{index + 1}
                     </Typography>
                     <Typography
@@ -205,7 +205,7 @@ const LevelUpTeaser = () => {
           }}
         >
           <Box>
-            <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: 'terracotta.main', mb: 1 }}>
+            <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: 'terracotta.dark', mb: 1 }}>
               {profile ? `${profile.nickname}의 모험가 상태` : '내 모험가 상태 · 로그인하면 기록이 쌓여요'}
             </Typography>
             {isLoading ? (

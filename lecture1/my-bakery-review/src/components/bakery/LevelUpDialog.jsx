@@ -29,7 +29,7 @@ const LevelUpDialog = ({ open, levelUp, onClose }) => (
           <Sparkle size={16} twinkle delay={2} sx={{ position: 'absolute', bottom: 8, right: -20 }} />
         </Box>
 
-        <Typography sx={{ mt: 1, fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.2em', color: 'terracotta.main' }}>
+        <Typography sx={{ mt: 1, fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.2em', color: 'terracotta.dark' }}>
           LEVEL UP!
         </Typography>
         <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '1.7rem', color: 'primary.main', mb: 1.5, wordBreak: 'keep-all' }}>

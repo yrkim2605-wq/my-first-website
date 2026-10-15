@@ -255,7 +255,7 @@ const CommunityPostDetail = () => {
 
         <Reveal delay={0.05}>
         <Box sx={{ ...PARCHMENT_SX, borderRadius: '20px', p: { xs: 2.5, sm: 3.5 }, mb: 3 }}>
-        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'terracotta.main', mb: 1 }}>
+        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'terracotta.dark', mb: 1 }}>
           {category?.label}
           {post.isSample && (
             <Box component="span" sx={{ ml: 1, px: 1, py: 0.1, borderRadius: RADIUS.pill, border: '1px dashed', borderColor: 'text.secondary', color: 'text.secondary', fontSize: '0.75rem', fontWeight: 800 }}>

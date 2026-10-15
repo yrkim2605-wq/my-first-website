@@ -16,22 +16,24 @@ const OFFSETS = [-2, -1, 0, 1, 2]
 
 const NAV_BUTTON_SX = GAME_ICON_BUTTON_SX
 
+// 옆 카드는 "뒤에 있는 느낌"을 카드 전체 투명도가 아니라 사진만 흐리게 해서 내요.
+// 글자까지 투명하게 하면 글자 대비가 4.5:1 아래로 떨어져서 읽기 어려워져요.
 const SLOT_SX_BY_OFFSET = {
   0: {
     // 모바일은 양옆 화살표를 뺀 남는 폭에 맞춰요 (고정 폭이면 좁은 화면에서 카드 양쪽이 잘려요)
     width: { xs: '100%', sm: 390, md: 440 },
-    opacity: 1,
+    '--review-photo-opacity': 1,
     zIndex: 2,
   },
   1: {
     width: { sm: 280, md: 310 },
-    opacity: 0.85, // 바로 옆 카드: 사진과 글을 알아볼 수 있게
+    '--review-photo-opacity': 0.8, // 바로 옆 카드: 사진과 글을 알아볼 수 있게
     zIndex: 1,
     display: { xs: 'none', sm: 'block' },
   },
   2: {
     width: { sm: 280, md: 310 },
-    opacity: 0.7, // 바깥쪽 카드
+    '--review-photo-opacity': 0.6, // 바깥쪽 카드
     zIndex: 1,
     display: { xs: 'none', md: 'block' },
   },
@@ -90,7 +92,8 @@ const PopularReviewCarousel = ({ reviews }) => {
                 sx={{
                   ...SLOT_SX_BY_OFFSET[Math.abs(offset)],
                   flexShrink: 0,
-                  transition: 'width 0.4s ease, opacity 0.4s ease',
+                  transition: 'width 0.4s ease',
+                  '& .review-photo': { opacity: 'var(--review-photo-opacity)', transition: 'transform 0.4s ease, opacity 0.4s ease' },
                 }}
               >
                 <PopularReviewCard
@@ -118,12 +121,9 @@ const PopularReviewCarousel = ({ reviews }) => {
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1.5, mt: 3 }}>
-        <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: 'text.secondary' }}>
-          {index + 1}
-          <Box component="span" sx={{ opacity: 0.4, mx: 0.75 }}>
-            |
-          </Box>
-          {total}
+        {/* 세이지 색 블록 위라서 진한 갈색 글자를 써요 (text.secondary는 세이지 위에서 대비 2.6:1) */}
+        <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: 'text.primary' }}>
+          {index + 1} / {total}
         </Typography>
         <IconButton
           onClick={() => setIsPaused((prev) => !prev)}

@@ -32,6 +32,7 @@ import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { useProfile } from '../hooks/useProfile'
 import { useReviews } from '../hooks/useReviews'
 import { useBakeryRatings } from '../hooks/useBakeryRatings'
+import { useBookmarks } from '../hooks/useBookmarks'
 import { buildLevelsByUser, kstDate } from '../utils/gameState'
 import { getAuthorLevel } from '../utils/authorLevel'
 import WoodButton from '../components/common/WoodButton'
@@ -73,6 +74,7 @@ const BakeryDetail = () => {
   const { profile } = useProfile()
   const { reviews: allReviews, removeReview, levelsByUserId, reload: reloadReviews } = useReviews()
   const { isEnabled: ratingsEnabled, getRating } = useBakeryRatings()
+  const { isBookmarked, toggleBookmark } = useBookmarks()
 
   // 계정 모드: 상세를 열 때마다 서버의 최신 리뷰 · 평균 별점을 다시 불러와요 (다른 사용자가 남긴 리뷰도 반영돼요)
   useEffect(() => {
@@ -83,7 +85,6 @@ const BakeryDetail = () => {
   const realBakery = realBakeries.find((b) => String(b.id) === id)
   const bakery = mockBakery || realBakery
 
-  const [bookmarkedIds, setBookmarkedIds] = useState({})
   // 일지 창은 열 때마다 key를 바꿔서 새로 만들어요 (이전 입력값이 남지 않게)
   const [dialog, setDialog] = useState({ open: false, session: 0 })
   const [reward, setReward] = useState(null)
@@ -113,7 +114,8 @@ const BakeryDetail = () => {
   const isRealBakery = !mockBakery && Boolean(realBakery)
   const visited = isRealBakery && visitedIds.includes(bakery.id)
   const district = DISTRICTS.find((d) => d.id === bakery.districtId)
-  const bookmarked = Boolean(bookmarkedIds[bakery.id])
+  // 찜 상태는 빵집 카드 · 마이페이지와 같은 목록이에요 (이 브라우저에만 저장돼요)
+  const bookmarked = isBookmarked(bakery.id)
   const hasUploadedPhoto = Boolean(photosByBakeryId[bakery.id])
 
   // ── 이 빵집의 일지(리뷰) 모으기: 내 것 → 이 브라우저의 다른 모험가 → 예시 리뷰 순서 ──
@@ -160,7 +162,15 @@ const BakeryDetail = () => {
     }
   }
 
-  const toggleBookmark = () => setBookmarkedIds((prev) => ({ ...prev, [bakery.id]: !prev[bakery.id] }))
+  const handleToggleBookmark = () =>
+    toggleBookmark({
+      id: bakery.id,
+      name: bakery.name,
+      districtLabel: district?.name,
+      signatureMenu: bakery.signatureMenu,
+      address: bakery.address,
+      photoSlot: bakery.photoSlot,
+    })
   const openDialog = () => setDialog((prev) => ({ open: true, session: prev.session + 1 }))
   const closeDialog = () => setDialog((prev) => ({ ...prev, open: false }))
 
@@ -304,7 +314,7 @@ const BakeryDetail = () => {
         {/* 탐험지 정보 패널 */}
         <Box component="section" aria-label="탐험지 정보" sx={{ ...PARCHMENT_SX, p: { xs: 2.5, sm: 4 }, borderRadius: '24px', mb: 6 }}>
           {district && (
-            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.12em', color: 'terracotta.main', mb: 1 }}>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.12em', color: 'terracotta.dark', mb: 1 }}>
               탐험 지역 · {district.name}
             </Typography>
           )}
@@ -312,7 +322,7 @@ const BakeryDetail = () => {
             {bakery.name}
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5, display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
-            <PlaceIcon sx={{ fontSize: '1.1rem', mt: 0.25, color: 'terracotta.main', flexShrink: 0 }} />
+            <PlaceIcon sx={{ fontSize: '1.1rem', mt: 0.25, color: 'terracotta.dark', flexShrink: 0 }} />
             {bakery.address}
           </Typography>
           {bakery.description && <Typography sx={{ mb: 2 }}>{bakery.description}</Typography>}
@@ -329,7 +339,7 @@ const BakeryDetail = () => {
                 </Typography>
               </Box>
             ) : (
-              <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 600, color: 'terracotta.main' }}>
+              <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 600, color: 'terracotta.dark' }}>
                 아직 별점이 없어요
               </Typography>
             )}
@@ -408,7 +418,8 @@ const BakeryDetail = () => {
               </Button>
             )}
             <Button
-              onClick={toggleBookmark}
+              onClick={handleToggleBookmark}
+              aria-pressed={bookmarked}
               variant={bookmarked ? 'contained' : 'outlined'}
               color="secondary"
               startIcon={bookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}

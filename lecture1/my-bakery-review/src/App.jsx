@@ -30,6 +30,7 @@ import { BusanBakeriesProvider } from './context/BusanBakeriesContext'
 import { VisitedBakeriesProvider } from './context/VisitedBakeriesContext'
 import { RealBakeryPhotosProvider } from './context/RealBakeryPhotosContext'
 import { ProfileProvider } from './context/ProfileContext'
+import { BookmarksProvider } from './context/BookmarksContext'
 import { ReviewsProvider } from './context/ReviewsContext'
 
 function App() {
@@ -41,45 +42,47 @@ function App() {
       {/* 프로필 · 방문 체크 · 리뷰 저장소: 로컬 모드는 이 브라우저에만, 계정 모드는 Supabase 계정에 저장해요 */}
       <ProfileProvider>
         <VisitedBakeriesProvider>
-          <ReviewsProvider>
-            <RealBakeryPhotosProvider>
-              <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: !prefersReducedMotion }}>
-                <HashRouter>
-                  <Routes>
-                    <Route element={<Layout />}>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/community" element={<Community />} />
-                      {IS_ACCOUNT_MODE ? (
-                        <>
-                          <Route path="/community/write" element={<CommunityPostForm />} />
-                          <Route path="/community/:id/edit" element={<CommunityPostForm />} />
-                          <Route path="/community/:id" element={<AccountPostDetail />} />
-                        </>
-                      ) : (
-                        <>
-                          {/* 로컬 모드에는 글쓰기가 없어요 (예시 글만 보여줘요) */}
-                          <Route path="/community/write" element={<Navigate to="/community" replace />} />
-                          <Route path="/community/:id" element={<CommunityPostDetail />} />
-                        </>
-                      )}
-                      <Route path="/mypage" element={<MyPage />} />
-                      <Route path="/ranking" element={<Ranking />} />
-                      <Route path="/bakery/:id" element={<BakeryDetail />} />
-                      <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                      <Route path="/terms" element={<TermsOfServicePage />} />
-                      <Route path="/login" element={IS_ACCOUNT_MODE ? <AccountLogin /> : <Login />} />
-                      <Route path="/signup" element={IS_ACCOUNT_MODE ? <AccountSignup /> : <Signup />} />
-                      {IS_ACCOUNT_MODE && <Route path="/admin/reports" element={<AdminReports />} />}
-                      {IS_ACCOUNT_MODE && <Route path="/forgot-password" element={<ForgotPassword />} />}
-                      {IS_ACCOUNT_MODE && <Route path="/reset-password" element={<ResetPassword />} />}
-                      {/* 위의 어느 주소에도 맞지 않으면 "찾을 수 없어요" 화면 */}
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                  </Routes>
-                </HashRouter>
-              </ReactLenis>
-            </RealBakeryPhotosProvider>
-          </ReviewsProvider>
+          <BookmarksProvider>
+            <ReviewsProvider>
+              <RealBakeryPhotosProvider>
+                <ReactLenis root options={{ lerp: 0.1, duration: 1.4, smoothWheel: !prefersReducedMotion }}>
+                  <HashRouter>
+                    <Routes>
+                      <Route element={<Layout />}>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/community" element={<Community />} />
+                        {IS_ACCOUNT_MODE ? (
+                          <>
+                            <Route path="/community/write" element={<CommunityPostForm />} />
+                            <Route path="/community/:id/edit" element={<CommunityPostForm />} />
+                            <Route path="/community/:id" element={<AccountPostDetail />} />
+                          </>
+                        ) : (
+                          <>
+                            {/* 로컬 모드에는 글쓰기가 없어요 (예시 글만 보여줘요) */}
+                            <Route path="/community/write" element={<Navigate to="/community" replace />} />
+                            <Route path="/community/:id" element={<CommunityPostDetail />} />
+                          </>
+                        )}
+                        <Route path="/mypage" element={<MyPage />} />
+                        <Route path="/ranking" element={<Ranking />} />
+                        <Route path="/bakery/:id" element={<BakeryDetail />} />
+                        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                        <Route path="/terms" element={<TermsOfServicePage />} />
+                        <Route path="/login" element={IS_ACCOUNT_MODE ? <AccountLogin /> : <Login />} />
+                        <Route path="/signup" element={IS_ACCOUNT_MODE ? <AccountSignup /> : <Signup />} />
+                        {IS_ACCOUNT_MODE && <Route path="/admin/reports" element={<AdminReports />} />}
+                        {IS_ACCOUNT_MODE && <Route path="/forgot-password" element={<ForgotPassword />} />}
+                        {IS_ACCOUNT_MODE && <Route path="/reset-password" element={<ResetPassword />} />}
+                        {/* 위의 어느 주소에도 맞지 않으면 "찾을 수 없어요" 화면 */}
+                        <Route path="*" element={<NotFound />} />
+                      </Route>
+                    </Routes>
+                  </HashRouter>
+                </ReactLenis>
+              </RealBakeryPhotosProvider>
+            </ReviewsProvider>
+          </BookmarksProvider>
         </VisitedBakeriesProvider>
       </ProfileProvider>
     </BusanBakeriesProvider>

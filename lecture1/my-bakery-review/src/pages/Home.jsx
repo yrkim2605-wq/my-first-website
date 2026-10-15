@@ -215,7 +215,7 @@ const Home = () => {
             eyebrow="ADVENTURER'S LOG"
             title="모험가의 기록"
             description="한 줄의 기록이 누군가의 다음 모험이 돼요."
-            tone="onColor"
+            tone="onSage"
             sx={{ mb: { xs: 4, md: 5 }, px: 2, position: 'relative' }}
           />
           <Box sx={{ px: SECTION_PX, position: 'relative' }}>

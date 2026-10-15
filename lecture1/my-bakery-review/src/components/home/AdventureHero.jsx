@@ -116,7 +116,7 @@ const AdventureHero = () => {
               alignItems: { xs: 'center', sm: 'flex-start' },
             }}
           >
-            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', color: 'terracotta.main', mb: 1.25 }}>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', color: 'terracotta.dark', mb: 1.25 }}>
               BAKERY ADVENTURE
             </Typography>
             <Typography

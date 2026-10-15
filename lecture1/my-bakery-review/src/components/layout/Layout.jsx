@@ -7,10 +7,12 @@ import Header from './Header'
 import Footer from './Footer'
 import ScrollToTopButton from '../common/ScrollToTopButton'
 import ErrorBoundary from '../common/ErrorBoundary'
+import { useProfile } from '../../hooks/useProfile'
 
 const Layout = () => {
   const location = useLocation()
   const lenis = useLenis()
+  const { profile, ready } = useProfile()
 
   // 다른 페이지로 이동하면 맨 위에서 시작해요 (부드러운 스크롤 Lenis를 쓰면 그쪽으로 즉시 이동)
   useEffect(() => {
@@ -20,9 +22,10 @@ const Layout = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      {/* 맨 위 안내 띠: 지금 실제로 있는 기능(EXP · 퀘스트 · 배지 · 레벨)만 알려요. 레벨 혜택은 아직 제공하지 않아서 말하지 않아요. */}
       <Box
         component={Link}
-        to="/signup"
+        to={profile ? '/mypage' : '/signup'}
         sx={{
           minHeight: 44,
           bgcolor: 'primary.main',
@@ -37,22 +40,28 @@ const Layout = () => {
           '&:hover .promo-banner-cta': { textDecorationColor: 'currentColor' },
         }}
       >
-        <Typography sx={{ fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.85rem' }, textAlign: 'center' }}>
-          지금 가입하고 레벨업 혜택을 받아보세요{' '}
-          <Box
-            component="span"
-            className="promo-banner-cta"
-            sx={{
-              fontWeight: 700,
-              color: 'mustard.main',
-              textDecoration: 'underline',
-              textDecorationColor: 'transparent',
-              textUnderlineOffset: 3,
-              transition: 'text-decoration-color 0.15s ease',
-            }}
-          >
-            회원가입 →
-          </Box>
+        <Typography sx={{ fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.85rem' }, textAlign: 'center', wordBreak: 'keep-all' }}>
+          모험 일지를 남기면 EXP가 쌓이고, 퀘스트 · 배지로 레벨업해요{' '}
+          {/* 로그인 여부를 알기 전에는 안내 링크 글자를 비워서, 로그인한 사람에게 "모험가 만들기"가 잠깐 보이지 않게 해요 */}
+          {ready && (
+            <Box
+              component="span"
+              className="promo-banner-cta"
+              sx={{
+                // 글자와 화살표(→)를 한 덩어리로 묶어서, 좁은 화면에서도 화살표만 줄 끝에 홀로 남지 않고 다음 줄로 같이 내려가요
+                display: 'inline-block',
+                whiteSpace: 'nowrap',
+                fontWeight: 700,
+                color: 'mustard.main',
+                textDecoration: 'underline',
+                textDecorationColor: 'transparent',
+                textUnderlineOffset: 3,
+                transition: 'text-decoration-color 0.15s ease',
+              }}
+            >
+              {profile ? '내 모험가 보기 →' : '모험가 만들기 →'}
+            </Box>
+          )}
         </Typography>
       </Box>
       <Header />

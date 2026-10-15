@@ -12,12 +12,14 @@ import { PARCHMENT_SX } from '../../constants/rpgStyles'
 //   board   : 퀘스트 보드에 압정으로 꽂은 양피지 메모
 //   journal : 손글씨 일지 제목 + 형광펜 밑줄
 // flank={{ left: { name, width }, right: { name, width } }}: 제목 양옆에 꾸밈 스티커를 놓아요 (넓은 화면에서만 보여요).
-// tone="onColor"는 색 블록(세이지 · 와인) 위에 올릴 때 써요. titleId를 주면 aria-labelledby에 연결할 수 있어요.
+// tone="onColor"는 와인처럼 어두운 색 블록 위에(크림색 글자), tone="onSage"는 세이지처럼 밝은 색 블록 위에(진한 갈색 글자) 올릴 때 써요.
+// 세이지 위에 크림색 글자를 올리면 대비가 2.5:1이라 읽기 어려워서 나눴어요. titleId를 주면 aria-labelledby에 연결할 수 있어요.
 const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default', variant = 'plain', flank, sx }) => {
   const onColor = tone === 'onColor'
+  const onSage = tone === 'onSage'
 
   const titleSx = {
-    plain: { color: onColor ? 'primary.contrastText' : 'primary.main' },
+    plain: { color: onColor ? 'primary.contrastText' : onSage ? 'text.primary' : 'primary.main' },
     sign: { color: 'wood.contrastText' },
     ribbon: { color: 'primary.contrastText', letterSpacing: '0.02em' },
     board: { color: 'primary.main' },
@@ -26,7 +28,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
       fontWeight: 700,
       fontSize: { xs: '2.1rem', sm: '2.7rem' },
       lineHeight: 1.15,
-      color: onColor ? 'primary.contrastText' : 'wood.main',
+      color: onColor ? 'primary.contrastText' : onSage ? 'text.primary' : 'wood.main',
       // 형광펜으로 그은 듯한 밑줄
       backgroundImage: 'linear-gradient(transparent 62%, rgba(226,176,74,0.55) 62%)',
       px: 0.75,
@@ -139,7 +141,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
               fontSize: '0.75rem',
               fontWeight: 700,
               letterSpacing: '0.18em',
-              color: onColor ? 'primary.contrastText' : 'terracotta.main',
+              color: onColor ? 'primary.contrastText' : onSage ? 'text.primary' : 'terracotta.dark',
               mb: variant === 'board' || variant === 'ribbon' ? 1.5 : 1,
             }}
           >
@@ -151,7 +153,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
           <Typography
             sx={{
               fontSize: '0.95rem',
-              color: onColor ? 'primary.contrastText' : 'text.secondary',
+              color: onColor ? 'primary.contrastText' : onSage ? 'text.primary' : 'text.secondary',
               opacity: onColor ? 0.85 : 1,
               mt: hasDivider ? 0 : 1.5,
             }}

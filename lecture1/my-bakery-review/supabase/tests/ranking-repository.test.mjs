@@ -127,7 +127,17 @@ const repoFor = (state) => {
 {
   const { repo } = repoFor({ errors: { ranking_exp: { code: 'PGRST205', message: "Could not find the table 'public.ranking_exp' in the schema cache" } } })
   const error = await rejects(repo.getBoard('exp'))
-  check('0005를 아직 적용하지 않았으면 설정 안내가 나와요', error?.code === 'NOT_SET_UP' && /0005/.test(error.message), error?.message)
+  // 478df91에서 이용자 화면의 오류 문구는 "기술 용어 없는 쉬운 안내"로 바꾸기로 했어요 (예전 기대값은 문구에 0005가 있어야 했어요).
+  // 그래서 지금 기준: 코드는 NOT_SET_UP, 문구는 "준비하는 중 · 다시 시도 · 문의처"를 알려주고, 마이그레이션 번호 · 뷰 이름 · 서버 오류 코드 같은 기술 용어는 하나도 없어야 해요.
+  check(
+    '뷰가 아직 없으면(0005 미적용) 쉬운 "준비 중" 안내가 나와요 (기술 용어 없음)',
+    error?.code === 'NOT_SET_UP' &&
+      /준비하는 중/.test(error.message) &&
+      /다시 시도/.test(error.message) &&
+      /문의처/.test(error.message) &&
+      !/0005|마이그레이션|SQL|ranking_|PGRST|42P01|schema/i.test(error.message),
+    error?.message,
+  )
 }
 {
   const { repo } = repoFor({ errors: { ranking_exp: { code: '42P01', message: 'relation "public.ranking_exp" does not exist' } } })

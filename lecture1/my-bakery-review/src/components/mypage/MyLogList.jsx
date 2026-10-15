@@ -16,7 +16,7 @@ const MyLogList = ({ reviews }) => (
       <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '1.3rem', sm: '1.5rem' }, color: 'primary.main' }}>
         내 모험 일지
       </Typography>
-      <Typography component="span" sx={{ fontWeight: 800, color: 'terracotta.main' }}>
+      <Typography component="span" sx={{ fontWeight: 800, color: 'terracotta.dark' }}>
         {reviews.length}개
       </Typography>
     </Box>

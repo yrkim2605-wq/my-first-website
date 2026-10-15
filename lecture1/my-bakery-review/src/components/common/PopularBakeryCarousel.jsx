@@ -78,11 +78,7 @@ const PopularBakeryCarousel = ({ bakeries, highlightedId }) => {
 
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1.5, mt: 3 }}>
         <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: 'text.secondary' }}>
-          {index + 1}
-          <Box component="span" sx={{ opacity: 0.4, mx: 0.75 }}>
-            |
-          </Box>
-          {total}
+          {index + 1} / {total}
         </Typography>
         <IconButton
           onClick={() => setIsPaused((prev) => !prev)}

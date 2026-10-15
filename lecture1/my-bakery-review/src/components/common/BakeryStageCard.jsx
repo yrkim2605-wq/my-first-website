@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
@@ -15,6 +14,7 @@ import { Link } from 'react-router-dom'
 import StarRoundedIcon from '@mui/icons-material/StarRounded'
 import { getBakeryPhoto } from '../../constants/bakeryPhotos'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
+import { useBookmarks } from '../../hooks/useBookmarks'
 import { PARCHMENT_SX, WOOD_PLANK_SX } from '../../constants/rpgStyles'
 import { RADIUS } from '../../theme'
 
@@ -42,13 +42,15 @@ const BakeryStageCard = ({
 }) => {
   const { photosByBakeryId } = useRealBakeryPhotos()
   const photoSrc = getBakeryPhoto(id, photosByBakeryId, photoSlot)
-  const [bookmarked, setBookmarked] = useState(false)
+  // 찜 상태는 빵집 상세 · 마이페이지와 같은 목록을 써서, 어디서 눌러도 똑같이 보여요
+  const { isBookmarked, toggleBookmark } = useBookmarks()
+  const bookmarked = isBookmarked(id)
   const hasReviews = ratingStatus ? ratingStatus === 'ready' : reviewCount > 0 || rating > 0
 
   const handleBookmarkClick = (event) => {
     event.preventDefault()
     event.stopPropagation()
-    setBookmarked((prev) => !prev)
+    toggleBookmark({ id, name, districtLabel, signatureMenu, photoSlot })
   }
 
   return (
@@ -186,7 +188,7 @@ const BakeryStageCard = ({
               left: 10,
               fontWeight: 700,
               letterSpacing: '0.06em',
-              bgcolor: 'terracotta.main',
+              bgcolor: 'terracotta.dark', // 크림색 글자와 대비 4.5:1 이상이 되도록 진한 테라코타
               color: 'terracotta.contrastText',
               // 발견 카드에서는 금색 리본처럼: 금색 바탕 + 나무색 글자 + 테두리
               ...(discovery && {
@@ -201,7 +203,8 @@ const BakeryStageCard = ({
         )}
         <IconButton
           onClick={handleBookmarkClick}
-          aria-label={bookmarked ? '찜 해제' : '찜하기'}
+          aria-label={bookmarked ? `${name} 찜 해제` : `${name} 찜하기`}
+          aria-pressed={bookmarked}
           size="small"
           sx={{
             position: 'absolute',

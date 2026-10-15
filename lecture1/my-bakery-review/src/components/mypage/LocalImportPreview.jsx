@@ -105,7 +105,7 @@ const ReviewRow = ({ review, checked, onToggle, onEdit, disabled }) => {
             slotProps={{ htmlInput: { maxLength: REVIEW_CONTENT_MAX, 'aria-label': `${review.bakeryName} 일지 내용 고쳐 쓰기` } }}
             helperText={
               <Box component="span" sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                <Box component="span" aria-live="polite" sx={{ fontWeight: contentStatus.isTooShort ? 700 : 500, color: contentStatus.isTooShort ? 'terracotta.main' : 'secondary.dark' }}>
+                <Box component="span" aria-live="polite" sx={{ fontWeight: contentStatus.isTooShort ? 700 : 500, color: contentStatus.isTooShort ? 'terracotta.dark' : 'secondary.dark' }}>
                   {contentStatus.isTooShort ? getShortContentMessage(contentStatus.remaining) : '이전할 수 있어요!'}
                 </Box>
                 <Box component="span">
@@ -149,7 +149,7 @@ const ListBox = ({ children }) => (
 const Heading = ({ children, count }) => (
   <Typography component="h3" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '1.05rem', color: 'primary.main', mt: 2.5, mb: 1 }}>
     {children}
-    {count != null && <Box component="span" sx={{ ml: 0.75, fontSize: '0.9rem', color: 'terracotta.main' }}>{count}</Box>}
+    {count != null && <Box component="span" sx={{ ml: 0.75, fontSize: '0.9rem', color: 'terracotta.dark' }}>{count}</Box>}
   </Typography>
 )
 

@@ -47,11 +47,13 @@ const renderIn = async (server, componentPath, context) => {
   const { BusanBakeriesProvider } = await server.ssrLoadModule('/src/context/BusanBakeriesContext.jsx')
   const { VisitedBakeriesProvider } = await server.ssrLoadModule('/src/context/VisitedBakeriesContext.jsx')
   const { RealBakeryPhotosProvider } = await server.ssrLoadModule('/src/context/RealBakeryPhotosContext.jsx')
+  // 실제 앱(App.jsx)처럼 ProfileProvider 안쪽에 BookmarksProvider가 있어요 (찜한 빵집을 쓰는 화면이 이 환경에서도 그려지도록)
+  const { BookmarksProvider } = await server.ssrLoadModule('/src/context/BookmarksContext.jsx')
   const { default: Component } = await server.ssrLoadModule(componentPath)
   const reviewsValue = { reviews: [], levelsByUserId: null, gameSettings: null, reload: () => {}, ...context.reviews }
   // React 서버 렌더링은 붙어 있는 글자 사이에 <!-- --> 표식을 넣어요 ("Lv.<!-- -->1") → 지우고 비교해요
   const html = renderToString(
-    h(ThemeProvider, { theme }, h(MemoryRouter, null, h(ProfileContext.Provider, { value: { profile: context.profile, ready: true } }, h(ReviewsContext.Provider, { value: reviewsValue }, h(BusanBakeriesProvider, null, h(VisitedBakeriesProvider, null, h(RealBakeryPhotosProvider, null, h(Component, context.props)))))))),
+    h(ThemeProvider, { theme }, h(MemoryRouter, null, h(ProfileContext.Provider, { value: { profile: context.profile, ready: true } }, h(ReviewsContext.Provider, { value: reviewsValue }, h(BusanBakeriesProvider, null, h(VisitedBakeriesProvider, null, h(BookmarksProvider, null, h(RealBakeryPhotosProvider, null, h(Component, context.props))))))))),
   )
   return html.replace(/<!-- -->/g, '')
 }

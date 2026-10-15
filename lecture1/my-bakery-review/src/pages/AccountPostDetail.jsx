@@ -308,7 +308,7 @@ const AccountPostDetail = () => {
 
         <Reveal delay={0.05}>
           <Box sx={{ ...PARCHMENT_SX, borderRadius: '20px', p: { xs: 2.5, sm: 3.5 }, mb: 3 }}>
-            <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'terracotta.main', mb: 1 }}>{category?.label}</Typography>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'terracotta.dark', mb: 1 }}>{category?.label}</Typography>
             <Typography variant="h1" sx={{ fontSize: { xs: '1.6rem', sm: '2.1rem' }, mb: 2, wordBreak: 'break-word' }}>
               {post.title}
             </Typography>

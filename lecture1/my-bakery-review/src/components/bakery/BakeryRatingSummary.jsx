@@ -39,7 +39,7 @@ const BakeryRatingSummary = ({ info }) => {
     )
   }
   return (
-    <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 600, color: 'terracotta.main' }}>
+    <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 600, color: 'terracotta.dark' }}>
       아직 별점이 없어요
     </Typography>
   )

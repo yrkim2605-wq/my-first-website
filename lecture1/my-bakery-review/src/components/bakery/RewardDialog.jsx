@@ -36,7 +36,7 @@ const RewardDialog = ({ open, reward, onClose }) => {
             <Sparkle size={14} twinkle delay={1.5} sx={{ position: 'absolute', bottom: 6, left: -30 }} />
           </Box>
 
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.14em', color: 'terracotta.main' }}>
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.14em', color: 'terracotta.dark' }}>
             {reward.mode === 'create' ? 'LOG SAVED' : 'LOG UPDATED'}
           </Typography>
           <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '1.5rem', color: 'primary.main', mb: 1 }}>
@@ -45,10 +45,10 @@ const RewardDialog = ({ open, reward, onClose }) => {
 
           {/* 받은 EXP */}
           <Box className="pop-in" sx={{ display: 'inline-flex', alignItems: 'baseline', gap: 0.75, mb: 1.5 }} aria-label={`EXP ${gained} 획득`}>
-            <Typography component="span" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '2.6rem', lineHeight: 1, color: 'gold.dark' }}>
+            <Typography component="span" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: '2.6rem', lineHeight: 1, color: 'gold.text' }}>
               +{shownExp}
             </Typography>
-            <Typography component="span" sx={{ fontWeight: 800, color: 'gold.dark' }}>
+            <Typography component="span" sx={{ fontWeight: 800, color: 'gold.text' }}>
               EXP
             </Typography>
           </Box>
