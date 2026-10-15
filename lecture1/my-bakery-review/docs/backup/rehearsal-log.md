@@ -61,3 +61,24 @@
 | 유지한 것 | 기존 zip(`pg17.zip`)과 압축 푼 `pgsql\` 폴더는 건드리지 않았어요 |
 
 **참고:** `initdb`의 마지막 안내문이 `pg_ctl … start` 명령을 보여주지만 **실행하지 않았어요.** 관문 B(서버 시작 · 접속 확인 · 시험 DB 생성)는 별도 승인 대기예요.
+
+## 2026-10-15 · 4단계(관문 B): 로컬 서버 시작 → 바인딩 · 외부 차단 검사 → 빈 시험 DB 생성 → 정상 종료 (가짜 데이터 없음)
+
+**승인 범위:** 서버 시작, 리스닝 주소 · 외부 접속 차단 검사, 빈 `bakery_rehearsal` 생성, 정상 종료. 표 생성 · 가짜 데이터 · 백업 · 복구 시험은 하지 않았어요. 실행은 `try/finally`로 묶어서 어떤 경우에도 마지막에 `pg_ctl stop -m fast -w`가 실행되게 했어요. 비밀번호는 화면 · 로그 · Git에 남기지 않았어요.
+
+| 항목 | 결과 |
+|---|---|
+| 사전 점검 8항목 | 해시 동일 · 관리자 세션 아님 · `PG*`/`DATABASE_URL`/`SUPABASE*` 환경변수 0 · 54329 비어 있음 · 프로세스 없음 · `postmaster.pid` 없음 · `pg_hba.conf` 한 줄 · `listen_addresses`/`port` 설정 — 모두 통과 |
+| 시작 | 21:10:28, `pg_ctl start` 종료 코드 0, `postgres` 프로세스 6개. **Windows 서비스로 등록하지 않음** (사용자 세션의 일반 프로세스) |
+| UAC · 방화벽 창 | 없음 (감지된 프로세스는 Windows 보안 상시 프로세스 `SecurityHealth*`뿐, 창 제목 없음) |
+| 실제 리스닝 주소 | TCP **`127.0.0.1:54329` 한 개만** (pid 13352). 다른 주소 · 포트 리스닝 0, postgres 소유 UDP 소켓 0 |
+| 외부 접속 차단 | `127.0.0.1:54329` 연결 성공 / `192.168.219.103:54329` **연결 실패** / `[::1]:54329` **연결 실패** |
+| 로컬 접속 (psql, 대상 고정) | 사용자 `postgres`, 서버 주소 `127.0.0.1`, `listen_addresses=127.0.0.1`, `port=54329`, 버전 `17.11`, 암호 방식 `scram-sha-256`. 시작 직후 DB: `postgres`, `template0`, `template1` |
+| 인증 요구 확인 | 일부러 틀린 비밀번호로 시도 → 종료 코드 2, `password authentication failed` (거부됨) |
+| 빈 DB 생성 | `CREATE DATABASE bakery_rehearsal ENCODING 'UTF8' TEMPLATE template0 LOCALE 'C'` 성공 → 인코딩 UTF8 / collate C / ctype C, 사용자 객체(표 · 보기 · 시퀀스) **0개** |
+| 종료 | 21:10:40, `pg_ctl stop -m fast -w` 종료 코드 0. `postgres` 프로세스 0, 54329 리스닝 없음, `postmaster.pid` 없음, PostgreSQL 서비스 0, `PGPASSWORD` 환경변수 제거 |
+| 서버 로그 `pg.log` | 접속 허가 · 해제, 빠른 종료 요청 → 체크포인트 → `database system is shut down`. **비밀번호 평문이 들어 있는 파일 0개** (로그 · 스냅샷 · 설정 파일 검사) |
+| 시스템 변경 (`before-start` ↔ `after-gateB`) | 서비스 · 계정 · 방화벽 · 레지스트리 · PATH · 열린 포트 · 예약 작업 · 프로세스 · 폴더 **차이 0.** `C:\bakery-secure\pg` 안의 새 파일 3줄(`data`, `logs`, `snapshots`)뿐이고 밖은 0 |
+| 데이터 폴더 | 파일 1,272개 · 47MB (DB 생성과 서버 가동으로 늘어남) |
+
+**참고:** 스크립트를 처음 작성했을 때 해시테이블 문법 오류가 있었지만, 실행 전 점검 단계(UTF-8로 읽어 문법 검사)에서 잡아 고쳤어요. 서버 관련 명령은 그 전에는 한 번도 실행되지 않았어요. 관문 C(가짜 데이터 복구 시험)는 계획 승인 전까지 하지 않아요 (`gate-c-plan.md`).
