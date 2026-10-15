@@ -1,5 +1,7 @@
-# 관문 C 시험 파일 안내 (C-prep 산출물 — 작성만 했고 아직 한 번도 실행하지 않았어요)
+# 관문 C 시험 파일 안내
 
+> **현재 상태 (2026-10-15):** 1차 실행(C-run)은 끝났어요 — 통과 26 · 실패 12 · 관찰 4, 상황 B에서 중단. 결과: `RESULT-gateC.md`, `results-run1.txt` / 원인 분석: `ANALYSIS-gateC.md`.
+> 그 분석을 반영해 시험 코드를 **3차 개정**했고(아래 표의 ★), 개정본은 **아직 한 번도 실행하지 않았어요.** 재시험(`-Run 2`)은 `RETEST-PLAN.md` 에 있고 별도 승인 후에만 해요. 백업 · 복구는 **아직 검증 완료가 아니에요.**
 > 계획: `../gate-c-plan.md` / 선행 결과: `../rehearsal-log.md` 3~4단계.
 > **실행(C-run)은 사용자 승인 뒤에만 해요.** 이 파일들은 서버 시작 · SQL 실행 · 백업 생성 · 복원을 하지 않은 상태로 작성하고 정적 검사(문법)만 했어요.
 > 실제 Supabase 프로젝트 · 운영 데이터에는 접속하지 않아요. 모든 데이터는 가짜(`…@example.invalid`, `FAKE_HASH_…`, 문서용 IP `203.0.113.x`)예요.
@@ -11,19 +13,23 @@
 | `00-auth-stub.sql` | 가짜 Supabase 기본 환경: `auth`(실제 모양에 가깝게 늘린 `users` · `identities`(생성 칸 `email` 포함) + 일부러 만든 `sessions` · `refresh_tokens` · `one_time_tokens` · `audit_log_entries`) · `storage` · 역할 3개 · `auth.uid()` | 예 |
 | `10-fake-seed.sql` | 가짜 데이터: 계정 6명(운영자 1명 + 나중에 탈퇴할 `fake-withdrawn`) · 빵집 3 · 일지 7 · 글 3 · 댓글 3 · 좋아요 3(탈퇴 예정 글에 누른 좋아요 포함) · 신고 2 · 방문 2 · 사진 기록 1 · 가짜 세션/토큰/로그 | 예 |
 | `20-report.sql` | DB 하나의 "내용 + 구조 + 권한" 보고서(읽기 전용). 원본과 복원본에 똑같이 돌려 줄 단위로 비교 | 예 |
+| ★`21-access-probe.sql` | 역할별 **실제 읽기 동작** 시험: `set local role`로 anon · authenticated · service_role 이 되어 public 표 · 보기를 `select count(*)` 해 보고 `rows=N / denied / error:코드`를 적음(읽기 전용, 임시 함수만 사용) | 예 |
+| ★`22-constraint-behavior.sql` | T06b: `reviews_rating_check` 의 진짜 정의문을 임시 표에 걸고 11개 값의 허용/거부를 확인(읽기 전용, 임시 표만 사용) | 예 |
 | `30-quarantine-functions.sql` | 상황 B 격리(`quarantine`) **프로토타입** 함수 4개 + 권한 회수. 구현 승인된 기능이 아님 | 예 |
 | `31-quarantine-tests.sql` | 격리 프로토타입 시험 Q01~Q12 | 예 |
 | `50-reapply-outside-public.sql` | `public` 덤프에 안 들어오는 `auth.users` 트리거를 다시 만드는 수리 단계(storage는 마이그레이션 0003 · 0008 · 0010을 그대로 재적용) | 예 |
-| `gateC.ps1` | 실행기. 서버 시작 → 시험 전체 → `finally`로 항상 정상 종료 → 결과 표 · 설계 수정안 출력 | 시작/종료 포함 |
+| `gateC.ps1` | 실행기. 서버 시작 → 시험 전체 → `finally`로 항상 정상 종료 → 결과 표 · 설계 수정안 출력. ★3차 개정: `-Run 1/2`(재시험은 별도 폴더 · DB · 새 임시 키), `Restore-PublicDump`(SCHEMA public 항목 정확히 1개 확인 후 제외), 결과 배열 `.Count` 수정, `PsqlScalar` 오류 이유 보존, T10k 파일 실행 | 시작/종료 포함 |
+| `RESULT-gateC.md` · `ANALYSIS-gateC.md` · `RETEST-PLAN.md` · `results-run1.txt` | 1차 결과 · 원인 분석과 수정안 · 재시험 계획 · 1차 결과 원문(가짜 데이터 값만, 비밀 없음) | — |
 | `.gitignore` | 덤프 · 암호문 · tar · 키 · 결과 파일이 실수로 Git에 들어가지 않게 막음 | — |
 
 ## 2. 실행 방법 (승인 후, 일반 PowerShell — 관리자 권한 아님)
 
 ```powershell
 $f = 'C:\Users\USER\OneDrive\Desktop\my-first-website-main\lecture1\my-bakery-review\docs\backup\rehearsal\gateC.ps1'
-& ([scriptblock]::Create((Get-Content -Raw -LiteralPath $f -Encoding UTF8)))                          # 시험 실행 (서버 시작 → 시험 → 정상 종료)
-& ([scriptblock]::Create((Get-Content -Raw -LiteralPath $f -Encoding UTF8))) -Mode Cleanup            # 정리 대상 목록만 보기 (삭제 안 함)
-& ([scriptblock]::Create((Get-Content -Raw -LiteralPath $f -Encoding UTF8))) -Mode Cleanup -ConfirmDelete   # 시험 DB · 파일 삭제 (별도 승인 후)
+& ([scriptblock]::Create((Get-Content -Raw -LiteralPath $f -Encoding UTF8)))                          # 재시험 실행 (-Run 2 가 기본값: …-run2 폴더 · …_run2 DB · 새 임시 키. 서버 시작 → 시험 → 정상 종료)
+& ([scriptblock]::Create((Get-Content -Raw -LiteralPath $f -Encoding UTF8))) -Mode Cleanup            # 재시험 정리 대상 목록만 보기 (삭제 안 함)
+& ([scriptblock]::Create((Get-Content -Raw -LiteralPath $f -Encoding UTF8))) -Mode Cleanup -ConfirmDelete   # 재시험 DB · 파일 삭제 (별도 승인 후)
+# 1차 산출물(접미사 없는 폴더 · DB)은 -Run 1 일 때만 대상이에요: … -Run 1 -Mode Cleanup  (재시험은 절대 건드리지 않아요. 1차 정리는 별도 승인)
 ```
 - 실행기는 시작 전 점검(해시 · 비관리자 · 환경변수 · 포트 · 이전 흔적 없음 · 산출물 위치)이 하나라도 실패하면 **서버를 시작하지 않고** 멈춰요.
 - 서버를 시작한 뒤에는 관문 B와 같은 검사(리스닝 `127.0.0.1:54329`만, 외부 주소 · `::1` 연결 거부, UAC · 방화벽 창 없음)를 통과해야 시험으로 넘어가요.
@@ -42,11 +48,13 @@ $f = 'C:\Users\USER\OneDrive\Desktop\my-first-website-main\lecture1\my-bakery-re
 | T03a·b·c | **워크플로와 같은 명령**의 백업 | `pg_dump` 3개 성공, `public` 목록 항목 > 20, 계정 덤프의 `TABLE DATA` = 2, 세션 · 토큰 · 감사 로그 표가 두 덤프에 **없음** | `pg_dump -Fc --no-owner --no-privileges --schema=public` / `pg_dump -Fc --no-owner --no-privileges --data-only --table=auth.users --table=auth.identities` / (변형) 권한 포함 `public` 덤프, `pg_restore --list` |
 | T04a·b·c·d | 임시 age 키 3개(운영 키 아님)로 암호화·복호화 | 암호문에 평문 없음, 키1만 · 키2만으로 복호화되고 원본 tar와 해시 동일, 키3 거부, 복호화한 덤프 = 원본 덤프 | `age-keygen -o`, `age -r 키1 -r 키2 -o`, `age -d -i`, `tar` |
 | T05f | 탈퇴 흉내 | 계정 · 프로필 · 일지 연쇄 삭제, 신고 기록은 남고 신고자 연결만 끊김 | `10`·`c6-after-backup.sql` |
-| T05a | R1 복원 오류 | `pg_restore` 오류 0개 (계정 → public 순서) | `pg_restore --no-owner --no-privileges --data-only` 후 전체 복원 |
+| T05a | R1 복원 오류 | `pg_restore` 오류 0개 (계정 → public 순서). ★3차: 덤프의 `SCHEMA - public` 항목이 **정확히 1개**인지 확인하고 그 항목만 뺀 목록(`-L`)으로 복원, 아니면 중단. 기준(오류 0개)은 그대로 | `pg_restore --no-owner --no-privileges --data-only` 후 `pg_restore -l` → 필터 → `pg_restore -L` |
 | T05b·c | **public 표 · 외래키 대상 · 계정 표** 보존 | 표별 행 수 + 행 체크섬이 원본과 같음 | `20-report.sql` 비교 |
 | T05d | **비밀번호 해시 · `raw_user_meta_data` · 약관 동의 기록 · 생성 칸** 보존 | `encrypted_password` 체크섬, 메타데이터 체크섬, `terms_version` 분포, `terms_agreed_at` 개수, `identities.email` 체크섬 모두 일치 | 보고서 `2.account` |
 | T05e | 백업에서 뺀 표가 비어 있음 | 세션 · 토큰 · 감사 로그 복원본 행 수 0 | 보고서 `1.rows` |
-| T06 | **외래키** | 제약조건 정의 일치 + 모두 `validated=true` | 보고서 `3.constraint` |
+| T06 | **외래키** | 제약조건 정의 **텍스트** 일치 + 모두 `validated=true` (기준 변경 없음. 1차 결과 ❌는 통과로 바꾸지 않아요) | 보고서 `3.constraint` |
+| ★T06b · T06b-r1b | **제약 동작** (T06의 보강, 기준 대체 아님) | `reviews_rating_check` 가 11개 값(0 · 0.4 · 0.5 · 0.7 · 1 · 1.5 · 4.5 · 4.9 · 5 · 5.5 · 9.9)의 허용/거부를 원본 · 기대값과 똑같이 함. 기대값: 0.5 · 1 · 1.5 · 4.5 · 5 허용, 나머지 거부 | `22-constraint-behavior.sql` |
+| ★T06b0 · T02b | **기준값 확인** | 원본에서 위 기대값이 맞음 / 원본의 역할별 읽기 결과가 만들어지고 `admins` 는 anon · authenticated 모두 거부(0009 설계) | `22` · `21` |
 | **T07.trigger** | **프로필 생성 트리거**가 백업에 포함되나 | 원본과 복원본 모두 `auth.users on_auth_user_created` 1개 | 보고서 `4.trigger` |
 | **T07.storage** | **`storage.objects` 정책**이 포함되나 | 정책 수가 원본과 같음 | 보고서 `5.policy` |
 | **T07.bucket** | **photos 버킷 정보**가 포함되나 | `storage.buckets`에 photos 1개 | 보고서 `10.bucket` |
@@ -54,10 +62,15 @@ $f = 'C:\Users\USER\OneDrive\Desktop\my-first-website-main\lecture1\my-bakery-re
 | **T07.object** | **Storage 객체**(사진 파일 기록 `storage.objects`)가 포함되나 | 원본과 같음 — **사진 백업이 미구현이라 항상 ❌ 로 남는 것이 예상**(의도된 한계, 독립적으로 판정) | 보고서 `1.rows` |
 | T07.photo ℹ️ | 복원본에 사진 경로가 있는 일지가 있는데 사진 파일 기록은 없음 | 관찰 기록(앱에서 깨진 이미지가 어떻게 보이는지는 별도 확인 필요) | `reviews.photo_path` 개수 |
 | T07.etc | 그 밖의 public 구조 | 정책 · RLS · 함수 · 보기 · 인덱스 동일 | 보고서 `5·7·8·9` |
-| T08a·b | **설계 수정안 ①**: 권한 포함 덤프 | 복원 오류 0개, GRANT가 원본과 같음 | `pg_dump`에서 `--no-privileges` 제외 |
+| ★T07.access · T07.probe | R1(`--no-privileges`)의 **역할별 실제 접근** | 원본과 같음 — **현재 워크플로의 알려진 공백이라 ❌ 예상**(기준 그대로) | 보고서 `12.access`, `21-access-probe.sql` |
+| T08a·b | **설계 수정안 ①**: 권한 포함 덤프 | 복원 오류 0개, ★**유효 권한**(비어 있는 권한 칸은 PostgreSQL 기본 권한으로 풀어서)이 원본과 같음 | `pg_dump`에서 `--no-privileges` 제외 / 보고서 `6.acl` |
+| ★T08b2 ℹ️ | 저장 방식(명시적/기본)만 다른 권한 | 참고 정보(판정 아님). 실제 접근이 다르면 T08b · T08e · T08f 가 ❌ | 보고서 `6.aclsrc` |
+| ★T08e · T08f | R1b(수리 후)의 **역할별 실제 접근** · **역할별 읽기 결과** | 둘 다 원본과 같음. 차이가 하나라도 있으면 ❌ | 보고서 `12.access` · `21-access-probe.sql` |
 | T08c·d | **설계 수정안 ②**: public 밖 객체 재적용 | 수리 후 전체 보고서가 원본과 일치(백업에 안 넣기로 한 세션 · 토큰 · 로그 · 사진 파일 기록만 다름), 트리거 정의가 0001과 동일 | `50-reapply-outside-public.sql` + 마이그레이션 0003 · 0008 · 0010 |
 | T09a·b ℹ️ | **트리거 충돌 재현**: 마이그레이션을 먼저 적용한 DB에 계정 → public 복원 | 관찰 기록(프로필 자동 생성 수, 복원 오류 수) | `pg_restore --data-only` |
 | T10a~k | **상황 A**: 살아 있는 계정(명부)만 가져오기 | 탈퇴자 행 0, 잃은 데이터 복구(u2 일지 2 · 글 1 · 댓글 2 · u3 좋아요 1), 회원 수 증가 없음, 원래 날짜 · EXP 칸 유지, 중복 0, 트리거 재활성, **신고(reports) 유실 · 중복 없음(전후 같음, 탈퇴자 글 신고 1 · 신고자 연결 끊긴 신고 1 유지), 탈퇴자 글에 단 댓글 · 누른 좋아요가 되살아나지 않음, 글 없는 댓글 · 좋아요(고아) 0** | 명부 CSV → 스테이징에서 `\copy` 내보내기 → 운영 DB에서 `disable trigger user` + `INSERT … ON CONFLICT DO NOTHING` |
+| ★T10k0 · T10k | **잘못된 연결 복구 없음** (T10k 의 한글 조건은 UTF-8 파일로 실행) | T10k0: 백업 복원본에서 한글 조건으로 센 값 = 아이디 조건으로 센 값, 둘 다 1 이상(조건이 헛돌지 않음). T10k: 탈퇴자 글에 단 댓글 0 · 탈퇴자 글에 누른 좋아요 0 · 고아 댓글 0 · 고아 좋아요 0 → `0/0/0/0` (기대값 그대로). 실행 오류면 `ERR(code=…)` 이유가 상세에 나옴 | `t10k.sql`(UTF-8) |
+| ★T04e · T05a0 | 재시험 전용: 새 임시 키가 1차 키와 겹치지 않음 / 복원 목록에서 SCHEMA public 1개만 제외한 기록 | T04e: 겹침 0개(공개키만 비교). T05a0: 정보 기록 | `age-keygen -y` / `pg_restore -l` |
 | T10b ℹ️ | 트리거를 켠 채 INSERT 하면 | 관찰 기록(작성자 덮어쓰기로 실패해야 함) | 트랜잭션 롤백 |
 | T11a·b·c | **상황 B** 준비: 격리 스키마 | 오류 0개, 공개 프로필 0개(자동 생성 충돌 없음) | `alter table … set schema quarantine`, `pg_dump --schema=quarantine`, 계정 → 마이그레이션 → 격리 데이터 순서 |
 | Q01~Q03 | 외부 역할이 격리 표 · 함수에 접근하면 거부 | `anon`/`authenticated`/`service_role` 모두 `DENIED` | `set local role …` |

@@ -1,0 +1,42 @@
+﻿T01a|pass|가짜 auth · storage 기본 환경 적용|
+T01b|pass|마이그레이션 0001~0010이 오류 없이 적용|10개 파일
+T02|pass|가짜 데이터 입력 + 프로필 자동 생성 트리거 동작 + 기대 건수 일치|16개 항목 모두 일치
+T03a|pass|pg_dump 3개 실행 성공|0/0/0
+T03b|pass|덤프 목록 검사(워크플로 조건): public 항목 > 20, 계정 덤프의 TABLE DATA = 2|public=124, auth TABLE DATA=2
+T03c|pass|세션 · 토큰 · 감사 로그 표가 두 덤프 어디에도 없음|
+T04a|pass|tar 묶음 + age 암호화 성공, 암호문에 가짜 평문이 보이지 않음|tar=0, age=0
+T04b|pass|키1만 · 키2만으로 각각 복호화되고 원본 tar와 해시 동일|키1 code=0 일치=True / 키2 code=0 일치=True
+T04c|pass|무관한 키3은 복호화가 거부됨|code=1
+T04d|pass|복호화 → tar 풀기로 나온 두 덤프가 원본 덤프와 동일 (이후 복원은 이 파일로 해요)|
+T05f|pass|탈퇴 흉내 확인: 계정 · 프로필 · 일지는 연쇄 삭제, 신고 기록은 남고 신고자 연결만 끊김(0009)|계정/프로필/일지/대상신고/신고자null = 0/0/0/1/1 (기대 0/0/0/1/1)
+T05a|fail|pg_restore 오류 0개 (계정 → public 순서)|오류 2개: pg_restore: error: could not execute query: ERROR:  schema "public" already exists | pg_restore: warning: errors ignored on restore: 1
+T05b|pass|public 모든 표의 행 수 · 행 체크섬이 원본과 같음|
+T05c|pass|auth.users · auth.identities 행 수 · 행 체크섬 일치|
+T05d|pass|비밀번호 해시 · raw_user_meta_data · 약관 동의 기록(terms_version · terms_agreed_at) · identities.email 생성 칸 보존|
+T05e|pass|백업에 넣지 않기로 한 표(세션 · 토큰 · 감사 로그)가 복원본에서 비어 있음|4개 표 확인: 0 / d41d8cd98f00b204e9800998ecf8427e ; 0 / d41d8cd98f00b204e9800998ecf8427e ; 0 / d41d8cd98f00b204e9800998ecf8427e ; 0 / d41d8cd98f00b204e9800998ecf8427e
+T06|fail|외래키 · 검사 제약조건이 모두 복원되고 검증됨(validated=true)|3.constraint|public.reviews reviews_rating_check|CHECK (((rating >= 0.5) AND (rating <= (5)::numeric) AND ((ra [=>] ; 3.constraint|public.reviews reviews_rating_check|CHECK ((((rating >= 0.5) AND (rating <= (5)::numeric)) AND (( [<=]
+T07.trigger|fail|프로필 자동 생성 트리거(auth.users)가 백업에 포함되는가|원본 1개 / 복원본 0개
+T07.storage|fail|storage.objects 정책이 백업에 포함되는가|원본 6개 / 복원본 0개
+T07.bucket|fail|photos 버킷 정보가 백업에 포함되는가|원본 1개 / 복원본 0개
+T07.object|fail|Storage 객체(사진 파일 기록 storage.objects)가 백업에 포함되는가 — 사진 백업은 미구현(의도된 한계)|원본 [1 / 86a98b979712498f5e7e0257d61eb69d] / 복원본 [0 / d41d8cd98f00b204e9800998ecf8427e]
+T07.photo|info|복원본에 사진 경로가 있는 일지가 있는데 사진 파일 기록은 없음 → 앱에서 깨진 이미지가 어떻게 보이는지는 별도 확인 필요|사진 경로가 있는 일지 1개 / 복원본 storage.objects 0개 예상
+T07.grant|fail|GRANT 권한(표 · 열 · 함수)이 백업에 포함되는가 (--no-privileges 워크플로 기준)|다른 줄 73개: 6.acl|function public.admin_handle_report(p_report_id uuid, p_action text, p_note text)|(기본) [=>] ; 6.acl|function public.comments_check_parent()|(기본) [=>] ; 6.acl|function public.community_before_insert()|(기본) [=>]
+T07.etc|pass|그 밖의 public 구조(정책 · RLS 켜짐 · 함수 · 보기 · 인덱스)는 원본과 같음|
+T08a|fail|권한 포함 덤프 복원 오류 0개|오류 2개: pg_restore: error: could not execute query: ERROR:  schema "public" already exists | pg_restore: warning: errors ignored on restore: 1
+T08b|fail|권한 포함 덤프는 public 표 · 열 · 함수의 GRANT가 원본과 같음|
+T08c|fail|수리 후 전체 보고서가 원본과 일치 (백업에 안 넣기로 한 세션 · 토큰 · 감사 로그 · 사진 파일 기록만 다름)|다른 줄 3개: 3.constraint|public.reviews reviews_rating_check|CHECK (((rating >= 0.5) AND (rating <= (5)::numeric) AND ((ra [=>] ; 3.constraint|public.reviews reviews_rating_check|CHECK ((((rating >= 0.5) AND (rating <= (5)::numeric)) AND (( [<=] ; 6.acl|table public.admins|postgres:DELETE,postgres:INSERT,postgres:MAINTAIN,postgres:REFERENCES,postgres:SELEC [<=]
+T08d|pass|50-reapply-outside-public.sql 의 트리거 정의가 마이그레이션 0001의 정의와 동일|
+T09a|info|트리거가 있는 DB에 계정을 복원하면 프로필이 자동 생성되는가|프로필 6개 자동 생성(원본 계정 6개), 계정 복원 오류 0개, 마이그레이션 실패 0개
+T09b|info|이 순서로 public 데이터를 복원하면 충돌 · 오류가 나는가 (README 9장·재확인 설계의 설명이 맞는지)|pg_restore 오류 9개, 복원 후 프로필/일지/글 = 6/0/0 (원본 6/7/3). 첫 오류: pg_restore: error: COPY failed for table "bakery_visits": ERROR: NOT_SIGNED_IN
+T10a|pass|스테이징(백업 복원본)에서 명부 기준으로 가져올 행만 내보내기 — 제외된 탈퇴자 관련 행: 일지 1 · 글 1 · 댓글 1(탈퇴자 글에 단 댓글) · 좋아요 2(탈퇴자의 좋아요 + 탈퇴자 글에 누른 좋아요)|EXCL|reviews|1 ; EXCL|posts|1 ; EXCL|comments|1 ; EXCL|post_likes|2
+T10b|info|트리거를 켠 채로 INSERT 하면? (user_id가 auth.uid()로 덮어써져 실패하는 것이 예상) — 실제 운영 절차에서 트리거를 꺼야 하는 이유|psql:C:/bakery-secure/pg/rehearsal-files/a-negative.sql:4: NOTICE: NEG|INSERT_FAILED:28000 / 롤백 후 u2 일지 0 (0이어야 해요)
+T10c|pass|운영 DB(시험용)에 INSERT만 실행 (사용자 트리거만 잠시 끄고 다시 켬, 트랜잭션 한 번)|
+T10d|pass|가짜 탈퇴자의 계정 · 프로필 · 일지 · 글 · 댓글 · 좋아요 · 방문이 가져와지지 않음(되살아나지 않음)|탈퇴자 행 합계=0
+T10e|pass|잃어버린 u2의 일지 2 · 글 1 · 그 글의 댓글 2(댓글+답글) · u3의 좋아요 1이 복구됨|u2 일지/글/댓글, u3 좋아요 = 2/1/2/1 (기대 2/1/2/1)
+T10k|fail|잘못된 연결 복구 없음: 탈퇴자 글에 단 댓글 0 · 탈퇴자 글에 누른 좋아요 0 · 글 없는 댓글(고아) 0 · 글 없는 좋아요 0| (기대 0/0/0/0)
+T10j|pass|신고(reports)가 유실되거나 중복 · 잘못 복구되지 않음: 가져오기 전후 같음, 탈퇴자 글 신고 1 · 신고자 연결 끊긴 신고 1 유지|전 2 / 후 2, 대상탈퇴자/신고자null = 1/1
+T10f|pass|회원 수가 늘지 않음(계정은 건드리지 않음): 계정 / 프로필|6 / 6 (u1~u5 + 백업 이후 가입한 u7 = 6)
+T10g|pass|가져온 일지의 원래 작성 날짜 · EXP 칸이 백업과 같음(트리거를 끈 덕분)|
+T10h|pass|중복 행이 생기지 않음(같은 사용자 · 같은 빵집 일지 중복 0)|중복=0
+T10i|pass|가져온 뒤 사용자 트리거가 모두 다시 켜져 있음(tgenabled=O)|상태=O
+INFRA|fail|스테이징 복원 오류 — 상황 B 시험 준비 실패|pg_restore: error: could not execute query: ERROR:  schema "public" already exists | pg_restore: warning: errors ignored on restore: 1

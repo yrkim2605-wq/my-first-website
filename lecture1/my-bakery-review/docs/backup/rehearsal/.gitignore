@@ -10,3 +10,5 @@ rehearsal-files/
 results.txt
 report-*.txt
 *.log
+rehearsal-keys*/
+rehearsal-files*/

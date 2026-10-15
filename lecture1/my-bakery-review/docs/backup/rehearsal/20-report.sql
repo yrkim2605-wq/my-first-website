@@ -8,12 +8,14 @@
 --   3.constraint  제약조건(외래키 · 검사) 정의
 --   4.trigger     트리거 정의 (auth.users 의 프로필 자동 생성 트리거 포함)
 --   5.policy      행 단위 보안 정책 (public · storage) 과 RLS 켜짐 여부
---   6.acl         권한(GRANT): 표 · 열 · 함수 · 스키마 · 기본 권한
+--   6.acl         권한(GRANT)의 유효 권한: 표 · 열 · 함수 · 스키마 · 기본 권한 (NULL 은 PostgreSQL 기본 권한으로 풀어서 비교)
+--   6.aclsrc      권한이 "명시적(explicit)"으로 저장됐는지 "기본(default)"인지 (표현 차이 참고용, 판정에는 쓰지 않아요)
 --   7.function    함수 정의 체크섬 · security definer · 설정
 --   8.view        보기 정의 체크섬 · 옵션
 --   9.index       인덱스 정의
 --   10.bucket     storage.buckets (photos 버킷 정보)
 --   11.schema     스키마 목록
+--   12.access     anon · authenticated · service_role 의 실제 접근 권한(표 · 열 · 함수 · public 스키마)
 
 \pset format unaligned
 \pset tuples_only on
@@ -74,12 +76,21 @@ select * from (
 
   union all
   -- 6) 권한(GRANT)
+  -- (3차 개정) 6.acl 은 "실제로 적용되는 권한(유효 권한)"으로 비교해요: 권한 칸이 비어 있으면(NULL) PostgreSQL 기본 권한(acldefault)으로 풀어서 보여줘요.
+  --   · 명시적으로 저장된 권한과 기본 권한이 "같은 의미"여도 저장 방식이 다르면 pg_dump가 내보내지 않아서 복원본에는 NULL이 돼요 → 의미가 같으면 같은 줄이 되어야 해요.
+  --   · 의미가 다르면(누가 무엇을 할 수 있는지가 다르면) 줄이 달라져서 실패로 잡혀요. (예전에는 NULL 표가 보고서에서 통째로 빠져서 이런 차이를 못 봤어요.)
+  --   · "명시적 / 기본" 저장 방식 자체는 6.aclsrc 에 따로 적어요 (표현 차이를 알려주는 참고용, 시험 판정에는 쓰지 않아요).
   select '6.acl', 'table ' || item, string_agg(g, ',' order by g)
     from (select n.nspname || '.' || c.relname as item,
                  (case a.grantee when 0 then 'PUBLIC' else a.grantee::regrole::text end) || ':' || a.privilege_type as g
-            from pg_class c join pg_namespace n on n.oid = c.relnamespace, aclexplode(c.relacl) a
-           where c.relacl is not null and n.nspname in ('public', 'storage', 'quarantine') and c.relkind in ('r', 'v', 'm', 'p', 'S')) s
+            from pg_class c join pg_namespace n on n.oid = c.relnamespace,
+                 aclexplode(coalesce(c.relacl, acldefault(case when c.relkind = 'S' then 's' else 'r' end, c.relowner))) a
+           where n.nspname in ('public', 'storage', 'quarantine') and c.relkind in ('r', 'v', 'm', 'p', 'S')) s
    group by item
+  union all
+  select '6.aclsrc', 'table ' || n.nspname || '.' || c.relname, case when c.relacl is null then 'default' else 'explicit' end
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname in ('public', 'storage', 'quarantine') and c.relkind in ('r', 'v', 'm', 'p', 'S')
   union all
   select '6.acl', 'column ' || item, string_agg(g, ',' order by g)
     from (select n.nspname || '.' || c.relname || '.' || att.attname as item,
@@ -88,10 +99,26 @@ select * from (
            where att.attacl is not null and n.nspname in ('public', 'storage', 'quarantine')) s
    group by item
   union all
-  select '6.acl', 'function ' || n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')', coalesce(p.proacl::text, '(기본)')
+  select '6.acl', 'function ' || fn, string_agg(g, ',' order by g)
+    from (select n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' as fn,
+                 (case a.grantee when 0 then 'PUBLIC' else a.grantee::regrole::text end) || ':' || a.privilege_type as g
+            from pg_proc p join pg_namespace n on n.oid = p.pronamespace,
+                 aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+           where n.nspname in ('public', 'quarantine') and p.prokind = 'f') s
+   group by fn
+  union all
+  select '6.aclsrc', 'function ' || n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')', case when p.proacl is null then 'default' else 'explicit' end
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname in ('public', 'quarantine') and p.prokind = 'f'
   union all
-  select '6.acl', 'schema ' || n.nspname, coalesce(n.nspacl::text, '(기본)') from pg_namespace n where n.nspname in ('public', 'auth', 'storage', 'quarantine')
+  select '6.acl', 'schema ' || sch, string_agg(g, ',' order by g)
+    from (select n.nspname as sch,
+                 (case a.grantee when 0 then 'PUBLIC' else a.grantee::regrole::text end) || ':' || a.privilege_type as g
+            from pg_namespace n, aclexplode(coalesce(n.nspacl, acldefault('n', n.nspowner))) a
+           where n.nspname in ('public', 'auth', 'storage', 'quarantine')) s
+   group by sch
+  union all
+  select '6.aclsrc', 'schema ' || n.nspname, case when n.nspacl is null then 'default' else 'explicit' end
+    from pg_namespace n where n.nspname in ('public', 'auth', 'storage', 'quarantine')
   union all
   select '6.acl', 'default ' || coalesce(d.defaclnamespace::regnamespace::text, '-') || ' ' || d.defaclrole::regrole::text || ' ' || d.defaclobjtype::text, coalesce(d.defaclacl::text, '')
     from pg_default_acl d
@@ -121,6 +148,34 @@ select * from (
   union all
   -- 11) 스키마 목록
   select '11.schema', n.nspname, '' from pg_namespace n where n.nspname !~ '^pg_' and n.nspname <> 'information_schema'
+
+  union all
+  -- 12) 역할별 "실제 접근 권한" (상속 · PUBLIC 권한까지 합친 최종 결과: has_*_privilege). GRANT 문장이 아니라 결과로 비교해요.
+  --     역할: anon · authenticated · service_role. 이 역할이 DB 서버에 없으면 이 구역은 비어서 "비교할 원본 줄 0개"로 시험이 실패해요(빈 비교 통과 금지).
+  select '12.access', r.rolname || ' table ' || n.nspname || '.' || c.relname, string_agg(v.p, ',' order by v.p)
+    from pg_roles r cross join pg_class c join pg_namespace n on n.oid = c.relnamespace
+         cross join (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE'), ('REFERENCES'), ('TRIGGER')) v(p)
+   where r.rolname in ('anon', 'authenticated', 'service_role') and n.nspname = 'public' and c.relkind in ('r', 'v', 'm', 'p')
+     and has_table_privilege(r.oid, c.oid, v.p)
+   group by r.rolname, n.nspname, c.relname
+  union all
+  select '12.access', r.rolname || ' column ' || n.nspname || '.' || c.relname || '.' || att.attname, string_agg(v.p, ',' order by v.p)
+    from pg_roles r cross join pg_class c join pg_namespace n on n.oid = c.relnamespace
+         join pg_attribute att on att.attrelid = c.oid and att.attnum > 0 and not att.attisdropped
+         cross join (values ('SELECT'), ('INSERT'), ('UPDATE')) v(p)
+   where r.rolname in ('anon', 'authenticated', 'service_role') and n.nspname = 'public' and c.relkind in ('r', 'v', 'm', 'p')
+     and has_column_privilege(r.oid, c.oid, att.attnum, v.p)
+   group by r.rolname, n.nspname, c.relname, att.attname
+  union all
+  select '12.access', r.rolname || ' function ' || n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')',
+         case when has_function_privilege(r.oid, p.oid, 'EXECUTE') then 'EXECUTE' else 'none' end
+    from pg_roles r cross join pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where r.rolname in ('anon', 'authenticated', 'service_role') and n.nspname = 'public' and p.prokind = 'f'
+  union all
+  select '12.access', r.rolname || ' schema public', string_agg(v.p, ',' order by v.p)
+    from pg_roles r cross join (values ('USAGE'), ('CREATE')) v(p)
+   where r.rolname in ('anon', 'authenticated', 'service_role') and has_schema_privilege(r.oid, 'public', v.p)
+   group by r.rolname
 
 ) q
 order by 1, 2, 3;

@@ -1,5 +1,7 @@
-# ⚠️ 초안이에요 (2차 개정). 이 파일은 "비공개" 백업 전용 저장소의 .github/workflows/backup-db.yml 로 옮겨 쓸 거예요.
+# ⚠️ 초안이에요 (3차 개정, 2026-10-15 — 아직 어디에도 켜지 않았고 실행하지 않았어요). 이 파일은 "비공개" 백업 전용 저장소의 .github/workflows/backup-db.yml 로 옮겨 쓸 거예요.
 #    이 공개 저장소(my-first-website)에는 절대 넣지 않아요. (설정 방법 · 한계: docs/backup/README.md)
+#    3차 개정(관문 C 첫 실행 분석 반영): ① public 덤프에서 --no-privileges 를 뺐어요(GRANT 소실 방지) ② 덤프 점검에 "권한 항목 있음"(없으면 실패) · "SCHEMA public 항목 1개"(아니면 경고만) 확인을 추가했어요.
+#    변경 내용 검토표: docs/backup/workflow-change-review.md. 재시험(가짜 데이터)으로 확인하기 전에는 이 변경을 켜지 않아요.
 #
 # 하는 일: 매일 Supabase DB를 내보내서 → 암호화(키 2개로)하고 → Artifact로 올려요.
 #   - public 스키마 전체 (앱 데이터)
@@ -58,9 +60,11 @@ jobs:
           set -euo pipefail
           umask 077
           # 접속 주소는 환경변수로만 쓰고, 로그에 값을 찍지 않아요 (set -x 금지)
-          # 1) 앱 데이터: 표 구조 + 데이터 + 함수 · 트리거 · 보기(view)
+          # 1) 앱 데이터: 표 구조 + 데이터 + 함수 · 트리거 · 보기(view) + 권한(GRANT/REVOKE)
+          #    · 권한을 포함해요(--no-privileges 없음): anon · authenticated · service_role 의 접근 권한이 복원돼야 앱이 똑같이 동작해요.
+          #    · --no-owner 는 유지: 소유자는 복원하는 계정(대개 postgres)이 돼요. 권한 문장은 역할 이름(anon 등)을 쓰므로 복원 대상에 같은 역할이 있어야 해요 (restore-procedure.md).
           pg_dump "$SUPABASE_DB_URL" \
-            --format=custom --no-owner --no-privileges \
+            --format=custom --no-owner \
             --schema=public \
             --file=public.dump
           # 2) 가입 계정: 이메일 · 비밀번호 해시 · 로그인 방식 정보만 (데이터만). 로그인 세션 · 토큰 · 감사 로그(IP)는 받지 않아요
@@ -78,6 +82,15 @@ jobs:
           pub=$(pg_restore --list public.dump | wc -l)
           echo "public 목차 항목 수: ${pub}"
           test "${pub}" -gt 20
+          # 권한(ACL) 항목이 들어 있어야 해요 (--no-privileges 가 다시 들어가는 실수를 잡아요). 내용은 출력하지 않고 개수만 봐요
+          acl=$(pg_restore --list public.dump | grep -cE '^[0-9]+; [0-9]+ [0-9]+ ACL ' || true)
+          echo "public 권한(ACL) 항목 수: ${acl}"
+          test "${acl}" -gt 0
+          # 복구 때 "SCHEMA public" 항목 1개만 제외하고 복원해요(restore-procedure.md). 정확히 1개가 아니면 그 절차를 다시 봐야 하므로 경고만 남겨요
+          #   (백업 자체를 막지는 않아요. 가짜 시험에서는 1개였고, 실제 Supabase에서도 1개인지는 첫 실행 때 확인할 항목이에요)
+          sch=$(pg_restore --list public.dump | grep -cE '^[0-9]+; [0-9]+ [0-9]+ SCHEMA - public( |$)' || true)
+          echo "SCHEMA public 항목 수: ${sch}"
+          if [ "${sch}" -ne 1 ]; then echo "::warning::SCHEMA public 항목이 ${sch}개예요. 복구 절차(restore-procedure.md)를 확인하세요"; fi
           # 계정 덤프에는 표 데이터 항목이 정확히 2개(users, identities)여야 해요
           auth=$(pg_restore --list auth-users.dump | grep -c "TABLE DATA" || true)
           echo "계정 덤프 표 데이터 항목 수: ${auth}"

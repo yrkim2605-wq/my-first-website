@@ -24,7 +24,9 @@
 | 파일 | 하는 일 |
 |---|---|
 | `backup-db.yml.draft` | **매일** DB를 내보내 → 암호화(키 2개) → Artifact로 올려요 |
-| `rehearsal/` | 관문 C 시험 파일(SQL 6개 + 실행기 `gateC.ps1` + 안내 README) — 작성만 했고 실행 안 함 |
+| `rehearsal/` | 관문 C 시험 파일(SQL 8개 + 실행기 `gateC.ps1` + 안내 README) — **1차 실행 완료**(통과 26 · 실패 12 · 관찰 4, 상황 B 미실행) / 3차 개정본은 **아직 실행 안 함**. 결과 `RESULT-gateC.md`, 분석 `ANALYSIS-gateC.md`, 재시험 계획 `RETEST-PLAN.md` |
+| `restore-procedure.md` | 복구 순서(빈 DB → 계정 → public → auth · storage 재적용), `SCHEMA public` 충돌 회피, 권한(GRANT) · 역할 · 소유권 주의사항 — **초안, 재시험 전까지 검증 안 됨** |
+| `workflow-change-review.md` | `backup-db.yml.draft` 3차 개정(권한 포함 덤프 등)의 변경 전후와 적용 조건 — **켜지 않음** |
 | `gate-c-plan.md` | 관문 C(가짜 데이터 복구 시험) 실행 계획 — 승인 대기 |
 | `local-server-plan.md` | 가짜 데이터 복구 시험용 임시 로컬 서버(127.0.0.1:54329) 실행 계획 — 승인 대기 |
 | `cleanup-backups.yml.draft` | 매일 21일 넘은 백업을 **직접 삭제 시도**해요 (아래 3장) |
@@ -41,7 +43,7 @@ Supabase DB ─(매일 pg_dump)→ 암호화(age, 받는 사람 2명) → Artifa
 
 | 대상 | 백업 | 메모 |
 |---|---|---|
-| `public` 스키마 (일지 · 글 · 댓글 · 좋아요 · 신고 · 프로필 · 운영자 목록 …) | ✅ | 표 구조 + 데이터 + 함수 · 트리거 · 보기 |
+| `public` 스키마 (일지 · 글 · 댓글 · 좋아요 · 신고 · 프로필 · 운영자 목록 …) | ✅ (설계안) | 표 구조 + 데이터 + 함수 · 트리거 · 보기 + **권한(GRANT)** (초안 3차 개정부터 `--no-privileges` 제외, 재시험 전까지 미검증 — `workflow-change-review.md`). 복구 순서 · 스키마 충돌 회피: `restore-procedure.md` |
 | `auth.users`, `auth.identities` | ✅ 데이터만 | 이메일 · 비밀번호 해시 · 가입 정보 |
 | 로그인 세션 · 갱신 토큰 · 일회용 토큰 · 인증 흐름 상태 · 감사 로그(IP) | ❌ 일부러 제외 | 백업에 꼭 필요하지 않은 민감 정보라서 뺐어요. 복구 후 모든 이용자는 **다시 로그인**해야 해요 |
 | **사진 파일 (Storage `photos`)** | ❌ **미구현** | 5장 참고 |
