@@ -1,7 +1,7 @@
 # ⚠️ 초안이에요 (2차 개정). 이 파일은 "비공개" 백업 전용 저장소의 .github/workflows/backup-db.yml 로 옮겨 쓸 거예요.
 #    이 공개 저장소(my-first-website)에는 절대 넣지 않아요. (설정 방법 · 한계: docs/backup/README.md)
 #
-# 하는 일: 주 1회 Supabase DB를 내보내서 → 암호화(키 2개로)하고 → Artifact로 올려요.
+# 하는 일: 매일 Supabase DB를 내보내서 → 암호화(키 2개로)하고 → Artifact로 올려요.
 #   - public 스키마 전체 (앱 데이터)
 #   - auth.users · auth.identities "데이터만" (가입 계정). 세션 · 토큰 · 감사 로그는 일부러 뺐어요
 #   ※ 사진 파일(Storage)은 백업하지 않아요 (미구현). 자세한 내용은 README
@@ -12,7 +12,7 @@ name: backup-db
 
 on:
   schedule:
-    - cron: '0 18 * * 0' # 매주 일요일 18:00 UTC = 월요일 03:00 KST
+    - cron: '0 18 * * *' # 매일 18:00 UTC = 03:00 KST (cleanup-backups는 18:30 UTC에 돌아서 백업이 끝난 뒤에 정리해요)
   workflow_dispatch: {} # 수동 실행 (첫 시험용)
 
 permissions:
