@@ -218,7 +218,7 @@ export const TERMS_OF_SERVICE = {
     },
     {
       title: '제13조 (분쟁의 해결)',
-      body: ['서비스 이용과 관련한 분쟁은 대한민국 법에 따르며, 관할 법원: {jurisdiction}'],
+      body: ['서비스 이용과 관련한 분쟁은 대한민국 법에 따라요. {jurisdiction}'],
     },
   ],
 }

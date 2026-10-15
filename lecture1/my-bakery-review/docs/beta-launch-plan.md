@@ -42,7 +42,7 @@
 | 6-1 | **메일 템플릿 (Confirm sign up · Reset Password)** | Authentication → Emails → Templates | 영어 기본 템플릿 대신 한국어 안내 | ✅ **가입 인증은 단순 HTML 템플릿으로 정상 작동 확인** (제목 · 링크 · 한 줄 안내). ⚠️ 긴 인라인 스타일 HTML을 붙였더니 가입이 500(`html/template: "<" in unquoted attr: "<a"`)으로 실패해서 단순 템플릿으로 교체함 — **복잡한 HTML은 쓰지 않아요.** 디자인 개선은 베타 후. **Reset Password도 단순 한국어 HTML로 교체 후 로컬에서 발송 · 링크 · 새 비밀번호 로그인까지 정상 확인 (2026-10-15)** |
 | 7 | **Redirect URL / Site URL 등록** | Authentication → URL Configuration | Site URL = `https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/`, Redirect URLs = 이 주소 + `http://localhost:5173/my-first-website/my-bakery-review/` (인증 · 재설정 링크가 돌아올 곳, 끝의 `/`까지 정확히) | 🔶 **사용자가 등록했다고 보고함. 로컬 주소로는 가입 인증 링크 → 로그인까지 성공**(= localhost 허용은 간접 확인). **배포 주소(github.io)로 돌아오는 링크는 아직 검증 안 됨** — 8번(운영 계정 모드) 적용 뒤 운영 주소에서 가입 · 재설정 메일의 `redirect_to`와 복귀를 확인해야 해요. 대시보드에 저장된 실제 값(오타 · 끝 `/`)도 한 번 더 눈으로 확인 |
 | 8 | **GitHub Actions 환경변수 추가** | `.github/workflows/deploy.yml` + GitHub Settings | `VITE_DATA_BACKEND=supabase`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. publishable 키만 (비밀 키 `sb_secret_…`는 절대 넣지 않아요) | ⬜ |
-| 9 | **법률 문서의 "확인 필요" 채우기** | `src/constants/legalInfo.js` | 아래 3장 표 참고. 빈 칸은 화면에 노란 "[확인 필요]"로 보여요 | 🔶 **12개 반영 (2026-10-15)**: 백업 보관(30일) · 최소 나이(만 14세) · 신고 기록 보관(1년) · 메일 서비스 처리 위치 · 메일 발송 기록(1개월) · 접속 기록(약 1일) · 저장 지역(서울) · 운영자 · 문의 이메일 · 책임자 · 시행일(2026년 11월 1일, 일정 바뀌면 `effectiveDate`만 수정) · 메일 서비스(Brevo). **2개 남음**: 백업 · 신고 기록 보관 기간 · 관할 법원 |
+| 9 | **법률 문서의 "확인 필요" 채우기** | `src/constants/legalInfo.js` | 아래 3장 표 참고. 빈 칸은 화면에 노란 "[확인 필요]"로 보여요 | 🔶 **전체 반영 (2026-10-15)**: 관할 법원 · 백업 보관(30일) · 최소 나이(만 14세) · 신고 기록 보관(1년) · 메일 서비스 처리 위치 · 메일 발송 기록(1개월) · 접속 기록(약 1일) · 저장 지역(서울) · 운영자 · 문의 이메일 · 책임자 · 시행일(2026년 11월 1일, 일정 바뀌면 `effectiveDate`만 수정) · 메일 서비스(Brevo). **2개 남음**: 백업 · 신고 기록 보관 기간 · 관할 법원 |
 | 10 | 카카오 콘솔 확인 | Kakao Developers | JavaScript 키의 허용 도메인(이미 확인됨), 쿼터 확인 | ✅ 도메인 확인됨 |
 | 11 | 백업 · 모니터링 준비 | 아래 5장 | Free 플랜은 자동 백업이 없어요 (공식 문서로 확인 필요) | 🔶 **방식 결정 (2026-10-15)**: 공식 문서상 Free는 자동 백업이 없고 `supabase db dump` 정기 내보내기 + 외부 보관을 권해요 → **정기 `db dump`, 30일 보관**으로 정함 (방침에 "최대 30일" 반영 완료). ⛔ **절차는 아직 없어요 — 공개 전 필수**: 덤프 방법 · 비공개 보관 위치 · 30일 지난 파일 삭제 · 복구 연습 · 사진(Storage)은 DB 덤프에 안 들어가므로 별도 방안. 방침의 30일과 실제 운영이 어긋나면 안 돼요 |
 
@@ -71,7 +71,7 @@
 | 메일 발송 기록 보관 기간 (`mailLogRetention`) | Brevo 발송 로그 보관 기간 (Supabase 로그와 별개) | Brevo 설정 | ✅ 1개월 · All senders · 본문 미리보기 저장 안 함 (2026-10-15) |
 | 백업 보관 기간 (`backupRetention`) | 탈퇴한 정보가 백업에 남는 기간 | 백업 방식 결정 후 | ✅ 최대 30일 (정기 db dump 방식) — 실제 절차는 11번에서 만들어야 해요 |
 | 신고 기록 보관 기간 (`reportRetention`) | 처리된 신고를 보관하는 기간 | 사용자 결정 | ✅ 처리가 끝난 날부터 1년 |
-| 관할 법원 (`jurisdiction`) | 분쟁 시 관할 | 사용자 결정 (법률 검토) | ⬜ |
+| 관할 법원 (`jurisdiction`) | 분쟁 시 관할 | 사용자 결정 (법률 검토) | ✅ 특정 법원 미지정, "민사소송법 등 관계 법령에 따릅니다" (사용자 지정 문구, 2026-10-15) |
 
 값이 모두 채워지면 문서 위의 "초안" 경고가 자동으로 사라져요. 약관을 바꾸면 `LEGAL_VERSION`도 바꿔 주세요 (가입할 때 동의한 버전이 계정에 기록돼요).
 
