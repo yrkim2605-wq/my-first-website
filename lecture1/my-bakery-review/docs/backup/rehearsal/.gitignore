@@ -1,0 +1,12 @@
+# 복구 시험 산출물이 실수로 Git에 들어가지 않게 막아요 (정상 실행에서는 이 폴더에 아무것도 생기지 않아요 — 산출물은 C:\bakery-secure\pg 안)
+*.dump
+*.age
+*.tar
+*.csv
+*.pem
+*-key-*.txt
+rehearsal-keys/
+rehearsal-files/
+results.txt
+report-*.txt
+*.log

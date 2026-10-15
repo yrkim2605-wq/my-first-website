@@ -24,6 +24,7 @@
 | 파일 | 하는 일 |
 |---|---|
 | `backup-db.yml.draft` | **매일** DB를 내보내 → 암호화(키 2개) → Artifact로 올려요 |
+| `rehearsal/` | 관문 C 시험 파일(SQL 6개 + 실행기 `gateC.ps1` + 안내 README) — 작성만 했고 실행 안 함 |
 | `gate-c-plan.md` | 관문 C(가짜 데이터 복구 시험) 실행 계획 — 승인 대기 |
 | `local-server-plan.md` | 가짜 데이터 복구 시험용 임시 로컬 서버(127.0.0.1:54329) 실행 계획 — 승인 대기 |
 | `cleanup-backups.yml.draft` | 매일 21일 넘은 백업을 **직접 삭제 시도**해요 (아래 3장) |

@@ -82,3 +82,16 @@
 | 데이터 폴더 | 파일 1,272개 · 47MB (DB 생성과 서버 가동으로 늘어남) |
 
 **참고:** 스크립트를 처음 작성했을 때 해시테이블 문법 오류가 있었지만, 실행 전 점검 단계(UTF-8로 읽어 문법 검사)에서 잡아 고쳤어요. 서버 관련 명령은 그 전에는 한 번도 실행되지 않았어요. 관문 C(가짜 데이터 복구 시험)는 계획 승인 전까지 하지 않아요 (`gate-c-plan.md`).
+
+## 2026-10-15 · 5단계(C-prep): 관문 C 시험용 SQL · 실행기 작성 (서버 시작 · SQL 실행 · 백업 · 복원은 하지 않음)
+
+**승인 범위:** 시험용 SQL과 실행 스크립트를 작성하고 검토하는 단계까지. **서버는 시작하지 않았고, SQL은 한 줄도 실행하지 않았고, 백업 · 복원 · 키 생성도 하지 않았어요.**
+
+| 항목 | 결과 |
+|---|---|
+| 작성한 파일 | `docs/backup/rehearsal/` 안에 `00-auth-stub.sql`, `10-fake-seed.sql`, `20-report.sql`, `30-quarantine-functions.sql`, `31-quarantine-tests.sql`, `50-reapply-outside-public.sql`, `gateC.ps1`, `README.md`, `.gitignore` (9개) |
+| 정적 검사 | `gateC.ps1` PowerShell 파서 오류 0개 · SQL 6개 따옴표/괄호/`$$` 짝 정상. **실제 SQL 문법은 서버에서 실행해 봐야 알 수 있어요(미검증).** |
+| 외부 접속 · 비밀 | 파일 안에 Supabase 주소 · `.env` 참조 · 접속 URL · 비밀키 모양 문자열 0개. 접속 대상은 `127.0.0.1:54329` 고정(`Assert-LocalOnly`) |
+| 코드에서 새로 알게 된 위험(가설) | 5개 — `rehearsal/README.md` 7장 (트리거 · storage 정책 · 버킷 누락, `--no-privileges`로 GRANT 소실, 삽입 트리거가 날짜 · EXP를 덮어쓰는 문제, 격리 방식의 교차 의존, 슈퍼유저 권한 의존, `reports`의 탈퇴자 내용 잔존) |
+| 서버 · 파일 상태 | PostgreSQL 프로세스 0, 54329 리스닝 없음, `rehearsal-files` · `rehearsal-keys` 폴더 아직 없음 |
+| 다음 | C-run은 별도 승인. 승인 전에 사용자가 파일을 읽고 고칠 곳을 알려 주시면 반영 |
