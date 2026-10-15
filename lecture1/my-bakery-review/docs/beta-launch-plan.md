@@ -38,8 +38,9 @@
 | 3 | **첫 운영자 등록** | SQL Editor | `insert into public.admins (user_id) values ('<내 계정 UUID>')`. UUID는 Authentication → Users에서 확인 | ✅ 등록 완료 |
 | 4 | **Edge Function `delete-account` 배포** | Edge Functions | 회원 탈퇴. 코드: `supabase/functions/delete-account/index.ts` (대시보드 편집기에 붙여넣기) | ✅ 배포, Verify JWT 끔, 비로그인 요청 10종 차단 확인. **실제 토큰의 `amr` · 실제 탈퇴는 시험 계정으로 아직 미확인** |
 | 5 | `register-bakery` 함수가 최신인지 확인 | Edge Functions | 기존 함수 (이미 배포돼 있어요) | ✅ Verify JWT 끔 (아래 "배포할 때 주의" 참고). 진짜 토큰으로 일지 저장 · 코드 최신 여부(`DB_PERMISSION`, `실패 단계` 검색)는 사용자 확인 대기 |
-| 6 | **Custom SMTP 설정** | Authentication → SMTP Settings | 기본 메일 발송은 한도가 매우 낮아요 (시간당 2통 안팎이라는 자료가 있어요). 가입자 3번째부터 인증 메일이 막힐 수 있어요 | 🔶 **진행 중**: 도메인이 없어 Brevo(무료, 하루 300통)로 먼저 연결해요. 보낸 사람이 일반 이메일이면 스팸 처리될 수 있어서 **공개 전에 도메인 + 메일 서비스로 교체해야 해요.** 저장 여부 · 발송 한도 숫자는 사용자 확인 대기 |
-| 7 | **Redirect URL / Site URL 등록** | Authentication → URL Configuration | `https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/` (인증 · 재설정 링크가 돌아올 곳). 이 주소 하나면 돼요 | ⬜ |
+| 6 | **Custom SMTP 설정** | Authentication → SMTP Settings | 기본 메일 발송은 한도가 매우 낮아요 (시간당 2통 안팎이라는 자료가 있어요). 가입자 3번째부터 인증 메일이 막힐 수 있어요 | ✅ **Brevo 연결 · 발신자 인증 완료, 로컬에서 비밀번호 재설정 · 가입 인증 메일 수신 확인 (2026-10-15).** 처음에 `525 5.7.1 Unauthorized IP address`로 막혔고 Brevo → Security → Authorized IPs에서 `43.203.89.220`을 허용해 해결. 🔶 **공개 전 남은 것**: ① **IP 허용 목록은 Supabase 발송 IP가 바뀌면 같은 525가 다시 나요** → 공개 전에 IP 제한을 끄거나(SMTP 키가 인증 수단) 주기 점검 ② 보낸 사람이 일반 이메일이면 스팸 처리될 수 있어 **도메인 + 메일 서비스로 교체** ③ 발송 한도 숫자(Rate Limits) 확인 ④ Sender name 변경 후 받은편지함 표시 확인 |
+| 6-1 | **메일 템플릿 (Confirm sign up · Reset Password)** | Authentication → Emails → Templates | 영어 기본 템플릿 대신 한국어 안내 | ✅ **가입 인증은 단순 HTML 템플릿으로 정상 작동 확인** (제목 · 링크 · 한 줄 안내). ⚠️ 긴 인라인 스타일 HTML을 붙였더니 가입이 500(`html/template: "<" in unquoted attr: "<a"`)으로 실패해서 단순 템플릿으로 교체함 — **복잡한 HTML은 쓰지 않아요.** 디자인 개선은 베타 후. 비밀번호 재설정 템플릿이 어떤 버전인지 · 실제 발송이 되는지는 확인 대기 |
+| 7 | **Redirect URL / Site URL 등록** | Authentication → URL Configuration | Site URL = `https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/`, Redirect URLs = 이 주소 + `http://localhost:5173/my-first-website/my-bakery-review/` (인증 · 재설정 링크가 돌아올 곳, 끝의 `/`까지 정확히) | 🔶 **사용자가 등록했다고 보고함. 로컬 주소로는 가입 인증 링크 → 로그인까지 성공**(= localhost 허용은 간접 확인). **배포 주소(github.io)로 돌아오는 링크는 아직 검증 안 됨** — 8번(운영 계정 모드) 적용 뒤 운영 주소에서 가입 · 재설정 메일의 `redirect_to`와 복귀를 확인해야 해요. 대시보드에 저장된 실제 값(오타 · 끝 `/`)도 한 번 더 눈으로 확인 |
 | 8 | **GitHub Actions 환경변수 추가** | `.github/workflows/deploy.yml` + GitHub Settings | `VITE_DATA_BACKEND=supabase`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. publishable 키만 (비밀 키 `sb_secret_…`는 절대 넣지 않아요) | ⬜ |
 | 9 | **법률 문서의 "확인 필요" 채우기** | `src/constants/legalInfo.js` | 아래 3장 표 참고. 빈 칸은 화면에 노란 "[확인 필요]"로 보여요 | ⬜ |
 | 10 | 카카오 콘솔 확인 | Kakao Developers | JavaScript 키의 허용 도메인(이미 확인됨), 쿼터 확인 | ✅ 도메인 확인됨 |
@@ -49,6 +50,7 @@
 
 - **대시보드에서 함수 코드를 다시 배포하면 Verify JWT가 "켜짐"으로 되돌아갈 수 있어요.** `register-bakery`가 실제로 그랬어요. 두 함수(`register-bakery`, `delete-account`)는 모두 함수가 스스로 토큰을 검증하므로 **꺼 둔 상태가 기준**이에요.
 - 배포 뒤 확인법: 로그인 없이 `POST`를 보내서, 응답이 **앞단**(`code: UNAUTHORIZED_…`, "Missing authorization header")이면 켜짐이고, **함수**(`error.code: NOT_SIGNED_IN`)이면 꺼짐이에요. `node supabase/check-live.mjs`가 응답 모양까지 확인해요.
+- **메일 템플릿(Confirm sign up 등)에 잘못된 HTML을 넣으면 가입 자체가 500으로 실패해요** (Auth Logs: `html/template: ... in unquoted attr`). 템플릿을 바꿀 때마다 가입 · 재설정을 한 번씩 실제로 시험해요.
 - 설정 변경 직후에는 함수가 다시 뜨면서 **503이 한두 번 나올 수 있어요.** 반복되면 Edge Functions → 해당 함수 → Logs를 확인해요.
 
 ## 3. 법률 문서: 사용자가 확인해야 하는 항목
@@ -77,9 +79,10 @@
 
 계정 2개(일반 A, 운영자 B)로 확인해요. **먼저 `git tag main-before-account-mode main`으로 되돌릴 지점을 만들어 둬요.**
 
-- [ ] 새 이메일 가입 → 인증 메일 도착 → 링크 → 로그인 (가입 화면의 약관 동의 체크 필수 확인)
+- [x] 새 이메일 가입 → 인증 메일 도착 → 링크 → 로그인 (**로컬에서 성공, 2026-10-15**. 운영 주소에서는 공개 직후 다시)
+  - 약관 동의 체크가 필수로 동작했는지는 사용자 보고에 없어요 → 확인 필요
 - [ ] 계정 정보에 `terms_version` · `terms_agreed_at`이 기록됐는지 (Authentication → Users → 해당 사용자 → User Metadata)
-- [ ] **비밀번호 찾기** → 메일 → (같은 브라우저에서) 링크 → 새 비밀번호 → 다른 기기 로그아웃됨 → 새 비밀번호로 로그인
+- [ ] **비밀번호 찾기** → 메일 → (같은 브라우저에서) 링크 → 새 비밀번호 → 다른 기기 로그아웃됨 → 새 비밀번호로 로그인 (**메일 도착까지만 확인됨**, 링크 이후 단계는 미확인)
 - [ ] 리뷰 작성 · 사진 · EXP · 랭킹 (기존 흐름)
 - [ ] **신고**: A가 B의 글 · 댓글 · 리뷰 신고 → 중복 신고 거부 → 내 글에는 버튼이 없음
 - [ ] **운영자 처리**: B로 `#/admin/reports` 주소로 접속 → 반려 / 삭제하고 처리 → 사진 파일까지 지워지는지 (Storage 확인)
@@ -123,6 +126,9 @@
 - Free 한도(DB · 파일 저장 · 전송량), 프로젝트 자동 정지(일정 기간 활동이 없으면), 카카오 쿼터는 베타 중 주 1회 확인하세요. 사진이 가장 먼저 한도에 닿을 거예요
 
 ## 6. 베타 공개 후 개선 가능 (이번 범위 밖)
+
+- 가입 인증 · 비밀번호 재설정 **메일 디자인 개선** (지금은 단순 템플릿. 복잡한 HTML은 템플릿 파싱 오류로 가입이 500이 된 적이 있어 한 번에 조금씩, 가입 시험으로 확인하며)
+- **오류 문구 실제 유형 점검**: `authMessages.js`의 502/503/504 분기(9e83411)는 추측으로 만들었어요. 실제 SMTP 실패는 Auth 로그 500이었는데 화면에는 "서버에 연결하지 못했어요"가 떴어요(브라우저가 오류 응답을 못 읽었을 가능성, 미확인). 개발자 도구 Network 탭에서 500 응답이 어떻게 보이는지 확인한 뒤, 서버 쪽 실패(메일 발송 실패 포함)를 별도 안내로 나눌지 결정
 
 - 사용자별 사진 개수 제한 · 오래된 고아 파일 정리
 - `register-bakery` 호출 제한을 DB 기반으로 (지금은 함수 인스턴스별 "최선의 노력")
