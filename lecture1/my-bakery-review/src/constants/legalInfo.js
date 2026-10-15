@@ -18,6 +18,7 @@ export const LEGAL_INFO = {
   dataRegion: '대한민국 서울 (Supabase 주 데이터베이스, ap-northeast-2)', // Supabase 대시보드에서 확인 (2026-10-15). 데이터베이스 위치만이에요 — 외부 서비스 위치와 섞지 않아요
   mailProvider: 'Brevo', // 인증 · 재설정 메일 발송 서비스 (Custom SMTP를 정한 뒤)
   mailProviderRegion: '', // 메일 발송 서비스가 메일 주소를 처리하는 서버 위치 (Brevo 공식 문서 · 계정 설정에서 확인)
+  mailLogRetention: '발송 후 1개월이며, 이후 삭제돼요(삭제에는 최대 24시간이 걸릴 수 있어요). 메일 본문 미리보기는 저장하지 않아요', // Brevo 설정 확인(사용자, 2026-10-15): 적용 대상 All senders · 발송 로그 1개월 · Never store previews
   minimumAge: '', // 가입 가능한 최소 나이 (예: 만 14세 이상 가입 제한 여부)
   logRetention: '약 1일 (Supabase 무료 플랜 기준이며, 인증 관련 기록은 약 1시간이에요. 플랜이 바뀌면 달라질 수 있어요)', // Supabase Free 플랜 공식 문서 기준(2026-10-15, 플랜은 사용자 확인). 메일 서비스(Brevo)의 발송 기록은 포함하지 않아요
   backupRetention: '', // 백업본에 탈퇴한 사용자의 정보가 남는 기간
@@ -36,6 +37,7 @@ export const LEGAL_INFO_LABELS = {
   mailProviderRegion: '메일 발송 서비스 처리 위치',
   minimumAge: '가입 가능 최소 나이',
   logRetention: '접속 기록 보관 기간',
+  mailLogRetention: '메일 발송 기록 보관 기간',
   backupRetention: '백업 보관 기간',
   reportRetention: '신고 기록 보관 기간',
   jurisdiction: '관할 법원',
