@@ -11,12 +11,12 @@ export const LEGAL_INFO = {
   serviceUrl: 'https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/',
 
   // ── 운영자가 확인해서 채울 값 (빈 칸 = 확인 필요) ──
-  operatorName: '', // 운영자(개인 또는 사업자) 이름
-  contactEmail: '', // 문의 · 신고 · 개인정보 요청을 받을 이메일
-  privacyOfficer: '', // 개인정보 보호책임자 (이름과 연락처)
-  effectiveDate: '', // 시행일 (예: 2026년 11월 1일)
+  operatorName: '빵덕후 레벨업 (사업자등록 없는 개인 프로젝트, 무료 서비스)', // 운영자(개인 또는 사업자) 이름
+  contactEmail: 'bbanglevelup@gmail.com', // 문의 · 신고 · 개인정보 요청을 받을 이메일
+  privacyOfficer: '김유리 (bbanglevelup@gmail.com)', // 개인정보 보호책임자 (이름과 연락처)
+  effectiveDate: '2026년 11월 1일', // 시행일 — 베타 공개 일정이 바뀌면 이 값만 고치면 돼요 (방침 · 약관에 자동 반영)
   dataRegion: '', // Supabase 프로젝트의 데이터 저장 지역 (대시보드 Project Settings에서 확인)
-  mailProvider: '', // 인증 · 재설정 메일 발송 서비스 (Custom SMTP를 정한 뒤)
+  mailProvider: 'Brevo', // 인증 · 재설정 메일 발송 서비스 (Custom SMTP를 정한 뒤)
   minimumAge: '', // 가입 가능한 최소 나이 (예: 만 14세 이상 가입 제한 여부)
   logRetention: '', // 접속 기록 · 서버 로그 보관 기간 (Supabase 설정 확인 후)
   backupRetention: '', // 백업본에 탈퇴한 사용자의 정보가 남는 기간

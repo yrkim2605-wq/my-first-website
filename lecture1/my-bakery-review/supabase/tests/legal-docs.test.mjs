@@ -21,8 +21,10 @@ const docs = { 개인정보처리방침: PRIVACY_POLICY, 이용약관: TERMS_OF_
 const allText = JSON.stringify(docs)
 
 // ── 임의로 채우지 않았는지 ──
-check('운영자 · 문의처 · 책임자 · 시행일 등은 비어 있어요 (확인 전에는 채우지 않아요)', Object.keys(LEGAL_INFO_LABELS).every((key) => LEGAL_INFO[key] === ''), JSON.stringify(getPendingLegalKeys()))
-check('확인 필요 항목 목록이 이름표와 같아요', getPendingLegalKeys().length === Object.keys(LEGAL_INFO_LABELS).length)
+const CONFIRMED_LEGAL_KEYS = ['operatorName', 'contactEmail', 'privacyOfficer', 'effectiveDate', 'mailProvider']
+check('운영자가 확정한 값은 채워져 있어요', CONFIRMED_LEGAL_KEYS.every((key) => String(LEGAL_INFO[key]).trim() !== ''), JSON.stringify(getPendingLegalKeys()))
+check('아직 확정하지 않은 값은 비어 있어요 (임의로 채우지 않아요)', Object.keys(LEGAL_INFO_LABELS).filter((key) => !CONFIRMED_LEGAL_KEYS.includes(key)).every((key) => LEGAL_INFO[key] === ''), JSON.stringify(getPendingLegalKeys()))
+check('확인 필요 항목 목록은 확정하지 않은 값만 남아요', getPendingLegalKeys().length === Object.keys(LEGAL_INFO_LABELS).length - CONFIRMED_LEGAL_KEYS.length)
 check('문서 버전이 있어요', typeof LEGAL_VERSION === 'string' && LEGAL_VERSION.length > 0)
 check('본문에 이메일 주소 · 전화번호 · 사업자번호처럼 보이는 값이 들어 있지 않아요', !/[\w.-]+@[\w-]+\.[a-z]{2,}/i.test(allText.replace(/privacy\.kisa\.or\.kr/g, '')) && !/\d{2,3}-\d{3,4}-\d{4}/.test(allText) && !/\d{3}-\d{2}-\d{5}/.test(allText))
 
