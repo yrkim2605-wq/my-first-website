@@ -19,8 +19,7 @@ export const LEGAL_INFO = {
   mailProvider: 'Brevo', // 인증 · 재설정 메일 발송 서비스 (Custom SMTP를 정한 뒤)
   mailProviderRegion: '', // 메일 발송 서비스가 메일 주소를 처리하는 서버 위치 (Brevo 공식 문서 · 계정 설정에서 확인)
   minimumAge: '', // 가입 가능한 최소 나이 (예: 만 14세 이상 가입 제한 여부)
-  logRetention: '', // 접속 기록 · 서버 로그 보관 기간 (Supabase 설정 확인 후)
-  backupRetention: '', // 백업본에 탈퇴한 사용자의 정보가 남는 기간
+  logRetention: '약 1일 (Supabase 무료 플랜 기준이며, 인증 관련 기록은 약 1시간이에요. 플랜이 바뀌면 달라질 수 있어요)', // Supabase Free 플랜 공식 문서 기준(2026-10-15, 플랜은 사용자 확인). 메일 서비스(Brevo)의 발송 기록은 포함하지 않아요  backupRetention: '', // 백업본에 탈퇴한 사용자의 정보가 남는 기간
   reportRetention: '', // 처리가 끝난 신고 기록을 보관하는 기간
   jurisdiction: '', // 분쟁이 생겼을 때의 관할 법원
 }
