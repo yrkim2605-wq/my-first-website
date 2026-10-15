@@ -1,0 +1,79 @@
+# ⚠️ 초안이에요. 이 파일은 "비공개" 백업 전용 저장소의 .github/workflows/backup-db.yml 로 옮겨 쓸 거예요.
+#    이 공개 저장소(my-first-website)에는 절대 넣지 않아요. (설정 방법: docs/backup/README.md)
+#
+# 하는 일: 주 1회 Supabase DB(public + auth)를 내보내서 → 암호화하고 → 30일 보관 후 자동 삭제되는 Artifact로 올려요.
+# 방침과의 연결: 개인정보처리방침 "백업본은 만든 날부터 30일이 지나면 삭제해요" = 아래 retention-days: 30
+
+name: backup-db
+
+on:
+  schedule:
+    - cron: '0 18 * * 0' # 매주 일요일 18:00 UTC = 월요일 03:00 KST
+  workflow_dispatch: {} # 수동 실행 (첫 시험용)
+
+permissions:
+  contents: read # 이 저장소 코드를 읽는 권한만. 쓰기 권한은 필요 없어요
+
+concurrency:
+  group: backup-db
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: PostgreSQL 17 클라이언트 설치
+        # Supabase 서버 버전보다 같거나 높은 pg_dump가 필요해요 (낮으면 거부돼요)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -q
+          sudo apt-get install -y -q curl ca-certificates gnupg age
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -q
+          sudo apt-get install -y -q postgresql-client-17
+          pg_dump --version
+
+      - name: DB 내보내기 (public + auth)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          umask 077
+          # 접속 주소는 환경변수로만 쓰고, 로그에 값을 찍지 않아요 (set -x 금지)
+          # public: 앱 데이터(일지 · 글 · 댓글 …) / auth: 가입 계정(이메일 · 비밀번호 해시). 사진 파일(Storage)은 포함되지 않아요
+          pg_dump "$SUPABASE_DB_URL" \
+            --format=custom --no-owner --no-privileges \
+            --schema=public --schema=auth \
+            --file=backup.dump
+
+      - name: 내보낸 파일이 정상인지 확인
+        run: |
+          set -euo pipefail
+          test -s backup.dump
+          # 목차를 읽을 수 있으면 파일이 깨지지 않은 거예요 (내용은 출력하지 않고 개수만 확인)
+          count=$(pg_restore --list backup.dump | wc -l)
+          echo "목차 항목 수: ${count}"
+          test "${count}" -gt 20
+
+      - name: 암호화 (age)
+        env:
+          AGE_PUBLIC_KEY: ${{ secrets.AGE_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          stamp=$(date -u +%Y%m%d-%H%M)
+          age --recipient "$AGE_PUBLIC_KEY" --output "bakery-db-${stamp}.dump.age" backup.dump
+          rm -f backup.dump # 암호화하지 않은 파일은 바로 지워요
+          ls -l bakery-db-*.dump.age
+          echo "ARTIFACT_FILE=bakery-db-${stamp}.dump.age" >> "$GITHUB_ENV"
+
+      - name: 올리기 (30일 뒤 자동 삭제)
+        uses: actions/upload-artifact@v4
+        with:
+          name: bakery-db-backup
+          path: ${{ env.ARTIFACT_FILE }}
+          retention-days: 30 # ← 방침의 "30일"과 같은 값이에요. 바꾸면 방침도 함께 바꿔야 해요
+          if-no-files-found: error
