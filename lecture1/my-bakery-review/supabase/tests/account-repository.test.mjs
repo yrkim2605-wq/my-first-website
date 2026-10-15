@@ -21,7 +21,7 @@ globalThis.window = {
 }
 
 const { createAccountRepository, validateSignUpInput } = await load('/src/storage/accountRepository.js')
-const { messageForCallbackError, AUTH_NETWORK_MESSAGE } = await load('/src/storage/authMessages.js')
+const { messageForCallbackError, AUTH_NETWORK_MESSAGE, toAuthError } =await load('/src/storage/authMessages.js')
 const { isSecretKey } = await load('/src/lib/backend.js')
 
 let passed = 0
@@ -264,6 +264,16 @@ check('재설정 요청 이메일 형식 오류', (await rejects(repoFor({}).rep
   check('재설정 메일 한도 초과 안내 + 표식은 남기지 않아요', (await rejects(repo.requestPasswordReset('a@b.co')))?.code === 'EMAIL_RATE_LIMIT' && marker.fresh === false)
 }
 check('재설정 요청 네트워크 오류 안내', (await rejects(repoFor({ networkDown: true }).repo.requestPasswordReset('a@b.co')))?.code === 'NETWORK')
+for (const status of [502, 503, 504]) {
+  const { repo, marker } = repoFor({ resetError: Object.assign(new Error('x'), { name: 'AuthRetryableFetchError', status }) })
+  const error = await rejects(repo.requestPasswordReset('a@b.co'))
+  check(`재설정 요청 서버 ${status} → 서버 응답 안내(인터넷 탓 아님) + 표식 안 남김`, error?.code === 'SERVER_UNAVAILABLE' && !/인터넷/.test(error.message) && marker.fresh === false, error?.message)
+}
+check('상태 없는 AuthRetryableFetchError · TypeError는 계속 NETWORK', ['AuthRetryableFetchError', 'TypeError'].every((name) => {
+  const e = name === 'TypeError' ? new TypeError('Failed to fetch') : Object.assign(new Error('fetch failed'), { name, status: 0 })
+  return toAuthError(e).code === 'NETWORK'
+}))
+check('500 오류는 서버 응답 안내로 바꾸지 않아요', toAuthError(Object.assign(new Error('x'), { name: 'AuthApiError', status: 500, code: 'unexpected_failure' })).code !== 'SERVER_UNAVAILABLE')
 {
   currentUrl = 'http://localhost:5173/my-first-website/my-bakery-review/?code=abc123#/'
   const recent = new Date(Date.now() - 60 * 1000).toISOString()

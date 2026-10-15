@@ -23,6 +23,13 @@ const BY_CODE = {
   user_banned: ['USER_BANNED', '이용이 제한된 계정이에요.'],
 }
 
+// 서버까지는 갔지만 서버가 502/503/504로 답한 경우예요 (예: 인증 메일을 보내는 서버에 연결하지 못해 시간이 초과됨).
+// 이용자의 인터넷 문제가 아니므로 "인터넷 연결을 확인하세요"라고 하지 않아요.
+export const AUTH_SERVER_MESSAGE = '서버가 잠시 응답하지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 문의처로 알려 주세요. (아무것도 저장되지 않았어요)'
+const SERVER_UNAVAILABLE_STATUSES = [502, 503, 504]
+const isServerUnavailable = (error) =>
+  error?.name === 'AuthRetryableFetchError' && SERVER_UNAVAILABLE_STATUSES.includes(Number(error?.status))
+
 const looksLikeNetworkError = (error) =>
   error?.name === 'AuthRetryableFetchError' ||
   error instanceof TypeError ||
@@ -31,6 +38,7 @@ const looksLikeNetworkError = (error) =>
 // error: supabase-js의 오류 객체 (또는 임의의 Error)
 export const toAuthError = (error) => {
   if (error instanceof RepositoryError) return error
+  if (isServerUnavailable(error)) return new RepositoryError('SERVER_UNAVAILABLE', AUTH_SERVER_MESSAGE)
   if (looksLikeNetworkError(error)) return new RepositoryError('NETWORK', AUTH_NETWORK_MESSAGE)
 
   const mapped = BY_CODE[error?.code]
