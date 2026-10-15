@@ -43,3 +43,21 @@
 | 폴더 권한 | `edb` 폴더 접근은 내 계정(`USER`)만 (상위 폴더에서 상속) |
 
 **새로 생긴 주의할 파일 (실행하지 않았어요):** `installer\vcredist_x64.exe` · `vcredist_x86.exe`(런타임 설치 프로그램), `installer\server\createuser.exe` · `validateuser.exe` · `initcluster.ps1` · `getlocales.ps1`(전체 설치 때 서비스 계정을 만들고 클러스터를 초기화하는 도우미), `scripts\runpsql.bat` 등. **이 파일들은 실행하지 않아요.** 서버가 필요하면 `bin\initdb.exe` · `bin\pg_ctl.exe`를 직접 쓰는 계획이에요(별도 승인).
+
+## 2026-10-15 · 3단계(관문 A): 빈 클러스터 초기화 + 로컬 인증 설정 (서버는 시작하지 않음, 가짜 데이터 없음)
+
+**승인 범위:** 임의 비밀번호 생성 · `initdb` · 로컬 인증 설정까지. 서버 시작(`pg_ctl start`) · DB 생성 · 가짜 데이터 · 복구 시험은 하지 않았어요.
+
+| 항목 | 결과 |
+|---|---|
+| 사전 점검 | 핵심 실행 파일 6개 해시 기록과 동일, 관리자(올린 권한) 세션 아님, `PG*`/`DATABASE_URL`/`SUPABASE*` 환경변수 0개, 54329 포트 비어 있음, PostgreSQL 프로세스 0개, `data`/`logs`/`secrets` 아직 없음 — 모두 통과. 시작 전 스냅샷 `before-server.txt` 저장 |
+| 비밀번호 | 암호학적 난수로 24자 생성 → `pg\secrets\pg-test-pw.txt`(24바이트). **화면 · 로그 · Git · 문서에 값을 남기지 않았어요.** `data` 폴더 전체를 검색해 평문이 들어 있는 파일 0개 확인 |
+| `secrets` 접근 권한 | 상속을 끊고 현재 사용자(`USER`) 전체 권한만 (`icacls`로 확인). 비밀번호 파일 · `logs` · `data`도 `USER`만, 소유자 `USER` |
+| `initdb` 명령 | `initdb.exe -D C:\bakery-secure\pg\data -U postgres --pwfile=C:\bakery-secure\pg\secrets\pg-test-pw.txt -A scram-sha-256 -E UTF8 --locale=C` (경로가 `pg` 안, OneDrive 밖, 미존재임을 확인한 뒤 실행). 종료 코드 0, `Success.` |
+| 클러스터 | 파일 969개 · 폴더 26개 · 39.2MB. 로케일 `C`, 시간대 `Asia/Seoul`, 기본 `max_connections=100`/`shared_buffers=128MB`(→ 아래에서 축소), 데이터 체크섬 꺼짐 |
+| 로컬 인증 설정 | `pg_hba.conf`: initdb 기본(6줄: local/host 127.0.0.1/::1/replication)을 **`host all all 127.0.0.1/32 scram-sha-256` 한 줄**로 축소 (원본은 `pg_hba.conf.initdb-original`로 보관). `postgresql.conf` 끝에 `listen_addresses='127.0.0.1'`, `port=54329`, `max_connections=20`, `shared_buffers=32MB`, 접속 기록 켜기 추가 |
+| 시스템 변경 | `before-server` ↔ `after-initdb` 스냅샷: 서비스 · 계정 · 그룹 · 방화벽 · 레지스트리 · PATH · 열린 포트 · 예약 작업 · 프로세스 · 폴더 **전부 차이 0.** 차이는 `C:\bakery-secure\pg` 아래의 새 파일뿐 (`data` 24줄, `logs` · `secrets` · `snapshots`). `C:\bakery-secure` 밖 차이 없음 |
+| 서버 상태 | PostgreSQL 프로세스 0, 5432 · 54329 리스닝 없음, `postmaster.pid` 없음, 서비스 0 |
+| 유지한 것 | 기존 zip(`pg17.zip`)과 압축 푼 `pgsql\` 폴더는 건드리지 않았어요 |
+
+**참고:** `initdb`의 마지막 안내문이 `pg_ctl … start` 명령을 보여주지만 **실행하지 않았어요.** 관문 B(서버 시작 · 접속 확인 · 시험 DB 생성)는 별도 승인 대기예요.
