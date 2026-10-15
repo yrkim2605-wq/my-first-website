@@ -217,6 +217,8 @@ Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue   # 5) 현재 창의 �
 
 ## 10. F2 실행 계획: `--extract-only 1` (사용자 결정 2026-10-15) — 실행 전 확인용, 아직 실행하지 않았어요
 
+> **최신 명령은 10-9 (대화형 · 최소 옵션 2개)예요.** 10-2의 명령과 10-8의 수정 명령은 이전 단계의 기록이고, 사용자 최종 승인은 10-9 기준으로 받아요. `--prefix` · `-WorkingDirectory`는 저장 위치를 정할 뿐 다른 경로의 쓰기를 막는 보안 장치가 아니에요(10-9 (2)).
+
 > 범위: **PostgreSQL 파일 추출까지만.** 서버 시작(`initdb` · `pg_ctl`)과 복구 시험은 별도 승인. 실제 Supabase 회원 데이터 사용 · 외부 업로드 · 운영 키 생성 · 자동 백업 실행은 하지 않아요.
 > 관리자 권한(UAC)은 **사용자가 직접 승인**해요. Claude는 권한을 우회하거나 임의로 올리지 않아요.
 
@@ -324,3 +326,51 @@ Start-Process -FilePath $installer -ArgumentList $installerArgs -WorkingDirector
 **비교 준비:** 서명 없는 zip의 `pgsql\` 파일 20,489개(956MB, `bin` · `doc` · `include` · `lib` · `pgAdmin 4` · `share` · `StackBuilder` + 라이선스 txt)의 SHA256 목록을 `C:\bakery-secure\pg\snapshots\zip-file-hashes.txt`에 저장했어요. 추출 결과와 파일별로 비교해요.
 
 **진행 순서 (사용자 확인 후):** ① 해시 · 서명 재확인 ② 스냅샷 `before.txt` ③ UAC 창 띄움 → 사용자가 게시자(`EnterpriseDB Corporation`)를 확인하고 직접 승인 (비밀번호 · 다른 계정을 요구하면 중단) ④ 프로세스 종료 대기 · 로그 확인 ⑤ 스냅샷 `after.txt` + diff ⑥ 추출 파일 목록 · zip과 해시 비교 ⑦ 보고. **서버 시작과 복구 시험은 하지 않아요.**
+
+### 10-9. 대화형(마법사) 실행 검토와 최소 옵션 명령 (2026-10-15, 사용자 요청) — 아직 실행하지 않았어요
+
+**(1) `--extract-only`를 `--mode unattended` 없이 대화형으로 실행할 수 있나?**
+- **문서 근거 (EDB 구버전 안내서, EDB Postgres Advanced Server v11 Windows 설치 안내서 3.2.2 "제한된 권한으로 설치"):** "`--extract-only` 옵션을 포함하면 설치 프로그램은 **설정 마법사의 축약된 형태를 단계별로 보여준다**(steps through a shortened form of the Setup wizard)." 같은 안내서는 이 옵션이 바이너리를 "변경 없이 꺼낸다"고 하고, 짧은 설치 중에 **나중에 쓸 수 있는 설치 스크립트를 생성한다**고 해요.
+- 그러므로 **대화형(마법사) 실행은 문서상 가능**해요. 무인 모드는 필수가 아니에요. 사용자가 직접 화면을 보며 진행할 수 있어요.
+- ⚠️ 한계: 이 안내서는 **EPAS(EDB Postgres Advanced Server) 11 (2019)** 문서예요. 우리는 **PostgreSQL 17.11-5 설치 프로그램**을 써요. 같은 설치 프로그램 계열(BitRock)이지만 PostgreSQL 17에서 같은 화면이 나오는지는 **실행해 봐야 알 수 있어요.** 최신 EPAS v18 참고 문서는 이 옵션이 GUI/무인 모드 중 어느 쪽에서 쓰이는지 말하지 않아요.
+- 값 표기가 문서마다 달라요: PostgreSQL 명령줄 문서는 `--extract-only` 기본값을 `0`(no)으로 적고(그래서 `1`), EPAS 문서는 `{ yes | no }`로 적어요. `1`로 먼저 시도하고, 축약 마법사가 아니라 **전체 마법사**(Password · Port 화면이 나옴)가 뜨면 값이 무시된 것이므로 즉시 **취소**하고 `yes`로 한 번 더 시도할지 상의해요.
+- 추가로 문서에서 확인한 것: `--enable-components`는 "아무 효과가 없다"고 안내서에 적혀 있어요 → 쓰지 않아요. 구성요소를 줄이려면 `--disable-components`뿐인데 `--extract-only`와의 조합은 불확실하므로 쓰지 않고, **마법사의 구성요소 선택 화면이 나오면 화면에서 직접 pgAdmin 4 · Stack Builder를 해제**해요.
+
+**(2) `--prefix`와 `-WorkingDirectory`의 성격 (명시)**
+> ⚠️ **`--prefix`(설치 프로그램 옵션)와 `Start-Process -WorkingDirectory`(PowerShell 옵션)는 파일을 "어디에 둘지" 정하는 값일 뿐, 다른 시스템 경로에 대한 쓰기를 막는 보안 장치가 아니에요.** 관리자 권한으로 실행되는 설치 프로그램은 그 권한으로 `C:\Program Files`, `C:\ProgramData`, 레지스트리, 서비스 등 어디든 쓸 수 있어요. 이 옵션들이 무시되거나, 설치 프로그램이 일부 파일을 다른 곳에 쓰더라도 Windows가 막아주지 않아요. 그래서 **안전 확인은 이 옵션이 아니라 (a) 사람이 화면에서 경로를 확인하는 것, (b) 실행 전후 스냅샷 비교, (c) 중단 조건**으로 해요.
+
+**(3) 공식 문서에서 확인 가능한 최소 옵션 명령**
+```powershell
+$installer = 'C:\bakery-secure\pg\download\postgresql-17.11-5-windows-x64.exe'
+New-Item -ItemType Directory -Path 'C:\bakery-secure\pg\work' -Force | Out-Null
+Start-Process -FilePath $installer `
+  -ArgumentList @('--extract-only', '1', '--prefix', 'C:\bakery-secure\pg\edb') `
+  -WorkingDirectory 'C:\bakery-secure\pg\work' -Verb RunAs
+```
+| 옵션 | 문서 | 왜 필요한가 |
+|---|---|---|
+| `--extract-only 1` | PostgreSQL 명령줄 문서 ✅ / EPAS 문서 ✅ (`yes\|no`) | 설치 없이 바이너리만 꺼냄 |
+| `--prefix C:\bakery-secure\pg\edb` | PostgreSQL 명령줄 문서 ✅ ("설치 디렉터리") | 마법사의 "Installation Directory" 칸을 **미리 채워서** 사용자가 화면에서 확인하게 함. 화면에 다른 경로(예: `C:\Program Files\PostgreSQL\17`)가 보이면 무시된 것이므로 취소 |
+- **뺀 옵션:** `--mode unattended`, `--unattendedmodeui`(대화형이라 불필요), `--disable-components`(조합 불확실, 화면에서 해제), `--install_runtimes 0`, `--create_shortcuts 0`, `--debuglevel`, `--debugtrace`(최소화 원칙). 
+- **뺀 것의 위험:** `--install_runtimes`는 기본값이 `1`이라 설치 프로그램이 Visual C++ 런타임 설치를 시도할 수 있어요. 이 PC에는 이미 있으므로(`vcruntime140.dll` 등) 같은 버전이면 "이미 설치됨"으로 끝나는 것이 보통이지만 **확인하지는 못했어요.** 스냅샷(설치된 프로그램 목록)으로 확인해요. 원하시면 `--install_runtimes 0`을 추가할 수 있어요(문서에 있는 옵션이지만 `--extract-only`와의 조합은 불확실).
+- **로그:** `--debugtrace`를 뺐으므로 설치 프로그램 로그 파일은 없어요. 대신 사용자가 보는 화면과 전후 스냅샷으로 판단해요.
+
+**(4) 예상 화면 (문서 근거 수준을 함께 표시)**
+| 순서 | 화면 | 근거 | 사용자가 할 일 |
+|---|---|---|---|
+| 0 | **UAC 창** — 게시자 `EnterpriseDB Corporation` | 서명 `Valid` 🔎 | 게시자 확인 후 직접 "예". **비밀번호 · 다른 계정을 요구하면 취소** |
+| 1 | 설치 프로그램 시작 / **Welcome** | PostgreSQL 문서 ✅ (축약판에도 있는지 ❓) | Next |
+| 2 | **Installation Directory** | PostgreSQL 문서 ✅ | 칸에 `C:\bakery-secure\pg\edb` 가 보이는지 **확인**. 아니면 취소 |
+| 3 | **Select Components** | PostgreSQL 문서 ✅ (축약판에도 있는지 ❓) | PostgreSQL Server · Command Line Tools만 두고 **pgAdmin 4 · Stack Builder 해제** |
+| 4 | (가능) Pre Installation Summary / **Ready to Install** | PostgreSQL 문서 ✅ (❓) | 요약에 **데이터 폴더 · 포트 · 서비스 · 계정**이 보이면 취소. 설치 경로와 구성요소만 보이면 Next |
+| 5 | **Installing** (진행 막대) | PostgreSQL 문서 ✅ | 기다리기 |
+| 6 | 완료 화면 (Stack Builder 실행 체크박스가 있을 수 있음) | PostgreSQL 문서 ✅ | **Stack Builder 체크 해제** 후 Finish (다운로드 도구가 실행되지 않게) |
+
+**나타나면 안 되는 화면 (하나라도 보이면 즉시 취소하고 알려요):** Data Directory(데이터 폴더), Password(슈퍼유저/서비스 계정 비밀번호), Port, Advanced Options(로케일), Windows 서비스 · 계정 입력. 이런 화면이 나온다는 건 `--extract-only`가 무시되고 **전체 설치로 진행**된다는 신호예요. 전체 설치는 승인 범위 밖이에요.
+
+**(5) 예상되는 추가 파일**
+- 안내서에 따르면 축약 설치 중에 **설치 스크립트가 생성**돼요(위치 · 이름은 문서에 없음). 이 스크립트는 **실행하지 않아요**(관리자 권한으로 클러스터 초기화 · 서비스 시작 등록을 하는 스크립트라고 문서에 적혀 있어요). 생성된 파일은 목록에 기록만 해요.
+- 스크립트 모드 설명에 "메뉴 바로가기를 만들지 않고 레지스트리를 수정하지 않는다"는 문장이 있지만, 이는 *설치 스크립트로 설치할 때*의 설명이라서 **추출 단계에서 레지스트리를 쓰는지는 여전히 스냅샷으로 확인해야 해요.**
+
+**(6) 실행 순서 (사용자 최종 승인 후)** 
+① 해시 · 서명 재확인 ② `before.txt` 스냅샷 ③ 위 명령 실행 → UAC 창 → 사용자 승인 ④ 마법사 화면을 사용자가 보면서 진행 (제가 화면 내용을 대신 읽을 수는 없으므로 각 화면에서 보이는 것을 알려 주세요) ⑤ 종료 후 `after.txt` + diff ⑥ 추출 파일 목록 · zip 해시 비교 ⑦ 보고. **서버 시작 · 복구 시험은 하지 않아요.**
