@@ -5,6 +5,11 @@
 // 문서 버전: 약관을 바꾸면 이 값도 바꿔요. 가입할 때 "어느 버전에 동의했는지"가 계정에 기록돼요.
 export const LEGAL_VERSION = '2026-10-draft1'
 
+// 문서 상태: 'draft'이면 확인 필요 항목이 하나도 없어도 화면 위에 "초안" 안내를 계속 보여줘요 (사용자 결정 2026-10-15).
+// ⚠️ 이 안내는 개발자 전용이 아니에요 — /privacy · /terms를 여는 모든 방문자에게 보여요.
+//    법률 전문가 검토를 마치고 정식 문서로 확정할 때만 'final'로 바꿔요 (그때 안내가 사라져요).
+export const LEGAL_DOCUMENT_STATUS = 'draft'
+
 export const LEGAL_INFO = {
   // ── 이미 정해진 값 ──
   serviceName: '빵덕후 레벨업',

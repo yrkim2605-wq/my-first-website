@@ -64,6 +64,24 @@ check('방침은 위치 정보를 수집하지 않는다고 밝혀요 (코드에
 const terms = JSON.stringify(TERMS_OF_SERVICE)
 check('약관에 베타 · 금지행위 · 게시물 권리 · 신고 · 탈퇴 조항이 있어요', ['베타', '금지 행위', '게시물의 권리', '신고', '회원 탈퇴'].every((word) => terms.includes(word)))
 
+// ── 초안 안내: 확인 필요 항목이 0개여도 계속 보이는지 (사용자 결정 2026-10-15) ──
+//   이 안내는 개발자 전용이 아니라 /privacy · /terms를 여는 모든 방문자에게 보여요 (화면 코드에 DEV 조건이 없어야 해요).
+{
+  const { createElement: h } = await import('react')
+  const { renderToStaticMarkup } = await import('react-dom/server')
+  const { ThemeProvider } = await import('@mui/material/styles')
+  const { MemoryRouter } = await import('react-router-dom')
+  const { default: theme } = await load('/src/theme.js')
+  const { LEGAL_DOCUMENT_STATUS } = await load('/src/constants/legalInfo.js')
+  const { PrivacyPolicyPage, TermsOfServicePage } = await load('/src/pages/LegalDocument.jsx')
+  const render = (Page) => renderToStaticMarkup(h(ThemeProvider, { theme }, h(MemoryRouter, null, h(Page))))
+  check('문서 상태가 아직 초안(draft)이에요', LEGAL_DOCUMENT_STATUS === 'draft')
+  check('확인 필요 항목이 0개여도 방침 화면에 "초안" 안내가 보여요', getPendingLegalKeys().length === 0 && render(PrivacyPolicyPage).includes('<b>초안</b>이에요'))
+  check('확인 필요 항목이 0개여도 약관 화면에 "초안" 안내가 보여요', render(TermsOfServicePage).includes('<b>초안</b>이에요'))
+  const source = (await import('node:fs')).readFileSync(new URL('../../src/pages/LegalDocument.jsx', import.meta.url), 'utf8')
+  check('초안 안내는 개발 모드 전용이 아니에요 (화면 코드에 DEV 조건 없음)', !/import\.meta\.env\.(DEV|MODE|PROD)/.test(source))
+}
+
 await server.close()
 console.log(`\n통과 ${passed} · 실패 ${failures.length}`)
 if (failures.length) {

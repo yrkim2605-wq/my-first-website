@@ -214,3 +214,76 @@ Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue   # 5) 현재 창의 �
 - F1은 서비스 · OS 계정 · 레지스트리가 생기고 제거 후 잔여물 정리가 필요해서, 일회성 시험에는 과하다고 판단해요.
 - 결정 필요: ① F1 / F2 / 보류 ② UAC 승인 방식 ③ (F1일 때) 설치 위치.
 - 어느 쪽이든 UAC 창은 사용자가 직접 승인하고, 예상과 다른 권한 요청 · 검증 실패 · 오류가 나면 즉시 중단하고 알려요.
+
+## 10. F2 실행 계획: `--extract-only 1` (사용자 결정 2026-10-15) — 실행 전 확인용, 아직 실행하지 않았어요
+
+> 범위: **PostgreSQL 파일 추출까지만.** 서버 시작(`initdb` · `pg_ctl`)과 복구 시험은 별도 승인. 실제 Supabase 회원 데이터 사용 · 외부 업로드 · 운영 키 생성 · 자동 백업 실행은 하지 않아요.
+> 관리자 권한(UAC)은 **사용자가 직접 승인**해요. Claude는 권한을 우회하거나 임의로 올리지 않아요.
+
+### 10-1. 실행 직전 점검 (읽기 전용)
+1. 설치 프로그램 파일을 다시 확인: SHA256 `612c7f5400a003aaffa0372cb273eed52278f93c680ab911eb9cb2229e329072`, 크기 413,001,200바이트, Authenticode `Valid` / 서명자 `EnterpriseDB Corporation` (실행 직전에 한 번 더 — 파일이 바뀌지 않았는지)
+2. 시스템 스냅샷 **before** 저장: `C:\bakery-secure\pg\snapshots\before.txt` (스크립트는 읽기 전용, 비관리자로 약 6초, 2026-10-15 예행 연습에서 모든 항목 읽힘)
+3. 디스크 여유 확인 (C: 약 300GB), 기존 PostgreSQL 프로세스 · 서비스 없음 확인
+
+### 10-2. 정확한 명령
+```powershell
+$installer = 'C:\bakery-secure\pg\download\postgresql-17.11-5-windows-x64.exe'
+$installerArgs = @(
+  '--mode', 'unattended',
+  '--unattendedmodeui', 'minimalWithDialogs',   # 오류 · 확인 창이 있으면 화면에 보이게
+  '--extract-only', '1',                        # 설치하지 않고 바이너리만 꺼낸다 (EDB 문서)
+  '--prefix', 'C:\bakery-secure\pg\edb',        # 추출 경로
+  '--install_runtimes', '0',                    # Visual C++ 런타임 설치 건너뜀 (이 PC에 이미 있음)
+  '--create_shortcuts', '0',                    # 시작 메뉴 바로가기 만들지 않음
+  '--disable-components', 'pgAdmin,stackbuilder', # server + commandlinetools만
+  '--debuglevel', '2',
+  '--debugtrace', 'C:\bakery-secure\pg\extract-debug.log'
+)
+Start-Process -FilePath $installer -ArgumentList $installerArgs -Verb RunAs
+```
+- `-Verb RunAs`는 Windows가 **정상적인 UAC 창**을 띄우는 표준 방식이에요. 사용자가 "예"를 눌러야 실행되고 "아니오"/취소하면 아무 일도 일어나지 않아요. 제가 대신 누르거나 우회하지 않아요.
+- 사용자 계정(`USER`)이 Administrators 그룹이라서 비밀번호 입력 없는 "예/아니오" 창이 뜰 것으로 예상돼요 (비밀번호나 다른 관리자 계정을 요구하면 중단하고 알려요).
+- **다른 방법:** 사용자가 직접 "관리자 권한으로 PowerShell"을 열어 위 블록을 실행하셔도 돼요. 그 경우 완료 후 `extract-debug.log` 경로와 화면 메시지를 알려 주세요.
+- 인수 `--disable-components`가 `--extract-only`와 같이 쓰일 때 어떻게 동작하는지 문서에 없어요 → 설치 프로그램이 거부하면 그 인수만 빼고 다시 하기 전에 알려요.
+- `--superpassword`, `--serverport`, `--servicename` 등 **서버 설치용 인수는 쓰지 않아요** (서비스 · 계정을 만들지 않으려는 의도).
+
+### 10-3. 추출 경로와 예상 결과
+| 경로 | 내용 |
+|---|---|
+| `C:\bakery-secure\pg\edb\` | 추출된 PostgreSQL (예상: `bin\`, `lib\`, `share\`, `include\` 등. 설치 프로그램이 `--prefix` 아래에 버전 폴더를 한 단계 더 만들 수도 있어요 — 문서 불명확, 실행 후 확인) |
+| `C:\bakery-secure\pg\extract-debug.log` | 설치 프로그램 로그 (개인정보 없음) |
+| `C:\bakery-secure\pg\snapshots\` | 전후 스냅샷 |
+
+### 10-4. 예상 시스템 변경 (실제로는 스냅샷 비교로 확인)
+| 항목 | 예상 | 근거 · 불확실성 | 비교 방법 |
+|---|---|---|---|
+| 추출 경로의 새 파일 | **있음** (수백 MB~1GB대) | 목적 그 자체 | 폴더 크기 · 목록 |
+| `postgres` 등 Windows 서비스 | 없음 | "설치 없이 추출" (EDB 문서). 구버전 안내서는 *생성되는 스크립트*가 서비스를 만든다고 함 — **스크립트를 실행하지 않아요** | `services` 섹션 diff |
+| `postgres` Windows 사용자 계정 | 없음 | 위와 같음 | `local users` diff |
+| 방화벽 규칙 | 없음 | 서버를 시작하지 않으므로 | `firewall rules` diff |
+| 레지스트리 (설치 목록 · `HKLM\SOFTWARE\PostgreSQL`) | 없음 예상 | **확인 필요**: 추출만 하는데도 항목을 쓰는지는 문서에 없음 | `registry` 섹션 4종 diff |
+| 시작 메뉴 · 바로가기 | 없음 | `--create_shortcuts 0` | `well-known folders` diff |
+| PATH | 변경 없음 | 설치 프로그램이 PATH를 바꾸는 동작은 문서에 없음 | `PATH` diff |
+| Visual C++ 런타임 | 변경 없음 | `--install_runtimes 0` | 설치된 프로그램 목록 diff |
+| 임시 파일 (`%TEMP%`) | 있을 수 있음 | 설치 프로그램 일반 동작. 시스템 영역 아님 | 참고용 |
+| 열린 포트 · 프로세스 | 없음 (설치 프로그램 종료 후) | 서버를 시작하지 않음 | `listening ports`, `processes` diff |
+| 예약 작업 | 없음 | — | `scheduled tasks` diff |
+
+### 10-5. 실행 후 (읽기 전용 점검)
+1. 설치 프로그램 프로세스가 종료됐는지 확인, `extract-debug.log` 마지막 부분 확인 (오류 · 권한 · 서비스/계정 관련 줄)
+2. 시스템 스냅샷 **after** 저장 → `Compare-Object`로 **before와 diff**. 추출 경로 파일 외의 차이가 있으면 즉시 보고
+3. 추출 파일의 SHA256을 서명 없는 zip의 같은 파일과 비교 (`postgres.exe`, `initdb.exe`, `pg_ctl.exe`, `psql.exe`, `pg_dump.exe`, `pg_restore.exe`, 주요 dll) — 같으면 zip도 서명된 설치 프로그램과 같은 내용
+4. 추출된 파일의 서명 상태 기록 (zip과 같게 `NotSigned`일 것으로 예상: 서명은 설치 프로그램 파일 전체에 걸려 있음)
+5. 추출 폴더의 접근 권한(`icacls`)을 확인 — 내 계정과 관리자 계정만이어야 해요
+6. **실행하지 않음:** 추출된 어떤 파일도 실행하지 않아요 (`--version` 포함). 서버 시작 · 복구 시험은 별도 승인
+
+### 10-6. 중단 조건 (하나라도 해당하면 즉시 중단하고 알려요)
+- UAC 창이 뜨지 않거나, 비밀번호 · 다른 관리자 계정을 요구하는 등 예상과 다른 권한 요청
+- 설치 프로그램 해시/서명 재확인 실패
+- 설치 프로그램이 서버 설치 화면을 띄우거나 서비스 · 사용자 이름 · 비밀번호 입력을 요구
+- 로그 또는 스냅샷 diff에서 서비스 · 계정 · 방화벽 · 레지스트리 · PATH 변경이 발견됨
+- 오류 대화상자, 종료 코드/로그상 실패
+
+### 10-7. 되돌리기
+- 변경이 추출 폴더뿐이면: `C:\bakery-secure\pg\edb` 폴더 삭제로 끝 (`Test-Path`로 확인).
+- 스냅샷 diff에서 다른 변경이 발견되면: 해당 항목(서비스 · 계정 · 방화벽 · 레지스트리)을 **발견한 것만** 9-5의 수동 정리 방법으로 제거 (관리자 권한이 필요한 제거는 다시 사용자 승인).
