@@ -5,8 +5,8 @@
 #   - public 스키마 전체 (앱 데이터)
 #   - auth.users · auth.identities "데이터만" (가입 계정). 세션 · 토큰 · 감사 로그는 일부러 뺐어요
 #   ※ 사진 파일(Storage)은 백업하지 않아요 (미구현). 자세한 내용은 README
-# 30일 보관은 이중 장치예요: ① 아래 retention-days: 30 (GitHub 자동 만료) ② cleanup-backups 가 매일 28일 넘은 것을 직접 삭제
-#   → GitHub는 만료된 파일을 언제 실제로 지우는지 공식 문서에 밝히지 않아서, 자동 만료만 믿지 않아요
+# 보관 기간은 이중 장치예요 (사용자 승인 2026-10-15): ① cleanup-backups 가 매일 21일 넘은 것을 삭제 "시도" ② 아래 retention-days: 25 (GitHub 자동 만료 설정)
+#   → GitHub가 삭제/만료된 파일을 내부에서 실제로 지우는 시점은 공식 문서에 없어서, 물리적 삭제 시점은 보장하지 않아요 (우리가 정하는 것은 삭제 시도와 만료 설정)
 
 name: backup-db
 
@@ -97,10 +97,10 @@ jobs:
           ls -l bakery-db-*.tar.age
           echo "ARTIFACT_FILE=bakery-db-${stamp}.tar.age" >> "$GITHUB_ENV"
 
-      - name: 올리기 (GitHub 자동 만료 30일 + 별도 삭제 작업이 28일에 지워요)
+      - name: 올리기 (GitHub 자동 만료 25일 설정 + 별도 삭제 작업이 21일 넘은 것을 삭제 시도)
         uses: actions/upload-artifact@v4
         with:
           name: bakery-db-backup
           path: ${{ env.ARTIFACT_FILE }}
-          retention-days: 30 # ← 방침의 "30일"과 같은 값이에요. 바꾸면 방침 · cleanup-backups 도 함께 바꿔요
+          retention-days: 25 # ← 방침의 "25일 자동 만료"와 같은 값이에요. 바꾸면 방침 · cleanup-backups(21일) 도 함께 바꿔요
           if-no-files-found: error
