@@ -21,7 +21,7 @@ const docs = { 개인정보처리방침: PRIVACY_POLICY, 이용약관: TERMS_OF_
 const allText = JSON.stringify(docs)
 
 // ── 임의로 채우지 않았는지 ──
-const CONFIRMED_LEGAL_KEYS = ['operatorName', 'contactEmail', 'privacyOfficer', 'effectiveDate', 'mailProvider']
+const CONFIRMED_LEGAL_KEYS = ['operatorName', 'contactEmail', 'privacyOfficer', 'effectiveDate', 'dataRegion', 'mailProvider']
 check('운영자가 확정한 값은 채워져 있어요', CONFIRMED_LEGAL_KEYS.every((key) => String(LEGAL_INFO[key]).trim() !== ''), JSON.stringify(getPendingLegalKeys()))
 check('아직 확정하지 않은 값은 비어 있어요 (임의로 채우지 않아요)', Object.keys(LEGAL_INFO_LABELS).filter((key) => !CONFIRMED_LEGAL_KEYS.includes(key)).every((key) => LEGAL_INFO[key] === ''), JSON.stringify(getPendingLegalKeys()))
 check('확인 필요 항목 목록은 확정하지 않은 값만 남아요', getPendingLegalKeys().length === Object.keys(LEGAL_INFO_LABELS).length - CONFIRMED_LEGAL_KEYS.length)
