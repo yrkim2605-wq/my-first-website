@@ -114,7 +114,7 @@ Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue   # 5) 현재 창의 �
 
 | 경로 | 관리자 권한 | 검증 수준 | 판단 |
 |---|---|---|---|
-| **P1. 서명된 설치 프로그램을 관리자 권한 없이 실행해 `--extract-only`로 압축만 풀기** | 올리지 않음 (아래 방법) | 설치 프로그램은 EDB 서명 `Valid` + 공개 해시 일치. 꺼낸 파일의 해시를 서명 없는 zip의 파일과 비교 | **후보 1순위 (승인 필요)** |
+| ~~P1. 서명된 설치 프로그램을 관리자 권한 없이 실행해 `--extract-only`로 압축만 풀기~~ **사용자가 승인하지 않음 (2026-10-15, 관리자 권한 요청 우회 금지)** | 올리지 않음 (아래 방법) | 설치 프로그램은 EDB 서명 `Valid` + 공개 해시 일치. 꺼낸 파일의 해시를 서명 없는 zip의 파일과 비교 | 제외 (9장 참고) |
 | P2. 같은 `--extract-only`를 UAC로 관리자 1회 승인해서 실행 | 필요 | 위와 같음 | "관리자 권한 없이" 조건과 충돌 → 재승인 필요 |
 | P3. 서명 없는 zip을 해시 일치만으로 사용 | 불필요 | 무결성만, 출처 증명 없음 | 사용자가 보류함 |
 | P4. winget(`PostgreSQL.PostgreSQL.17`) 등으로 전체 설치 | 필요 | 서명 · 해시 확인 | Windows 서비스 · 레지스트리 · 시작 메뉴 변경 → 시험 목적에 과함, 제외 권고 |
@@ -137,3 +137,80 @@ Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue   # 5) 현재 창의 �
 | `C:\bakery-secure\pg\download\pg17.zip` | 381MB | 서명 없는 zip (해시 일치) |
 | `C:\bakery-secure\pg\pgsql\` | 약 1.3GB | 위 zip을 압축 푼 폴더 (실행 안 함) |
 | `C:\bakery-secure\pg\download\postgresql-17.11-5-windows-x64.exe` | 413MB | EDB 서명 설치 프로그램 (실행 안 함) |
+
+## 9. EDB 설치 프로그램 "정식" 사용 조사 (2026-10-15) — 설치하지 않았어요
+
+> 사용자 결정: **P1(RunAsInvoker)은 승인하지 않아요.** 설치 프로그램의 관리자 권한 요청을 우회하지 않고, EDB 공식 설치 프로그램을 정상적으로 쓰는 방법을 조사했어요. 아래는 조사 결과이고 **아무것도 설치 · 실행하지 않았어요.**
+> 출처 구분: ✅ = EDB 문서에 있는 내용, 🔎 = 파일에서 직접 확인, ❓ = 문서에 없어서 확인하지 못했거나 오래된 자료 기준 (설치해 봐야 알 수 있어요).
+
+### 9-1. 관리자 권한
+- ✅ "그래픽 설치 마법사로 설치하려면 슈퍼유저 또는 관리자 권한이 필요하다." (EDB 설치 가이드). 일부 Windows에서는 설치 프로그램을 우클릭해 **관리자 권한으로 실행**해야 할 수 있어요.
+- ✅ 무인 설치(`--mode unattended`)도 관리자 권한이 필요하다는 EDB 문서가 있어요 (EPAS 문서 기준, PostgreSQL 문서도 같은 취지).
+- 🔎 이 설치 프로그램의 매니페스트는 `requireAdministrator`예요. 어떤 옵션으로 실행해도 UAC 승인 요청이 떠요.
+- 지금 세션은 관리자가 아니에요. **UAC 승인은 사용자가 직접 해야 하고**, 저는 대신 승인하지 않아요.
+
+### 9-2. 정식으로 쓰는 방법 두 가지
+| | F1. 전체 설치 | F2. `--extract-only 1` (UAC 승인 후 압축만 풀기) |
+|---|---|---|
+| 하는 일 | 서버를 설치하고 Windows 서비스로 등록 | ✅ "설치를 하지 않고 PostgreSQL 바이너리만 꺼낸다" |
+| 관리자 권한 | 필요 (UAC) | 필요 (UAC, 🔎 매니페스트). 문서마다 엇갈림(❓) |
+| 시스템 변경 | 서비스 · OS 계정 · 레지스트리 · (방화벽?) 등 (아래 9-3) | 적을 것으로 예상(❓): 서비스 · 계정을 만들지 않도록 설계된 옵션. 실제 변경은 실행 전후 스냅샷으로 확인 |
+| 이후 사용 | 서비스가 서버를 운영 | 꺼낸 폴더에서 `initdb` · `pg_ctl`로 **직접** 운영 (서비스 없음, 127.0.0.1) |
+| 부가 효과 | — | 꺼낸 파일의 해시를 기존 zip과 비교해 zip의 출처를 서명된 설치 프로그램에 연결 가능 |
+| 제거 | 제어판 제거 + 수동 정리 (9-5) | 폴더 삭제 |
+
+### 9-3. F1(전체 설치)이 시스템에 만드는 것
+| 항목 | 내용 | 근거 |
+|---|---|---|
+| Windows 서비스 | 서버가 **백그라운드 서비스**로 실행돼요. 서비스 이름은 `--servicename`으로 지정 (기본 이름은 문서에 없음, 보통 `postgresql-x64-17` 형태로 알려졌지만 확인 못 함) | ✅ 서비스로 실행 / ❓ 서비스 생략 옵션은 문서에 없음, 기본 이름 · 시작 유형 |
+| 서비스 계정 | 기본 `postgres` 라는 **운영체제 계정**. 이미 있으면 그 계정의 기존 비밀번호를 입력해야 해요. 비밀번호 기본값은 DB 슈퍼유저 비밀번호와 같아요 (`--servicepassword`) | ✅ (새 로컬 사용자 계정이 만들어진다는 점은 문서의 "이미 존재하면" 표현으로 추정, ❓) |
+| 포트 | 기본 **5432**, `--serverport`로 변경 (제안: 54329) | ✅ |
+| 접속 허용 범위 | 설치 프로그램이 `listen_addresses`를 `*`(모든 인터페이스)로 두는 것으로 **2012년 EDB 글**에 나와요. 현재 동작은 확인 못 함 | ❓ → 설치 후 `postgresql.conf`를 열어 확인하고, `127.0.0.1`로 제한 (서비스 재시작 필요, 관리자) |
+| 방화벽 | 설치 프로그램이 Windows 방화벽 규칙을 만드는지 문서에 없음 | ❓ → 설치 후 `Get-NetFirewallRule`로 확인, 있으면 삭제 |
+| 설치 · 데이터 위치 | 기본 `C:\Program Files\PostgreSQL\17`, 데이터는 그 아래 `data` (문서 예시는 15 버전이며 17도 같은 형식으로 추정). `--prefix` · `--datadir`로 변경 | ✅ (17 경로는 ❓) |
+| 데이터 폴더 권한 | `--enable_acledit 1`은 서비스 계정에 데이터 경로 **전체에 읽기 권한**을 줘요. `C:\bakery-secure` 안에 두면 "내 계정만" 접근 규칙이 넓어져요 | ✅ → **기본 위치(Program Files) 권장**, 시험 파일(덤프 · 키)만 `C:\bakery-secure\rehearsal`에 |
+| 구성요소 | server · pgAdmin · stackbuilder · commandlinetools. `--disable-components pgAdmin,stackbuilder`로 줄이기 | ✅ |
+| 바로가기 | `--create_shortcuts 0`으로 끄기 | ✅ |
+| Visual C++ 런타임 | 기본으로 설치를 시도 (`--install_runtimes 1`). 이 PC는 이미 있어서 `0` 권장 | ✅ / 🔎 런타임 존재 확인 |
+| 제어판 등록 | 제거 가능하도록 등록됨 (제거 문서 기준) | ✅ |
+| 로그 | `--debuglevel`(0~4), `--debugtrace <파일>` | ✅ |
+
+### 9-4. 설치 명령 초안 (실행하지 않았어요 — 승인과 UAC 승인 후에만)
+```powershell
+# 시험 전용 임의 비밀번호 ($pw). 명령줄에 남으므로 실제 비밀번호는 절대 쓰지 않아요
+& 'C:\bakery-secure\pg\download\postgresql-17.11-5-windows-x64.exe' `
+  --mode unattended --unattendedmodeui minimalWithDialogs `
+  --superpassword $pw --serverport 54329 --servicename bakery-rehearsal-pg `
+  --disable-components pgAdmin,stackbuilder --create_shortcuts 0 --install_runtimes 0 `
+  --debuglevel 2 --debugtrace 'C:\bakery-secure\pg\install-debug.log'
+```
+- `--prefix` · `--datadir`는 지정하지 않아요 → 기본 위치 (9-3 데이터 폴더 권한 이유).
+- 로케일은 지정하지 않아 OS 로케일(한국어)이 쓰여요. 시험 DB는 `CREATE DATABASE … ENCODING 'UTF8' TEMPLATE template0`처럼 인코딩을 명시해서 만들어요.
+- 설치 직후(관리자): 서비스를 **수동 시작으로 바꾸고 중지**, `listen_addresses = '127.0.0.1'` 확인 · 수정 후 필요할 때만 시작, 방화벽 규칙 확인. 접속은 `127.0.0.1:54329`만.
+- 사용자가 관리자 PowerShell에서 직접 실행하는 방식과, 제가 UAC 창을 띄우고 사용자가 승인하는 방식 중 선택해야 해요.
+
+### 9-5. 제거 방법
+- ✅ 공식: **제어판 → 프로그램 제거 또는 변경 → PostgreSQL 우클릭 → 제거/변경 → "Entire application"** (또는 구성요소 선택). 설치 폴더에 제거 프로그램이 만들어져요 (파일 이름은 문서에 없음).
+- ❓ Windows에서 제거 후 남는 것은 PostgreSQL 문서에 없어요. 관련 EDB 문서(EPAS)는 "클러스터 데이터 파일과 서비스 사용자가 남는다"고 설명해요 → **남는다고 가정하고 수동 정리 계획을 세워요:**
+  1. 서비스가 남았으면 `sc.exe delete <서비스 이름>` (관리자)
+  2. 데이터 폴더 삭제
+  3. `postgres` Windows 계정 삭제 (`net user postgres /delete`, 관리자 — **이 계정을 다른 용도로 쓰지 않는지 먼저 확인**)
+  4. 방화벽 규칙 · 시작 메뉴 · 레지스트리 · PATH 잔여 확인
+  5. 설치 전 스냅샷과 비교해서 **차이 0**일 때 완료
+- 무인 제거 옵션은 EDB 문서에 없어요 (설치 폴더의 제거 프로그램을 어떻게 호출하는지 ❓).
+
+### 9-6. 설치 전 · 후 · 제거 후 스냅샷 (읽기 전용 명령, 같은 항목을 3번 비교)
+- 서비스: `Get-Service | Where-Object Name -match 'postgres|bakery-rehearsal'`
+- 로컬 사용자: `Get-LocalUser | Select-Object Name, Enabled`
+- 설치된 프로그램: 제어판 항목 `PostgreSQL` 유무 (`HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`의 표시 이름)
+- 방화벽: `Get-NetFirewallRule -DisplayName '*postgres*'`
+- 열린 포트: `Get-NetTCPConnection -State Listen`
+- PATH: `[Environment]::GetEnvironmentVariable('Path','Machine')`
+- 폴더: `C:\Program Files\PostgreSQL`, 시작 메뉴 항목
+- 결과는 `C:\bakery-secure\pg\snapshot-before.txt` 같은 파일에 저장 (개인정보 없음)
+
+### 9-7. 추천과 결정 사항
+- **F2(UAC 승인 + `--extract-only`)를 먼저 권해요.** 서비스 · OS 계정 · 방화벽 변경이 없거나 적을 것으로 예상되고, 제거는 폴더 삭제로 끝나고, 서명된 설치 프로그램에서 꺼낸 파일과 기존 zip을 비교해서 출처를 확인할 수 있어요. 단 동작이 문서마다 엇갈려서 실행 전후 스냅샷 비교가 필수예요.
+- F1은 서비스 · OS 계정 · 레지스트리가 생기고 제거 후 잔여물 정리가 필요해서, 일회성 시험에는 과하다고 판단해요.
+- 결정 필요: ① F1 / F2 / 보류 ② UAC 승인 방식 ③ (F1일 때) 설치 위치.
+- 어느 쪽이든 UAC 창은 사용자가 직접 승인하고, 예상과 다른 권한 요청 · 검증 실패 · 오류가 나면 즉시 중단하고 알려요.
