@@ -287,3 +287,40 @@ Start-Process -FilePath $installer -ArgumentList $installerArgs -Verb RunAs
 ### 10-7. 되돌리기
 - 변경이 추출 폴더뿐이면: `C:\bakery-secure\pg\edb` 폴더 삭제로 끝 (`Test-Path`로 확인).
 - 스냅샷 diff에서 다른 변경이 발견되면: 해당 항목(서비스 · 계정 · 방화벽 · 레지스트리)을 **발견한 것만** 9-5의 수동 정리 방법으로 제거 (관리자 권한이 필요한 제거는 다시 사용자 승인).
+
+### 10-8. 실행 직전 검토 결과 (2026-10-15) — 옵션 지원 여부 확인, **불확실한 옵션이 있어 실행을 보류하고 보고함**
+**재확인 (모두 통과):** SHA256 `612c7f54…329072` 일치, 크기 413,001,200바이트, Authenticode `Valid` / `EnterpriseDB Corporation` / 지문 `7BEDD126…06C70` 일치, 내려받은 뒤 파일 변경 없음.
+
+**옵션 지원 여부를 설치 파일에서 직접 확인하려는 시도:** 설치 파일 바이트에서 옵션 이름(ASCII · UTF-16)을 검색했지만 `--mode`, `unattended`, `serverport` 같은 가장 흔한 이름까지 **하나도 나오지 않았어요.** 옵션 정의가 압축된 영역에 있어서 파일을 읽는 것으로는 확인할 수 없다는 뜻이에요 (옵션이 *없다*는 증거는 아니에요). 실제 근거는 EDB 문서뿐이고, 문서에는 옵션이 **각각** 적혀 있지만 `--extract-only`와 **함께 쓸 때**의 동작은 적혀 있지 않아요. 설치 프로그램의 도움말(`--help`)은 실행해야 볼 수 있어서 쓰지 않았어요.
+
+| 옵션 | 문서에 있나 | `--extract-only`와 함께일 때 | 위험 | 판단 |
+|---|---|---|---|---|
+| `--mode unattended` | ✅ | 구버전 문서는 무인 모드에 관리자 권한이 필요하다고 함 (우리는 UAC 승인) | 낮음 | 유지 |
+| `--unattendedmodeui minimalWithDialogs` | ✅ | 추출만 할 때 창이 뜨는지 불명 → 오류 창이 안 보일 수 있음 (로그 · 스냅샷으로 보완) | 낮음 | 유지 |
+| `--extract-only 1` | ✅ ("설치 없이 바이너리를 꺼낸다") | — | — | 유지 |
+| `--prefix C:\bakery-secure\pg\edb` | ✅ | **추출 위치가 `--prefix`인지 문서에 없음** | 중간 | 유지 + 아래 완화 |
+| `--install_runtimes 0` | ✅ | 추출만 해도 런타임 설치(시스템 변경)를 시도하는지 불명 → `0`이 더 안전한 쪽 | 낮음 | 유지 (보수적) |
+| `--create_shortcuts 0` | ✅ | 위와 같음 | 낮음 | 유지 (보수적) |
+| `--disable-components pgAdmin,stackbuilder` | ✅ (단독) | **`--extract-only`와의 조합이 문서에 없음** — 추출 범위를 줄이는지, 무시되는지, 오류가 나는지 불명 | 중간 (시스템 변경 위험은 아니고 실패 가능성) | **제외 제안** (불확실한 조합 줄이기. 대신 추출이 커짐: zip 기준 약 956MB) |
+| `--debuglevel 2`, `--debugtrace <파일>` | ✅ | 로그가 만들어지는지 불명 | 낮음 | 유지 |
+
+**완화책:** `Start-Process -WorkingDirectory 'C:\bakery-secure\pg\work'`로 작업 폴더를 지정해서, `--prefix`가 무시되어 상대 경로로 추출되더라도 우리 폴더 안에 생기게 해요. 그래도 `C:\Program Files\PostgreSQL` 같은 시스템 폴더에 생기면 스냅샷의 폴더 항목(`well-known folders`)에서 감지돼요.
+
+**수정 명령 제안 (사용자 확인 후 실행):**
+```powershell
+$installer = 'C:\bakery-secure\pg\download\postgresql-17.11-5-windows-x64.exe'
+New-Item -ItemType Directory -Path 'C:\bakery-secure\pg\work' -Force | Out-Null
+$installerArgs = @(
+  '--mode', 'unattended', '--unattendedmodeui', 'minimalWithDialogs',
+  '--extract-only', '1',
+  '--prefix', 'C:\bakery-secure\pg\edb',
+  '--install_runtimes', '0', '--create_shortcuts', '0',
+  '--debuglevel', '2', '--debugtrace', 'C:\bakery-secure\pg\extract-debug.log'
+)
+Start-Process -FilePath $installer -ArgumentList $installerArgs -WorkingDirectory 'C:\bakery-secure\pg\work' -Verb RunAs
+```
+(`--disable-components`를 뺀 것 외에는 10-2와 같아요. 이 옵션 세트도 **조합 동작은 실행해 봐야 알 수 있어요.**)
+
+**비교 준비:** 서명 없는 zip의 `pgsql\` 파일 20,489개(956MB, `bin` · `doc` · `include` · `lib` · `pgAdmin 4` · `share` · `StackBuilder` + 라이선스 txt)의 SHA256 목록을 `C:\bakery-secure\pg\snapshots\zip-file-hashes.txt`에 저장했어요. 추출 결과와 파일별로 비교해요.
+
+**진행 순서 (사용자 확인 후):** ① 해시 · 서명 재확인 ② 스냅샷 `before.txt` ③ UAC 창 띄움 → 사용자가 게시자(`EnterpriseDB Corporation`)를 확인하고 직접 승인 (비밀번호 · 다른 계정을 요구하면 중단) ④ 프로세스 종료 대기 · 로그 확인 ⑤ 스냅샷 `after.txt` + diff ⑥ 추출 파일 목록 · zip과 해시 비교 ⑦ 보고. **서버 시작과 복구 시험은 하지 않아요.**
