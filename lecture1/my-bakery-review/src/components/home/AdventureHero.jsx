@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography'
 import { useLenis } from 'lenis/react'
 import Illustration from '../common/decor/Illustration'
 import Sparkle from '../common/decor/Sparkle'
+import Sticker from '../common/decor/Sticker'
 import WoodButton from '../common/WoodButton'
 import heroBackground from '../../assets/hero-bg.webp'
 import { WORLD_MAP_SECTION_ID } from '../../constants/sectionIds'
@@ -11,6 +12,13 @@ import { WORLD_MAP_SECTION_ID } from '../../constants/sectionIds'
 // 홈 첫 화면: RPG 시작 화면처럼 타이틀과 빵 기사에 시선이 모여요.
 // [모험 시작하기]를 누르면 아래 "빵지순례 월드맵"(카카오맵)으로 부드럽게 내려가요.
 const SCROLL_OFFSET = -100 // 고정 헤더에 가려지지 않도록
+
+// 마을 입구 장식. 글자 · 버튼 · 검색창보다 아래(zIndex 0)에 깔리고 클릭을 막지 않아요 (Sticker가 pointer-events: none).
+// PC(lg 이상): 표지판 · 깃발 가로등 · 덤불 · 꽃. 위치는 화면 가운데 기준 calc라서 넓은 화면에서도 글자 양옆 바깥에 놓여요.
+// 폰(sm 미만): 작은 덤불과 꽃 2개만, 아주 좁은 화면(360px 미만)에서는 숨겨요. 그 사이(sm~md)는 글자와 겹치지 않게 장식을 빼요.
+// 히어로 칸이 overflow: hidden이라 가장자리에서 잘려도 가로 스크롤은 생기지 않아요.
+const DECOR_PC = { position: 'absolute', zIndex: 0, display: { xs: 'none', lg: 'block' } }
+const DECOR_PHONE = { position: 'absolute', zIndex: 0, display: { xs: 'block', sm: 'none' }, '@media (max-width:359px)': { display: 'none' } }
 
 const AdventureHero = () => {
   const lenis = useLenis()
@@ -66,6 +74,17 @@ const AdventureHero = () => {
           pointerEvents: 'none',
         }}
       />
+
+      {/* 마을 입구 장식 (PC) */}
+      <Sticker name="signpost" width={122} sx={{ ...DECOR_PC, left: 'max(-34px, calc(50% - 760px))', bottom: 0 }} />
+      <Sticker name="flower-white" width={44} sx={{ ...DECOR_PC, left: 'max(52px, calc(50% - 640px))', bottom: 8 }} />
+      <Sticker name="bush-flowers" width={150} sx={{ ...DECOR_PC, left: 'max(100px, calc(50% - 570px))', bottom: -8 }} />
+      <Sticker name="bush-leafy" width={150} sx={{ ...DECOR_PC, right: 'max(150px, calc(50% - 640px))', bottom: -6 }} />
+      <Sticker name="flower-yellow" width={56} sx={{ ...DECOR_PC, right: 'max(190px, calc(50% - 620px))', bottom: 10 }} />
+      <Sticker name="banner-lamp" width={160} sx={{ ...DECOR_PC, right: 'max(12px, calc(50% - 780px))', bottom: 0 }} />
+      {/* 폰: 작은 장식 2개 */}
+      <Sticker name="bush-leafy" width={84} sx={{ ...DECOR_PHONE, left: -10, bottom: 30 }} />
+      <Sticker name="flower-white" width={40} sx={{ ...DECOR_PHONE, right: 14, bottom: 30 }} />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         <Box
