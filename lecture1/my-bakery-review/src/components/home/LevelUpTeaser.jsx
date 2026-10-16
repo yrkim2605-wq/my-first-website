@@ -28,7 +28,8 @@ const LevelUpTeaser = () => {
   const currentIndex = isRecordUnknown ? -1 : progress.currentIndex
 
   return (
-    <Container maxWidth="lg" component="section" aria-labelledby="level-up-title" sx={{ pt: { xs: 6, md: 8 } }}>
+    // 위쪽은 추천 퀘스트 섹션이 여백을 갖고 있고, 아래쪽은 이어지는 세이지 블록(물결 가장자리)과 간격을 둬요
+    <Container maxWidth="lg" component="section" aria-labelledby="level-up-title" sx={{ pb: { xs: 6, md: 8 } }}>
       <Reveal>
       <Box
         sx={{
@@ -44,6 +45,7 @@ const LevelUpTeaser = () => {
       >
         <SectionHeading
           variant="sign"
+          size="sm"
           eyebrow="ADVENTURERS GUILD"
           title="모험가 길드"
           titleId="level-up-title"

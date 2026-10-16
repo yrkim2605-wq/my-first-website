@@ -37,7 +37,11 @@ const FULL_BLEED_SX = {
   marginRight: '-50vw',
 }
 
-const SECTION_PY = { xs: 7, md: 10 }
+const SECTION_PY = { xs: 6, md: 9 }
+
+// 추천 퀘스트 뒤에 깔리는 옅은 양피지 띠: 위아래가 서서히 사라져서 월드맵 · 모험가 길드와 경계가 부드럽게 이어져요
+const QUEST_BAND_BG =
+  'linear-gradient(180deg, rgba(249,237,203,0) 0%, rgba(249,237,203,0.6) 22%, rgba(249,237,203,0.6) 78%, rgba(249,237,203,0) 100%)'
 const SECTION_PX = { xs: 3, sm: 6, md: 6, lg: 8 }
 
 const POPULAR_REVIEWS = [...BAKERY_REVIEWS]
@@ -168,7 +172,7 @@ const Home = () => {
       />
 
       {/* 오늘 인기 빵집 */}
-      <Box sx={{ py: SECTION_PY }}>
+      <Box sx={{ pt: SECTION_PY, pb: { xs: 5, md: 7 }, background: QUEST_BAND_BG }}>
         <SectionHeading
           variant="board"
           eyebrow="TODAY'S QUEST"
@@ -201,7 +205,7 @@ const Home = () => {
         <ScallopEdge color={sageColor} position="top" />
         <Box sx={{ position: 'relative', bgcolor: 'secondary.main', py: SECTION_PY, overflow: 'hidden' }}>
           <FlatFlower petal={palette.background.paper} center={palette.mustard.main} size={72} sx={{ position: 'absolute', top: 36, left: { xs: -18, md: 64 }, opacity: 0.9 }} />
-          <FlatFlower petal={palette.terracotta.main} center={palette.background.paper} size={44} sx={{ position: 'absolute', top: 118, left: { xs: 40, md: 150 } }} />
+          <FlatFlower petal={palette.terracotta.main} center={palette.background.paper} size={44} sx={{ position: 'absolute', top: 118, left: { xs: 40, md: 150 }, display: { xs: 'none', md: 'block' } }} />
           <FlatFlower petal={palette.primary.main} center={palette.mustard.main} size={56} sx={{ position: 'absolute', top: 44, right: { xs: -12, md: 90 } }} />
           <SectionHeading
             variant="journal"

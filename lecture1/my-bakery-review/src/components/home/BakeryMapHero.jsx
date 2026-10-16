@@ -23,6 +23,7 @@ const BakeryMapHero = ({ bakeries, selectedId, onSelectBakery, loading, error, o
       <Container maxWidth="lg">
         <SectionHeading
           variant="ribbon"
+          size="lg"
           eyebrow="WORLD MAP"
           title="빵지순례 월드맵"
           titleId="map-hero-title"

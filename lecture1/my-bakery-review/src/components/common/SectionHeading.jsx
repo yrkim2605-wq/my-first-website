@@ -14,7 +14,14 @@ import { PARCHMENT_SX } from '../../constants/rpgStyles'
 // flank={{ left: { name, width }, right: { name, width } }}: 제목 양옆에 꾸밈 스티커를 놓아요 (넓은 화면에서만 보여요).
 // tone="onColor"는 와인처럼 어두운 색 블록 위에(크림색 글자), tone="onSage"는 세이지처럼 밝은 색 블록 위에(진한 갈색 글자) 올릴 때 써요.
 // 세이지 위에 크림색 글자를 올리면 대비가 2.5:1이라 읽기 어려워서 나눴어요. titleId를 주면 aria-labelledby에 연결할 수 있어요.
-const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default', variant = 'plain', flank, sx }) => {
+// size: 홈에서 섹션 중요도에 맞춰 제목 크기에 강약을 줄 때 써요. lg(가장 중요) · md(기본) · sm(보조). 일지(journal)는 자기 글꼴 크기를 써요.
+const TITLE_SIZE = {
+  lg: { xs: '1.9rem', sm: '2.4rem' },
+  md: { xs: '1.7rem', sm: '2.1rem' },
+  sm: { xs: '1.4rem', sm: '1.7rem' },
+}
+
+const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default', variant = 'plain', size = 'md', flank, sx }) => {
   const onColor = tone === 'onColor'
   const onSage = tone === 'onSage'
 
@@ -36,7 +43,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
   }[variant]
 
   const titleNode = (
-    <Typography id={titleId} variant="h2" sx={{ fontSize: { xs: '1.7rem', sm: '2.1rem' }, ...titleSx }}>
+    <Typography id={titleId} variant="h2" sx={{ fontSize: TITLE_SIZE[size], ...titleSx }}>
       {title}
     </Typography>
   )
@@ -152,7 +159,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
         {description && (
           <Typography
             sx={{
-              fontSize: '0.95rem',
+              fontSize: size === 'sm' ? '0.875rem' : '0.95rem',
               color: onColor ? 'primary.contrastText' : onSage ? 'text.primary' : 'text.secondary',
               opacity: onColor ? 0.85 : 1,
               mt: hasDivider ? 0 : 1.5,
