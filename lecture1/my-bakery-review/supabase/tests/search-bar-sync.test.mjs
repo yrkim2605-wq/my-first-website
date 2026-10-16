@@ -47,6 +47,13 @@ check('접근성: 두 검색창 · 지역 그룹 · 영역의 이름표가 서�
 check('안내 문구 구분: 위쪽은 "탐험", 결과 쪽은 "다시 찾아보기"', hero.includes('placeholder="오늘은 어떤 빵집을 탐험할까요?"') && results.includes('placeholder="다른 빵집 · 메뉴로 다시 찾아보기"'))
 check('결과 쪽 안내 문구는 위쪽과 달라요 (재검색 느낌)', !hero.includes('다시 찾아보기') && !results.includes('탐험'))
 
+// 제출 버튼 하나만 잘라서 확인해요 (정규식 대신 문자열로)
+const submitStart = results.indexOf('<button', results.lastIndexOf('<button', results.indexOf('type="submit"')))
+const submitButton = results.slice(submitStart, results.indexOf('</button>', submitStart) + '</button>'.length)
+check('결과 쪽: 돋보기 + "검색" 글자가 함께 있는 제출 버튼(와인색 contained)', submitButton.includes('MuiButton-contained') && submitButton.includes('<svg') && submitButton.endsWith('검색</button>'), submitButton.slice(0, 120))
+check('결과 쪽 바는 form(role=search)이라 Enter · [검색] 버튼이 같은 처리예요', /<form[^>]*role="search"/.test(results))
+check('히어로(위쪽) 바는 바뀌지 않았어요: form · [검색] 버튼 없음, [결과 보기]만 있음', !hero.includes('<form') && !hero.includes('type="submit"') && !hero.includes('>검색</button>') && hero.includes('결과 보기'))
+
 const zero = render({ variant: 'results', searchQuery: '없는빵집', selectedDistrictId: null, resultCount: 0 })
 check('결과가 0개여도 결과 쪽 검색창과 지역 필터가 그대로 보여요', zero.includes('<input') && hasAllChips(zero, DISTRICTS))
 const loading = render({ variant: 'results', resultCount: null })
