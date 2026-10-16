@@ -194,7 +194,8 @@ const Header = () => {
                 key={entry.key}
                 onMouseEnter={() => openMenu(entry.key)}
                 onMouseLeave={closeMenuDelayed}
-                sx={{ position: 'relative' }}
+                // 폰(md 미만)에서는 메뉴 기준을 항목이 아니라 헤더로 둬요: 항목 아래 가운데 정렬이면 숨은 메뉴가 화면 오른쪽 밖으로 나가 가로 스크롤이 생겨요
+                sx={{ position: { xs: 'static', md: 'relative' } }}
               >
                 <Typography component={NavLink} to={entry.to} sx={NAV_LINK_SX}>
                   {entry.label}
@@ -204,16 +205,17 @@ const Header = () => {
                   sx={{
                     position: 'absolute',
                     top: '100%',
-                    left: '50%',
+                    left: { xs: 16, md: '50%' },
                     mt: 1.5,
                     minWidth: 190,
+                    maxWidth: { xs: 'calc(100vw - 32px)', md: 'none' },
                     ...PARCHMENT_SX,
                     borderRadius: RADIUS.md,
                     py: 1,
                     opacity: isOpen ? 1 : 0,
                     visibility: isOpen ? 'visible' : 'hidden',
                     pointerEvents: isOpen ? 'auto' : 'none',
-                    transform: isOpen ? 'translate(-50%, 0)' : 'translate(-50%, -6px)',
+                    transform: isOpen ? { xs: 'translate(0, 0)', md: 'translate(-50%, 0)' } : { xs: 'translate(0, -6px)', md: 'translate(-50%, -6px)' },
                     transition: 'opacity 0.18s ease, transform 0.18s ease, visibility 0.18s',
                     zIndex: 20,
                   }}

@@ -28,13 +28,10 @@ import { useBakeryRatings } from '../hooks/useBakeryRatings'
 // "전체 빵집"은 처음에 이만큼만 보여주고, "빵집 더 보기"로 같은 수만큼 이어서 보여줘요.
 const BAKERY_PAGE_SIZE = 12
 
+// 화면 전체 폭 박스. 부모(홈의 각 섹션)가 이미 화면 전체 폭이라 100%면 돼요.
+// (예전의 100vw + 좌우 당기기 방식은, 세로 스크롤바가 있는 화면에서 스크롤바 폭만큼 가로로 넘쳤어요)
 const FULL_BLEED_SX = {
-  width: '100vw',
-  position: 'relative',
-  left: '50%',
-  right: '50%',
-  marginLeft: '-50vw',
-  marginRight: '-50vw',
+  width: '100%',
 }
 
 const SECTION_PY = { xs: 6, md: 9 }

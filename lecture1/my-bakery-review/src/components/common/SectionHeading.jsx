@@ -21,7 +21,8 @@ const TITLE_SIZE = {
   sm: { xs: '1.4rem', sm: '1.7rem' },
 }
 
-const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default', variant = 'plain', size = 'md', flank, sx }) => {
+// descriptionSx: 설명 글에만 덧붙이는 스타일 (예: 폰에서만 설명을 숨기기). 안 주면 지금과 똑같아요.
+const SectionHeading = ({ eyebrow, title, titleId, description, descriptionSx, tone = 'default', variant = 'plain', size = 'md', flank, sx }) => {
   const onColor = tone === 'onColor'
   const onSage = tone === 'onSage'
 
@@ -163,6 +164,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, tone = 'default'
               color: onColor ? 'primary.contrastText' : onSage ? 'text.primary' : 'text.secondary',
               opacity: onColor ? 0.85 : 1,
               mt: hasDivider ? 0 : 1.5,
+              ...descriptionSx,
             }}
           >
             {description}
