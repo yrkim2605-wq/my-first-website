@@ -35,7 +35,7 @@ const AdventureHero = () => {
         display: 'flex',
         alignItems: 'center',
         // 높이는 고정하지 않고 "최소 높이"만 둬요. 글이 길어져도 잘리지 않아요.
-        minHeight: { xs: 400, sm: 380, md: 450 },
+        minHeight: { xs: 400, sm: 380, md: 600 },
         pt: { xs: 2.5, md: 3 },
         pb: { xs: 6, sm: 5, md: 4 },
       }}
@@ -49,7 +49,7 @@ const AdventureHero = () => {
           backgroundImage: `url(${heroBackground})`,
           backgroundSize: 'cover',
           // 비율은 그대로 두고(cover), 비어 있는 하늘 쪽이 먼저 잘리도록 아래쪽 풍경을 기준으로 맞춰요
-          backgroundPosition: { xs: '24% bottom', sm: 'center 78%', md: 'center 72%' },
+          backgroundPosition: { xs: '24% bottom', sm: 'center 90%', md: 'center 88%' },
           backgroundRepeat: 'no-repeat',
           pointerEvents: 'none',
         }}
@@ -61,21 +61,8 @@ const AdventureHero = () => {
           inset: 0,
           background: {
             xs: 'linear-gradient(180deg, rgba(251,244,228,0.55) 0%, rgba(251,244,228,0.78) 55%, rgba(251,244,228,0.3) 100%)',
-            md: 'linear-gradient(90deg, rgba(251,244,228,0.82) 0%, rgba(251,244,228,0.6) 40%, rgba(251,244,228,0) 70%)',
+            md: 'linear-gradient(90deg, rgba(251,244,228,0.6) 0%, rgba(251,244,228,0.4) 40%, rgba(251,244,228,0) 70%)',
           },
-          pointerEvents: 'none',
-        }}
-      />
-
-      <Box
-        aria-hidden="true"
-        sx={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: { xs: 40, md: 36 },
-          background: (theme) => `linear-gradient(180deg, rgba(0,0,0,0) 0%, ${theme.palette.background.default} 100%)`,
           pointerEvents: 'none',
         }}
       />
