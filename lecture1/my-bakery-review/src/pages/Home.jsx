@@ -7,7 +7,6 @@ import Button from '@mui/material/Button'
 import BakeryStageCard from '../components/common/BakeryStageCard'
 import PopularBakeryCarousel from '../components/common/PopularBakeryCarousel'
 import PopularReviewCarousel from '../components/common/PopularReviewCarousel'
-import InfiniteBakeryMarquee from '../components/common/InfiniteBakeryMarquee'
 import SectionHeading from '../components/common/SectionHeading'
 import AdventureHero from '../components/home/AdventureHero'
 import BakeryMapHero from '../components/home/BakeryMapHero'
@@ -89,6 +88,7 @@ const Home = () => {
   const isFiltering = Boolean(normalizedQuery) || Boolean(selectedDistrictId)
 
   const popularBakeries = useMemo(() => realBakeries.slice(0, 5), [realBakeries])
+  // 최근에 등록된 5곳: 카드에 NEW 표시만 해요 (홈의 "새롭게 발견된 빵집" 섹션은 없앴어요)
   const newBakeries = useMemo(() => [...realBakeries].reverse().slice(0, 5), [realBakeries])
   const newBakeryIds = useMemo(() => new Set(newBakeries.map((b) => b.id)), [newBakeries])
 
@@ -102,21 +102,6 @@ const Home = () => {
         discovered: discoveredIds.has(String(bakery.id)),
       })),
     [popularBakeries, newBakeryIds, discoveredIds, ratingProps],
-  )
-
-  const marqueeBakeries = useMemo(
-    () =>
-      [...realBakeries]
-        .reverse()
-        .slice(0, 10)
-        .map((bakery) => ({
-          ...bakery,
-          districtLabel: DISTRICTS.find((d) => d.id === bakery.districtId)?.name,
-          ...ratingProps(bakery),
-          isNew: newBakeryIds.has(bakery.id),
-          discovered: discoveredIds.has(String(bakery.id)),
-        })),
-    [realBakeries, newBakeryIds, discoveredIds, ratingProps],
   )
 
   const filteredBakeries = realBakeries.filter((b) => {
@@ -208,6 +193,9 @@ const Home = () => {
         </Box>
       </Box>
 
+      {/* 모험가 길드: 레벨 · EXP 안내 (리뷰보다 먼저: 성장 시스템을 먼저 알려요) */}
+      <LevelUpTeaser />
+
       {/* 이번 주 인기 리뷰: 세이지 색 블록 */}
       <Box sx={{ ...FULL_BLEED_SX }}>
         <ScallopEdge color={sageColor} position="top" />
@@ -229,37 +217,6 @@ const Home = () => {
         </Box>
         <ScallopEdge color={sageColor} position="bottom" />
       </Box>
-
-      {/* 레벨업 안내 (작은 띠) */}
-      <LevelUpTeaser />
-
-      {/* 새로 등록된 빵집 (오류일 때는 위에서 한 번만 안내하고 숨겨요) */}
-      {!bakeriesError && (
-        <Box sx={{ py: SECTION_PY }}>
-          <SectionHeading
-            variant="sign"
-            eyebrow="NEW DISCOVERIES"
-            title="새롭게 발견된 빵집"
-            description="새로 등록된 빵집을 가장 먼저 만나보세요."
-            sx={{ mb: { xs: 4, md: 5 }, px: 2 }}
-          />
-          {bakeriesLoading ? (
-            <Box sx={{ ...FULL_BLEED_SX, px: SECTION_PX }}>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
-                {[0, 1, 2, 3].map((i) => (
-                  <Box key={i} sx={{ display: { xs: i < 2 ? 'block' : 'none', md: 'block' } }}>
-                    <BakeryCardSkeleton />
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          ) : (
-            <Box sx={{ ...FULL_BLEED_SX }}>
-              <InfiniteBakeryMarquee bakeries={marqueeBakeries} />
-            </Box>
-          )}
-        </Box>
-      )}
 
       {/* 전체 빵집 */}
       <Container maxWidth="xl" component="section" id={ALL_BAKERIES_SECTION_ID} aria-labelledby="all-bakeries-title">
