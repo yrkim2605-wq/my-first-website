@@ -133,6 +133,16 @@ const Home = () => {
     setVisibleCount(BAKERY_PAGE_SIZE)
   }
 
+  // 히어로 아래 검색창과 결과 자리 재검색창이 같은 상태 · 같은 함수를 쓰도록 한 곳에서 묶어요 (검색 로직은 위의 하나뿐이에요)
+  const searchBarProps = {
+    searchQuery,
+    onSearchChange: handleSearchChange,
+    selectedDistrictId,
+    onSelectDistrict: handleSelectDistrict,
+    resultCount: bakeriesLoading || bakeriesError ? null : filteredBakeries.length,
+    onReset: handleResetFilters,
+  }
+
   const bakeriesErrorMessage = (
     <StatusMessage
       mood="error"
@@ -149,14 +159,7 @@ const Home = () => {
       <AdventureHero />
 
       {/* 빵집 찾기: 이름 · 메뉴 검색 + 지역 필터 (결과는 아래 "전체 빵집"에 나와요) */}
-      <BakerySearchBar
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        selectedDistrictId={selectedDistrictId}
-        onSelectDistrict={handleSelectDistrict}
-        resultCount={bakeriesLoading || bakeriesError ? null : filteredBakeries.length}
-        onReset={handleResetFilters}
-      />
+      <BakerySearchBar {...searchBarProps} />
 
       {/* 빵지순례 월드맵: 부산 빵집 지도 */}
       <BakeryMapHero
@@ -249,6 +252,9 @@ const Home = () => {
               </Button>
             )}
           </Box>
+
+          {/* 재검색용 검색창 · 지역 필터: 위쪽 검색창과 같은 상태라서 어느 쪽에서 바꿔도 결과가 같이 바뀌어요. 결과가 0개여도 항상 보여요. */}
+          <BakerySearchBar {...searchBarProps} variant="results" />
 
           {bakeriesError && bakeriesErrorMessage}
           {!bakeriesLoading && !bakeriesError && filteredBakeries.length === 0 && (
