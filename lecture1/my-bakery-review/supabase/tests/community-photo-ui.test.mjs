@@ -117,7 +117,10 @@ const wrap = (node) => clean(renderToString(h(ThemeProvider, { theme }, h(Memory
   const without = wrap(h(Item, { ...base, photoUrl: null, placeholderEmoji: '📸' }))
   check('사진이 없는 글: 기존 이모지 아치 그대로', without.includes('📸') && !without.includes('<img'))
   const sample = wrap(h(Item, { ...base, photoBakeryId: 1, isSample: true }))
-  check('예시 글(로컬 모드): 기존 예시 사진 + "예시" 표시 그대로', sample.includes('<img') && sample.includes('예시'))
+  check(
+    '예시 글(로컬 모드): 스톡 사진 대신 빵 기사 플레이스홀더 + "예시" 표시',
+    sample.includes('아직 등록된 사진이 없어요') && sample.includes('illust-knight-camera') && !sample.includes('bakery-photo-') && sample.includes('예시'),
+  )
 }
 
 console.log(`\n통과 ${passed} · 실패 ${failures.length}`)

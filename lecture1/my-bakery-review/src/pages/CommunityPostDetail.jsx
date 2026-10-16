@@ -17,11 +17,10 @@ import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt'
 import { COMMUNITY_POSTS } from '../constants/communityPosts'
 import { COMMUNITY_CATEGORIES } from '../constants/categories'
 import { COMMUNITY_COMMENTS } from '../constants/communityComments'
-import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../constants/bakeryPhotos'
+import { PhotoPlaceholder } from '../components/common/BakeryPhoto'
 import { useProfile } from '../hooks/useProfile'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import { PARCHMENT_SX } from '../constants/rpgStyles'
-import { getPostPhotoBakeryId } from '../utils/communityPostMeta'
 import Reveal from '../components/common/Reveal'
 import AuthorInfo from '../components/common/AuthorInfo'
 import { RADIUS } from '../theme'
@@ -118,7 +117,6 @@ const CommunityPostDetail = () => {
   }
 
   const category = COMMUNITY_CATEGORIES.find((c) => c.id === post.categoryId)
-  const photoSrc = BAKERY_PHOTO_BY_ID[getPostPhotoBakeryId(post)] || DEFAULT_BAKERY_PHOTO
   const displayedHeartCount = post.heartCount + (liked ? 1 : 0)
   const totalCommentCount = comments.reduce((sum, c) => sum + 1 + c.replies.length, 0)
 
@@ -243,13 +241,7 @@ const CommunityPostDetail = () => {
             mb: 3,
           }}
         >
-          <Box
-            component="img"
-            src={photoSrc}
-            alt={post.title}
-            className="soft-fade-in"
-            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+          <PhotoPlaceholder label={`${post.title}: 아직 등록된 사진이 없어요`} className="soft-fade-in" />
         </Box>
         </Reveal>
 

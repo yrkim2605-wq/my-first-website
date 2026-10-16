@@ -12,8 +12,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import PlaceIcon from '@mui/icons-material/Place'
 import { Link } from 'react-router-dom'
 import StarRoundedIcon from '@mui/icons-material/StarRounded'
-import { getBakeryPhoto } from '../../constants/bakeryPhotos'
-import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
+import BakeryPhoto from './BakeryPhoto'
 import { useBookmarks } from '../../hooks/useBookmarks'
 import { PARCHMENT_SX, WOOD_PLANK_SX } from '../../constants/rpgStyles'
 import { RADIUS } from '../../theme'
@@ -40,8 +39,6 @@ const BakeryStageCard = ({
   discovery = false, // 탐험 도감의 "발견 카드" 모양: 양피지 카드 + 금색 NEW 리본 (새로 등록된 빵집용)
   quest = false, // 퀘스트 보드 모양: 양피지 카드 + QUEST 라벨 + [빵집 탐험하기] 표시 (보상 · 경험치 같은 건 보여주지 않아요)
 }) => {
-  const { photosByBakeryId } = useRealBakeryPhotos()
-  const photoSrc = getBakeryPhoto(id, photosByBakeryId, photoSlot)
   // 찜 상태는 빵집 상세 · 마이페이지와 같은 목록을 써서, 어디서 눌러도 똑같이 보여요
   const { isBookmarked, toggleBookmark } = useBookmarks()
   const bookmarked = isBookmarked(id)
@@ -163,21 +160,7 @@ const BakeryStageCard = ({
                 : { height: 190, flexShrink: 0 }),
         }}
       >
-        <Box
-          component="img"
-          className="bakery-photo"
-          src={photoSrc}
-          alt={name}
-          loading="lazy"
-          sx={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center',
-            display: 'block',
-            transition: 'transform 0.4s ease',
-          }}
-        />
+        <BakeryPhoto bakeryId={id} name={name} className="bakery-photo" sx={{ transition: 'transform 0.4s ease' }} />
         {isNew && (
           <Chip
             label="NEW"

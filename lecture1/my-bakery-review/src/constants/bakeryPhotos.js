@@ -1,45 +1,5 @@
-import breadHouse from '../assets/bakery-photos/bakery-photo-01.webp'
-import meetBakery from '../assets/bakery-photos/bakery-photo-02.webp'
-import coffeesAre from '../assets/bakery-photos/bakery-photo-03.webp'
-import breadAndCo from '../assets/bakery-photos/bakery-photo-04.webp'
-import pastryCase from '../assets/bakery-photos/bakery-photo-05.webp'
-import fruitMousseCakes from '../assets/bakery-photos/bakery-photo-06.webp'
-import strawberryRollCake from '../assets/bakery-photos/bakery-photo-07.webp'
-
-export const BAKERY_PHOTO_BY_ID = {
-  1: pastryCase,
-  2: coffeesAre,
-  3: meetBakery,
-  4: breadAndCo,
-  5: breadHouse,
-  6: breadAndCo,
-  7: breadHouse,
-  8: pastryCase,
-  9: strawberryRollCake,
-  10: meetBakery,
-  11: coffeesAre,
-  12: breadAndCo,
-  13: fruitMousseCakes,
-}
-
-export const DEFAULT_BAKERY_PHOTO = breadHouse
-
-// 카카오에서 불러온 실제 빵집은 사진이 없어서, 아래 실제 사진들을 나눠 써요. (일러스트는 쓰지 않아요)
-// photoSlot(빵집 목록 순서)이 있으면 그 순서대로 돌려 써서 이웃한 카드에 같은 사진이 나오지 않고,
-// 없으면 id로 골라요. 어느 쪽이든 같은 빵집은 항상 같은 사진이에요.
-const PHOTO_POOL = [
-  pastryCase,
-  coffeesAre,
-  meetBakery,
-  fruitMousseCakes,
-  breadAndCo,
-  strawberryRollCake,
-  breadHouse,
-]
-
-const hashId = (id) => [...String(id)].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) % 100003, 7)
-
-export const getBakeryPhoto = (id, uploadedPhotos = {}, photoSlot) =>
-  BAKERY_PHOTO_BY_ID[id] ||
-  uploadedPhotos[id] ||
-  PHOTO_POOL[(photoSlot ?? hashId(id)) % PHOTO_POOL.length]
+// 빵집 사진 정책
+//  - "빵집 사진"은 그 빵집 리뷰에 실제로 붙은 사진만 보여줘요 (RealBakeryPhotosContext가 가장 최근 리뷰 사진을 골라 줘요).
+//  - 사진이 없거나 불러오지 못하면 빵 기사 플레이스홀더를 보여줘요 (components/common/BakeryPhoto.jsx).
+//  - 예전에 대표 사진처럼 쓰던 스톡 사진 7장(assets/bakery-photos)은 더 이상 어디에서도 쓰지 않아요.
+export const getBakeryReviewPhoto = (id, uploadedPhotos = {}) => uploadedPhotos[id] || null

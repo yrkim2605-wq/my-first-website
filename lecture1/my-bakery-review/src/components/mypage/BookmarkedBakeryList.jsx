@@ -6,11 +6,10 @@ import Typography from '@mui/material/Typography'
 import BookmarkRemoveIcon from '@mui/icons-material/BookmarkRemove'
 import { BAKERIES } from '../../constants/bakeries'
 import { DISTRICTS } from '../../constants/districts'
-import { getBakeryPhoto } from '../../constants/bakeryPhotos'
+import BakeryPhoto from '../common/BakeryPhoto'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { useBookmarks } from '../../hooks/useBookmarks'
 import { useBusanBakeries } from '../../hooks/useBusanBakeries'
-import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { RADIUS } from '../../theme'
 
 // 마이페이지의 "찜한 빵집" 목록이에요. 찜은 나만 보는 메모라서 EXP · 도감 · 퀘스트와는 상관없어요.
@@ -18,7 +17,6 @@ import { RADIUS } from '../../theme'
 const BookmarkedBakeryList = () => {
   const { items, removeBookmark } = useBookmarks()
   const { bakeries: liveBakeries } = useBusanBakeries()
-  const { photosByBakeryId } = useRealBakeryPhotos()
 
   // 지금 목록에서 찾을 수 있으면 최신 정보를, 없으면 저장해 둔 정보를 써요
   const rows = useMemo(
@@ -57,7 +55,9 @@ const BookmarkedBakeryList = () => {
             to={`/bakery/${row.id}`}
             sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 1.75, px: { xs: 1.5, sm: 2.5 }, py: 1.5, color: 'inherit', textDecoration: 'none', '&:hover .bookmarked-name': { color: 'primary.main' } }}
           >
-            <Box component="img" src={getBakeryPhoto(row.id, photosByBakeryId, row.photoSlot)} alt="" sx={{ width: 48, height: 48, flexShrink: 0, borderRadius: RADIUS.round, objectFit: 'cover' }} />
+            <Box sx={{ width: 48, height: 48, flexShrink: 0, borderRadius: RADIUS.round, overflow: 'hidden' }}>
+              <BakeryPhoto bakeryId={row.id} name={row.name} />
+            </Box>
             <Box sx={{ minWidth: 0 }}>
               <Typography className="bookmarked-name" sx={{ fontWeight: 700, transition: 'color 0.15s ease' }} noWrap>
                 {row.name}

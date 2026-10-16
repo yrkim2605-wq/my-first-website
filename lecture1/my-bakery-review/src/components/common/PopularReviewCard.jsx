@@ -4,8 +4,7 @@ import Rating from '@mui/material/Rating'
 import Box from '@mui/material/Box'
 import { Link } from 'react-router-dom'
 import PlaceIcon from '@mui/icons-material/Place'
-import { getBakeryPhoto } from '../../constants/bakeryPhotos'
-import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
+import BakeryPhoto from './BakeryPhoto'
 import { HOVER_LIFT_SX } from '../../constants/motion'
 import { JOURNAL_PAPER_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
@@ -31,9 +30,6 @@ const PopularReviewCard = ({
   content,
   size = 'default',
 }) => {
-  const { photosByBakeryId } = useRealBakeryPhotos()
-  const photoSrc = getBakeryPhoto(bakeryId, photosByBakeryId)
-
   return (
     <Card
       elevation={0}
@@ -71,20 +67,7 @@ const PopularReviewCard = ({
           transition: 'height 0.35s ease',
         }}
       >
-        <Box
-          component="img"
-          src={photoSrc}
-          alt={`${bakeryName} 리뷰 사진`}
-          loading="lazy"
-          className="review-photo"
-          sx={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-            transition: 'transform 0.4s ease',
-          }}
-        />
+        <BakeryPhoto bakeryId={bakeryId} name={bakeryName} className="review-photo" sx={{ transition: 'transform 0.4s ease' }} />
       </Box>
 
       <Box sx={{ p: PADDING_BY_SIZE[size], flexGrow: 1, display: 'flex', flexDirection: 'column', transition: 'padding 0.35s ease' }}>

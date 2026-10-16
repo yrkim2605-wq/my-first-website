@@ -6,9 +6,8 @@ import CloseIcon from '@mui/icons-material/Close'
 import Rating from '@mui/material/Rating'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Link } from 'react-router-dom'
-import { getBakeryPhoto } from '../../constants/bakeryPhotos'
+import BakeryPhoto from '../common/BakeryPhoto'
 import { DISTRICTS } from '../../constants/districts'
-import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { useBakeryRatings } from '../../hooks/useBakeryRatings'
 import { formatAverage } from '../../utils/bakeryRating'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
@@ -19,7 +18,6 @@ import { DISPLAY_FONT, RADIUS } from '../../theme'
 // variant="overlay": 넓은 화면에서 지도 위에 뜨는 세로형 / variant="compact": 모바일에서 지도 아래 가로형
 // onClose: 넣으면 오른쪽 위에 닫기(✕) 버튼이 생겨요 (넓은 화면 지도 위 카드에서만 써요)
 const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose, sx }) => {
-  const { photosByBakeryId } = useRealBakeryPhotos()
   const district = DISTRICTS.find((d) => d.id === bakery.districtId)
   const isCompact = variant === 'compact'
   // 계정 모드: 서버 집계의 평균 별점 · 리뷰 개수 / 로컬 모드: 예전 방식(빵집 정보의 rating)
@@ -66,18 +64,17 @@ const BakeryMapPreviewCard = ({ bakery, isSelected, variant = 'overlay', onClose
         </IconButton>
       )}
       <Box
-        component="img"
-        src={getBakeryPhoto(bakery.id, photosByBakeryId, bakery.photoSlot)}
-        alt=""
         sx={{
           width: isCompact ? 72 : '100%',
           height: isCompact ? 72 : 128,
           flexShrink: 0,
-          objectFit: 'cover',
+          overflow: 'hidden',
           borderRadius: isCompact ? '999px 999px 10px 10px' : '999px 999px 12px 12px',
           mb: isCompact ? 0 : 1.25,
         }}
-      />
+      >
+        <BakeryPhoto bakeryId={bakery.id} name={bakery.name} />
+      </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em', color: 'primary.main', mb: 0.25 }}>
           {isSelected ? '선택한 빵집' : '오늘의 추천 빵집'}

@@ -20,12 +20,11 @@ import AccountDangerZone from '../components/mypage/AccountDangerZone'
 import WoodButton from '../components/common/WoodButton'
 import Illustration from '../components/common/decor/Illustration'
 import { DISTRICTS } from '../constants/districts'
-import { getBakeryPhoto } from '../constants/bakeryPhotos'
+import BakeryPhoto from '../components/common/BakeryPhoto'
 import { PARCHMENT_SX } from '../constants/rpgStyles'
 import { useGameState } from '../hooks/useGameState'
 import { useDiscovery } from '../hooks/useDiscovery'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
-import { useRealBakeryPhotos } from '../hooks/useRealBakeryPhotos'
 import { useBookmarks } from '../hooks/useBookmarks'
 import { evaluateBadges } from '../utils/badgeRules'
 import { DISPLAY_FONT, RADIUS } from '../theme'
@@ -40,14 +39,16 @@ const SUBHEAD_SX = {
 }
 
 // "다녀왔어요" 체크한 빵집 한 줄 (누르면 빵집 상세로 가요)
-const CheckedBakeryRow = ({ bakery, photoSrc }) => (
+const CheckedBakeryRow = ({ bakery }) => (
   <Box component="li" sx={{ borderBottom: '1px solid rgba(201,165,106,0.5)', '&:last-of-type': { borderBottom: 'none' } }}>
     <Box
       component={Link}
       to={`/bakery/${bakery.id}`}
       sx={{ display: 'flex', alignItems: 'center', gap: 1.75, px: { xs: 1.5, sm: 2.5 }, py: 1.5, color: 'inherit', textDecoration: 'none', '&:hover .visited-name': { color: 'primary.main' } }}
     >
-      <Box component="img" src={photoSrc} alt="" sx={{ width: 48, height: 48, flexShrink: 0, borderRadius: RADIUS.round, objectFit: 'cover' }} />
+      <Box sx={{ width: 48, height: 48, flexShrink: 0, borderRadius: RADIUS.round, overflow: 'hidden' }}>
+        <BakeryPhoto bakeryId={bakery.id} name={bakery.name} />
+      </Box>
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <Typography className="visited-name" sx={{ fontWeight: 700, transition: 'color 0.15s ease' }} noWrap>
           {bakery.name}
@@ -83,7 +84,6 @@ const MyPage = () => {
   const game = useGameState()
   const discovery = useDiscovery()
   const { visitedIds, visits, loadError: visitsError } = useVisitedBakeries()
-  const { photosByBakeryId } = useRealBakeryPhotos()
   const { items: bookmarkedItems } = useBookmarks()
 
   const badges = useMemo(() => evaluateBadges(game.myReviews, discovery.discoveredCount), [game.myReviews, discovery.discoveredCount])
@@ -228,7 +228,7 @@ const MyPage = () => {
         ) : (
           <Box component="ul" sx={{ ...PARCHMENT_SX, listStyle: 'none', m: 0, p: 0, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
             {checkedBakeries.map((bakery) => (
-              <CheckedBakeryRow key={bakery.id} bakery={bakery} photoSrc={getBakeryPhoto(bakery.id, photosByBakeryId, bakery.photoSlot)} />
+              <CheckedBakeryRow key={bakery.id} bakery={bakery} />
             ))}
           </Box>
         )}

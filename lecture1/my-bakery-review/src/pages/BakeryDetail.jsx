@@ -24,7 +24,7 @@ import { DISTRICTS } from '../constants/districts'
 import { LEVELS } from '../constants/levels'
 import { BAKERY_REVIEWS } from '../constants/bakeryReviews'
 import { PARCHMENT_SX, WOOD_PLANK_SX } from '../constants/rpgStyles'
-import { getBakeryPhoto } from '../constants/bakeryPhotos'
+import BakeryPhoto from '../components/common/BakeryPhoto'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
 import { IS_ACCOUNT_MODE } from '../lib/backend'
@@ -236,7 +236,7 @@ const BakeryDetail = () => {
         </Typography>
 
         {/* 탐험지 사진: 위쪽이 둥근 아치, 라벨과 도장은 아치 밖에 둬서 잘리지 않아요 */}
-        <Box sx={{ position: 'relative', mb: hasUploadedPhoto || !isRealBakery ? 3 : 1.5 }}>
+        <Box sx={{ position: 'relative', mb: hasUploadedPhoto ? 3 : 1.5 }}>
           <Box
             sx={{
               width: '100%',
@@ -248,13 +248,8 @@ const BakeryDetail = () => {
               boxShadow: '0 3px 0 rgba(107,68,35,0.25)',
             }}
           >
-            <Box
-              component="img"
-              src={getBakeryPhoto(bakery.id, photosByBakeryId, bakery.photoSlot)}
-              alt={bakery.name}
-              className="soft-fade-in"
-              sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
+            {/* 좁은 화면에서는 오른쪽 아래 [발견] 도장이 플레이스홀더 문구를 가리지 않도록 내용을 위로 올려요 */}
+            <BakeryPhoto bakeryId={bakery.id} name={bakery.name} className="soft-fade-in" sx={{ pb: { xs: 6, sm: 0 } }} />
           </Box>
           <Box
             component="span"
@@ -305,9 +300,9 @@ const BakeryDetail = () => {
             </Box>
           )}
         </Box>
-        {isRealBakery && !hasUploadedPhoto && (
+        {!hasUploadedPhoto && (
           <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', textAlign: 'center', mb: 3 }}>
-            대표 사진은 예시예요. 일지에 사진을 붙이면 이 브라우저에서는 이 자리에 보여요.
+            아직 등록된 사진이 없어요. 일지에 사진을 붙이면 이 자리에 보여요.
           </Typography>
         )}
 

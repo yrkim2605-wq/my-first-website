@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import { Link } from 'react-router-dom'
-import { BAKERY_PHOTO_BY_ID, DEFAULT_BAKERY_PHOTO } from '../../constants/bakeryPhotos'
+import { PhotoPlaceholder } from './BakeryPhoto'
 import AuthorInfo from './AuthorInfo'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
@@ -22,13 +22,11 @@ const CommunityPostListItem = ({
   heartCount,
   commentCount,
   createdAt,
-  photoBakeryId,
   placeholderEmoji,
   photoUrl = null, // 글에 붙인 사진의 공개 주소 (없으면 아래의 이모지/예시 사진 그대로)
   isSample = false,
 }) => {
   const [photoFailed, setPhotoFailed] = useState(false) // 사진을 못 불러오면(파일이 지워졌을 때 등) 이모지로 돌아가요
-  const photoSrc = BAKERY_PHOTO_BY_ID[photoBakeryId] || DEFAULT_BAKERY_PHOTO
   const thumbnailSx = {
     width: { xs: 80, sm: 132 },
     height: { xs: 80, sm: 132 },
@@ -165,7 +163,10 @@ const CommunityPostListItem = ({
           {placeholderEmoji}
         </Box>
       ) : (
-        <Box component="img" src={photoSrc} alt="" loading="lazy" sx={{ ...thumbnailSx, objectFit: 'cover' }} />
+        // 이모지도 사진도 없는 예시 글: 가짜 빵집 사진 대신 빵 기사 플레이스홀더
+        <Box sx={{ ...thumbnailSx, overflow: 'hidden', border: '2px solid rgba(201,165,106,0.7)' }}>
+          <PhotoPlaceholder label={`${title}: 아직 등록된 사진이 없어요`} />
+        </Box>
       )}
     </Box>
   )
