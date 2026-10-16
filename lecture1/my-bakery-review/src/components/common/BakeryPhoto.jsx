@@ -3,6 +3,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Illustration from './decor/Illustration'
 import { getBakeryReviewPhoto } from '../../constants/bakeryPhotos'
+import { getPlaceholderPose } from '../../constants/photoPlaceholders'
 import { useRealBakeryPhotos } from '../../hooks/useRealBakeryPhotos'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 
@@ -11,9 +12,10 @@ export const PHOTO_PLACEHOLDER_TEXT = '첫 번째 빵 사진을 기다리고 있
 // 좁은 칸(찜 목록의 작은 동그라미 등)에서는 글자를 숨기고 빵 기사만 크게 보여줘요 (칸 너비 기준, container query)
 const SMALL = '@container (max-width: 150px)'
 
-// 사진이 없을 때 아치 안을 채우는 그림: 양피지 바탕 + 카메라를 든 빵 기사 + 안내 문구.
+// 사진이 없을 때 아치 안을 채우는 그림: 양피지 바탕 + 빵 기사(포즈 4종 중 하나) + 안내 문구.
 // 실제 사진이 아니라는 걸 문구로 분명히 알려요. 부모(아치 프레임)가 크기를 정하고, 이 그림은 그 안을 가득 채워요.
-export const PhotoPlaceholder = ({ label, className, sx }) => (
+// pose: constants/photoPlaceholders.js의 포즈 이름 (빵집 사진은 BakeryPhoto가 빵집 ID로 골라 줘요)
+export const PhotoPlaceholder = ({ label, pose = 'knightCamera', className, sx }) => (
   <Box
     role="img"
     aria-label={label}
@@ -40,7 +42,7 @@ export const PhotoPlaceholder = ({ label, className, sx }) => (
   >
     {/* 칸이 낮으면(maxHeight) 빵 기사를 비율 그대로 줄여요. 아주 좁은 칸은 칸 너비의 84%로 크게 보여줘요 */}
     <Illustration
-      name="knightCamera"
+      name={pose}
       width="min(62cqw, 260px)"
       sx={{ flexShrink: 1, minHeight: 0, maxHeight: '62%', objectFit: 'contain', [SMALL]: { width: '84cqw', maxHeight: '100%' } }}
     />
@@ -76,6 +78,7 @@ const BakeryPhoto = ({ bakeryId, name, className, sx }) => {
     return (
       <PhotoPlaceholder
         label={`${name}: ${src ? '사진을 불러오지 못했어요' : '아직 등록된 사진이 없어요'}`}
+        pose={getPlaceholderPose(bakeryId)}
         className={className}
         sx={sx}
       />
