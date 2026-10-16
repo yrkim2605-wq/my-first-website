@@ -19,11 +19,14 @@ import { ALL_BAKERIES_SECTION_ID } from '../../constants/sectionIds'
 //  - 같은 컴포넌트 · 같은 상태(검색어 · 지역)와 같은 함수를 받아서, 위아래 어느 쪽에서 바꿔도 결과가 똑같이 바뀌어요 (검색 로직은 복제하지 않아요).
 //  - 이미 결과 자리에 있으니 스크롤하지 않아요: [결과 보기] 줄을 빼고, Enter는 키보드만 닫아요.
 //  - 결과 개수와 [필터 초기화]는 결과 제목 줄에 이미 있어서 이 바에는 넣지 않아요.
+//  - PC(md 이상)에서는 아래 카드 그리드와 같은 너비로 펼치고, 안을 "검색창 5 : 지역 칩 7" 두 칸으로 나눠요. 검색창만 한없이 길어지지 않고, 지역 칩이 검색창 옆에 한 줄로 놓여요.
+//    폰에서는 위쪽 바와 똑같이 검색창 아래에 칩이 가로로 이어져요.
 const SCROLL_OFFSET = -100 // 고정 헤더에 가려지지 않도록
 
+// placeholder: 위쪽은 "탐험을 시작하는" 느낌, 결과 쪽은 "결과를 다시 찾는" 느낌으로 구분해요 (좁은 폰에서도 한 줄에 들어오게 짧게)
 const LABELS = {
-  hero: { section: '빵집 찾기', input: '빵집 이름이나 메뉴 검색', group: '지역으로 빵집 거르기' },
-  results: { section: '검색 결과에서 빵집 다시 찾기', input: '빵집 이름이나 메뉴 다시 검색', group: '지역으로 검색 결과 거르기' },
+  hero: { section: '빵집 찾기', input: '빵집 이름이나 메뉴 검색', group: '지역으로 빵집 거르기', placeholder: '오늘은 어떤 빵집을 탐험할까요?' },
+  results: { section: '검색 결과에서 빵집 다시 찾기', input: '빵집 이름이나 메뉴 다시 검색', group: '지역으로 검색 결과 거르기', placeholder: '다른 빵집 · 메뉴로 다시 찾아보기' },
 }
 
 const BakerySearchBar = ({ searchQuery, onSearchChange, selectedDistrictId, onSelectDistrict, resultCount, onReset, variant = 'hero' }) => {
@@ -69,23 +72,26 @@ const BakerySearchBar = ({ searchQuery, onSearchChange, selectedDistrictId, onSe
       <Box
         sx={{
           ...PARCHMENT_SX,
-          maxWidth: 860,
+          maxWidth: isResults ? { xs: 860, md: 'none' } : 860, // 결과 자리: PC에서는 카드 그리드와 같은 너비
           mx: isResults ? 0 : 'auto', // 결과 자리: 왼쪽 제목과 줄을 맞춰요
           p: { xs: 1.5, sm: 2.5 },
           borderRadius: { xs: '18px', md: '24px' },
-          display: 'flex',
+          display: isResults ? { xs: 'flex', md: 'grid' } : 'flex',
           flexDirection: 'column',
           gap: { xs: 1.25, sm: 1.75 },
+          ...(isResults && { gridTemplateColumns: { md: 'minmax(280px, 5fr) 7fr' }, alignItems: { md: 'center' }, columnGap: { md: 3 } }),
         }}
       >
         <TextField
           value={searchQuery}
           onChange={onSearchChange}
           onKeyDown={handleKeyDown}
-          placeholder="빵집 이름이나 먹고 싶은 메뉴를 찾아보세요"
+          placeholder={labels.placeholder}
           variant="outlined"
           fullWidth
           sx={{
+            // 안내 문구는 폰에서 살짝 작게: 320px에서도 한 줄에 다 들어와요
+            '& .MuiOutlinedInput-input::placeholder': { fontSize: { xs: '0.9rem', sm: '1rem' } },
             '& .MuiOutlinedInput-root': {
               borderRadius: 999,
               backgroundColor: 'background.paper',
@@ -114,7 +120,9 @@ const BakerySearchBar = ({ searchQuery, onSearchChange, selectedDistrictId, onSe
             display: 'flex',
             justifyContent: { xs: 'flex-start', sm: isResults ? 'flex-start' : 'center' },
             gap: 1,
-            overflowX: 'auto',
+            // 결과 자리의 PC: 칩이 한 줄에 다 안 들어가면 줄바꿈 (폰은 가로로 넘겨요)
+            overflowX: isResults ? { xs: 'auto', md: 'visible' } : 'auto',
+            flexWrap: isResults ? { xs: 'nowrap', md: 'wrap' } : 'nowrap',
             mx: { xs: -0.5, sm: 0 },
             px: { xs: 0.5, sm: 0 },
             scrollbarWidth: 'none',

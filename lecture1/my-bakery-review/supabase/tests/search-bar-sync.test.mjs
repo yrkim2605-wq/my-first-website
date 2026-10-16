@@ -44,6 +44,9 @@ check('히어로 쪽만 "N곳을 찾았어요" · [결과 보기] · [초기화]
 check('결과 쪽에는 [결과 보기] 줄이 없어요 (이미 결과 자리라 스크롤하지 않아요)', !results.includes('결과 보기') && !results.includes('곳을 찾았어요'))
 check('접근성: 두 검색창 · 지역 그룹 · 영역의 이름표가 서로 달라요', ['aria-label="빵집 이름이나 메뉴 검색"', 'aria-label="지역으로 빵집 거르기"', 'aria-label="빵집 찾기"'].every((a) => hero.includes(a)) && ['aria-label="빵집 이름이나 메뉴 다시 검색"', 'aria-label="지역으로 검색 결과 거르기"', 'aria-label="검색 결과에서 빵집 다시 찾기"'].every((a) => results.includes(a)))
 
+check('안내 문구 구분: 위쪽은 "탐험", 결과 쪽은 "다시 찾아보기"', hero.includes('placeholder="오늘은 어떤 빵집을 탐험할까요?"') && results.includes('placeholder="다른 빵집 · 메뉴로 다시 찾아보기"'))
+check('결과 쪽 안내 문구는 위쪽과 달라요 (재검색 느낌)', !hero.includes('다시 찾아보기') && !results.includes('탐험'))
+
 const zero = render({ variant: 'results', searchQuery: '없는빵집', selectedDistrictId: null, resultCount: 0 })
 check('결과가 0개여도 결과 쪽 검색창과 지역 필터가 그대로 보여요', zero.includes('<input') && hasAllChips(zero, DISTRICTS))
 const loading = render({ variant: 'results', resultCount: null })
