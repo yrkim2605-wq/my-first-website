@@ -272,11 +272,11 @@ const Home = () => {
                 md: 'repeat(3, 1fr)',
                 lg: 'repeat(4, 1fr)',
               },
-              gap: 3,
+              gap: { xs: 1.5, sm: 3 }, // 폰의 가로형 컴팩트 카드는 간격을 좁혀요
             }}
           >
             {bakeriesLoading &&
-              Array.from({ length: 8 }, (_, i) => <BakeryCardSkeleton key={i} />)}
+              Array.from({ length: 8 }, (_, i) => <BakeryCardSkeleton key={i} compactMobile />)}
             {!bakeriesLoading &&
               !bakeriesError &&
               visibleBakeries.map((bakery) => (
@@ -287,6 +287,7 @@ const Home = () => {
                   {...ratingProps(bakery)}
                   isNew={newBakeryIds.has(bakery.id)}
                   discovered={discoveredIds.has(String(bakery.id))}
+                  compactMobile
                 />
               ))}
           </Box>

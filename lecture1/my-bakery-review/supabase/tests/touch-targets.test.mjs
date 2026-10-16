@@ -25,12 +25,15 @@ const files = walk(srcDir).filter((f) => f.endsWith('.jsx'))
 const read = (f) => fs.readFileSync(f, 'utf8').replace(/\r\n/g, '\n')
 
 // 1) 소스에 남은 44px 미만 높이 (BakeryStageCard의 24는 글자 줄 높이라 버튼이 아니에요)
+//    예외: minHeight: 0은 높이를 정하는 게 아니라 "줄어들 수 있게" 하는 flex 설정이에요. BakeryStageCard의 평점 줄(24)은 여러 줄로 풀어 써도 같은 글자 줄이에요.
 {
   const small = []
   for (const file of files) {
+    const isStageCard = path.basename(file) === 'BakeryStageCard.jsx'
     read(file).split('\n').forEach((line, i) => {
       for (const match of line.matchAll(/minHeight: (\d+)[,} ]/g)) {
         const value = Number(match[1])
+        if (value === 0 || (isStageCard && value === 24)) continue
         if (value < 44 && !/Typography|<Box sx=\{\{ display: 'flex', alignItems: 'center', gap: 1\.5, minHeight: 24/.test(line)) small.push(`${path.relative(srcDir, file)}:${i + 1} minHeight ${value}`)
       }
     })
