@@ -3,11 +3,7 @@ import { useTheme } from '@mui/material/styles'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Chip from '@mui/material/Chip'
 import Button from '@mui/material/Button'
-import TextField from '@mui/material/TextField'
-import InputAdornment from '@mui/material/InputAdornment'
-import SearchIcon from '@mui/icons-material/Search'
 import BakeryStageCard from '../components/common/BakeryStageCard'
 import PopularBakeryCarousel from '../components/common/PopularBakeryCarousel'
 import PopularReviewCarousel from '../components/common/PopularReviewCarousel'
@@ -15,17 +11,16 @@ import InfiniteBakeryMarquee from '../components/common/InfiniteBakeryMarquee'
 import SectionHeading from '../components/common/SectionHeading'
 import AdventureHero from '../components/home/AdventureHero'
 import BakeryMapHero from '../components/home/BakeryMapHero'
+import BakerySearchBar from '../components/home/BakerySearchBar'
 import LevelUpTeaser from '../components/home/LevelUpTeaser'
 import ScallopEdge from '../components/common/decor/ScallopEdge'
 import FlatFlower from '../components/common/decor/FlatFlower'
-import Illustration from '../components/common/decor/Illustration'
-import HandNote from '../components/common/decor/HandNote'
 import StatusMessage from '../components/common/StatusMessage'
 import BakeryCardSkeleton from '../components/common/BakeryCardSkeleton'
 import { BAKERIES } from '../constants/bakeries'
 import { DISTRICTS } from '../constants/districts'
 import { BAKERY_REVIEWS, REVIEW_COUNT_BY_BAKERY_ID } from '../constants/bakeryReviews'
-import { FILTER_CHIP_SX } from '../constants/chipStyles'
+import { ALL_BAKERIES_SECTION_ID } from '../constants/sectionIds'
 import { getAuthorLevel } from '../utils/authorLevel'
 import { useBusanBakeries } from '../hooks/useBusanBakeries'
 import { useGameState } from '../hooks/useGameState'
@@ -88,10 +83,10 @@ const Home = () => {
 
   const { palette } = theme
   const sageColor = palette.secondary.main
-  const wineColor = palette.primary.main
 
   const selectedDistrict = DISTRICTS.find((d) => d.id === selectedDistrictId)
   const normalizedQuery = searchQuery.trim().toLowerCase()
+  const isFiltering = Boolean(normalizedQuery) || Boolean(selectedDistrictId)
 
   const popularBakeries = useMemo(() => realBakeries.slice(0, 5), [realBakeries])
   const newBakeries = useMemo(() => [...realBakeries].reverse().slice(0, 5), [realBakeries])
@@ -166,6 +161,16 @@ const Home = () => {
     <>
       {/* 첫 화면: 모험 시작 (타이틀 + 빵 기사) */}
       <AdventureHero />
+
+      {/* 빵집 찾기: 이름 · 메뉴 검색 + 지역 필터 (결과는 아래 "전체 빵집"에 나와요) */}
+      <BakerySearchBar
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        selectedDistrictId={selectedDistrictId}
+        onSelectDistrict={handleSelectDistrict}
+        resultCount={bakeriesLoading || bakeriesError ? null : filteredBakeries.length}
+        onReset={handleResetFilters}
+      />
 
       {/* 빵지순례 월드맵: 부산 빵집 지도 */}
       <BakeryMapHero
@@ -256,109 +261,35 @@ const Home = () => {
         </Box>
       )}
 
-      {/* 이름 · 메뉴 검색: 와인 색 블록 (위치로 찾기는 맨 위 지도 Hero에서) */}
-      <Box sx={{ ...FULL_BLEED_SX }}>
-        <Box sx={{ position: 'relative', bgcolor: 'primary.main', pt: SECTION_PY, pb: { xs: 5, md: 6 }, overflow: 'hidden' }}>
-          <FlatFlower petal={palette.mustard.main} center={palette.primary.main} size={60} sx={{ position: 'absolute', top: 28, right: { xs: -16, md: 120, lg: '3%' } }} />
-          <FlatFlower petal={palette.background.paper} center={palette.terracotta.main} size={40} sx={{ position: 'absolute', bottom: 24, left: { xs: 12, md: 110 }, opacity: 0.9 }} />
-          {/* 검색창 양옆 여백의 장식: 왼쪽 빵 바구니, 오른쪽 손글씨 + 딸기 케이크. 여백이 넉넉한 넓은 화면에서만 보여요. */}
-          <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
-            <Illustration
-              name="breadBasket"
-              width={180}
-              sx={{ position: 'absolute', left: '5%', top: '50%', transform: 'translateY(-50%) rotate(-4deg)' }}
-            />
-            <HandNote color="mustard.main" rotate={-8} sx={{ position: 'absolute', right: '12%', top: 52 }}>
-              맛있는 빵집을
-              <br />
-              더 쉽게 찾아보세요!
-            </HandNote>
-            <Illustration
-              name="strawberryCake"
-              width={104}
-              sx={{ position: 'absolute', right: '6%', bottom: 40, transform: 'rotate(6deg)' }}
-            />
-          </Box>
-          <Container maxWidth="sm" sx={{ position: 'relative' }}>
-            <SectionHeading
-              eyebrow="SEARCH BY NAME"
-              title="찾고 싶은 빵집이 있나요?"
-              description="빵집 이름이나 먹고 싶은 메뉴로 찾아보세요."
-              tone="onColor"
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="빵집 이름이나 메뉴를 검색해 보세요"
-              variant="outlined"
-              fullWidth
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 999,
-                  backgroundColor: 'background.paper',
-                  '& fieldset': { borderColor: 'transparent' },
-                  '&:hover fieldset': { borderColor: 'mustard.main' },
-                  '&.Mui-focused fieldset': { borderColor: 'mustard.main', borderWidth: 2 },
-                },
-              }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-          </Container>
-        </Box>
-        <ScallopEdge color={wineColor} position="bottom" />
-      </Box>
-
       {/* 전체 빵집 */}
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" component="section" id={ALL_BAKERIES_SECTION_ID} aria-labelledby="all-bakeries-title">
         <Box sx={{ pt: { xs: 5, md: 7 }, pb: SECTION_PY }}>
+          {/* 검색어 · 지역은 위쪽 "빵집 찾기" 바에서 골라요. 여기서는 결과 제목과 개수만 보여줘요. */}
           <Box
             sx={{
               display: 'flex',
-              alignItems: { xs: 'flex-start', md: 'flex-end' },
+              alignItems: 'flex-end',
               justifyContent: 'space-between',
-              flexDirection: { xs: 'column', md: 'row' },
               gap: 2,
               mb: 3,
             }}
           >
             <Box>
-              <Typography variant="h2" sx={{ color: 'primary.main', fontSize: { xs: '1.5rem', sm: '1.8rem' } }}>
-                {selectedDistrict ? `${selectedDistrict.name} 빵집` : '전체 빵집'}
+              <Typography id="all-bakeries-title" variant="h2" sx={{ color: 'primary.main', fontSize: { xs: '1.5rem', sm: '1.8rem' } }}>
+                {normalizedQuery ? `“${searchQuery.trim()}” 검색 결과` : selectedDistrict ? `${selectedDistrict.name} 빵집` : '전체 빵집'}
               </Typography>
               {!bakeriesLoading && !bakeriesError && (
                 <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary', mt: 0.5 }}>
+                  {normalizedQuery && selectedDistrict ? `${selectedDistrict.name} · ` : ''}
                   {filteredBakeries.length}곳
                 </Typography>
               )}
             </Box>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip
-                label="전체"
-                variant={!selectedDistrictId ? 'filled' : 'outlined'}
-                color={!selectedDistrictId ? 'primary' : 'default'}
-                onClick={() => handleSelectDistrict(null)}
-                sx={FILTER_CHIP_SX}
-              />
-              {DISTRICTS.map((district) => (
-                <Chip
-                  key={district.id}
-                  label={district.name}
-                  variant={selectedDistrictId === district.id ? 'filled' : 'outlined'}
-                  color={selectedDistrictId === district.id ? 'primary' : 'default'}
-                  onClick={() => handleSelectDistrict(district.id)}
-                  sx={FILTER_CHIP_SX}
-                />
-              ))}
-            </Box>
+            {isFiltering && (
+              <Button size="small" onClick={handleResetFilters} sx={{ fontWeight: 700, flexShrink: 0 }}>
+                필터 초기화
+              </Button>
+            )}
           </Box>
 
           {bakeriesError && bakeriesErrorMessage}
