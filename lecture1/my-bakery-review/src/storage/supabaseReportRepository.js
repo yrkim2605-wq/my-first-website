@@ -10,14 +10,37 @@ import { PHOTO_BUCKET } from './photoStorage'
 // getClient: () => Promise<SupabaseClient>  (테스트에서는 가짜 클라이언트를 넣어요)
 
 export const REPORT_TARGET_TYPES = ['post', 'comment', 'review']
+// targetTypes: 이 사유를 보여줄 대상 (없으면 모두). 'unrelated_photo'는 일지(리뷰) 사진에만 써요.
+export const UNRELATED_PHOTO_REASON = 'unrelated_photo'
 export const REPORT_REASONS = [
   { id: 'spam', label: '광고 · 도배' },
   { id: 'abuse', label: '욕설 · 혐오 · 비방' },
   { id: 'illegal', label: '불법 · 음란 · 폭력적인 내용' },
   { id: 'privacy', label: '개인정보 · 사생활 침해' },
+  { id: UNRELATED_PHOTO_REASON, label: '빵집과 관련 없는 사진', targetTypes: ['review'] },
   { id: 'other', label: '기타' },
 ]
 export const REPORT_DETAIL_MAX = 300
+
+// ── "빵집과 관련 없는 사진" 사유와 서버 규칙 ──
+// 서버(reports 표, 0009)는 사유를 spam · abuse · illegal · privacy · other 다섯 가지만 받아요 (check 제약).
+// 새 사유 코드를 그대로 보내면 서버가 거절하므로, 서버에는 기존 코드 'other'로 보내고 "자세한 내용" 맨 앞에 구분용 표식을 붙여요.
+// 운영자 화면으로 읽어 올 때는 표식을 보고 다시 'unrelated_photo'로 되돌려서 사유가 구분돼요.
+// (표식은 사람이 직접 써도 같은 결과예요 — 운영자 화면의 표시만 달라질 뿐 권한이나 처리에는 영향이 없어요.)
+// 나중에 서버 제약에 새 코드를 추가하면(공개 베타 전 사진 승인 작업과 함께) 이 매핑을 지우고 코드를 그대로 보내면 돼요.
+export const UNRELATED_PHOTO_TAG = '[빵집과 무관한 사진]'
+
+// 사유별로 사용자가 쓸 수 있는 "자세한 내용" 최대 글자 수 (표식이 들어갈 자리를 빼요)
+export const getReportDetailMax = (reason) => (reason === UNRELATED_PHOTO_REASON ? REPORT_DETAIL_MAX - UNRELATED_PHOTO_TAG.length - 1 : REPORT_DETAIL_MAX)
+
+// 서버에서 읽은 (reason, detail)을 화면용 사유로 되돌려요
+const decodeReason = (reason, detail) => {
+  const text = detail ?? ''
+  if (reason === 'other' && text.startsWith(UNRELATED_PHOTO_TAG)) {
+    return { reason: UNRELATED_PHOTO_REASON, detail: text.slice(UNRELATED_PHOTO_TAG.length).trim() }
+  }
+  return { reason, detail: text }
+}
 export const REPORT_NOTE_MAX = 300
 export const REPORT_STATUSES = ['open', 'resolved', 'rejected']
 export const REPORT_ACTIONS = ['dismiss', 'remove']
@@ -50,20 +73,49 @@ export const toReportError = (error) => {
 export const validateReport = ({ targetType, targetId, reason, detail }) => {
   if (!REPORT_TARGET_TYPES.includes(targetType)) throw new RepositoryError('INVALID_INPUT', '신고할 대상을 확인할 수 없어요.')
   if (!UUID_PATTERN.test(String(targetId ?? ''))) throw new RepositoryError('INVALID_INPUT', '신고할 대상을 확인할 수 없어요.')
-  if (!REPORT_REASONS.some((item) => item.id === reason)) throw new RepositoryError('INVALID_INPUT', '신고 사유를 골라 주세요.')
+  const reasonItem = REPORT_REASONS.find((item) => item.id === reason)
+  if (!reasonItem) throw new RepositoryError('INVALID_INPUT', '신고 사유를 골라 주세요.')
+  if (reasonItem.targetTypes && !reasonItem.targetTypes.includes(targetType)) throw new RepositoryError('INVALID_INPUT', '이 사유는 일지(리뷰) 사진을 신고할 때만 쓸 수 있어요.')
   const cleanDetail = String(detail ?? '').trim()
-  if (cleanDetail.length > REPORT_DETAIL_MAX) throw new RepositoryError('INVALID_INPUT', `자세한 내용은 ${REPORT_DETAIL_MAX}자까지 쓸 수 있어요.`)
+  const detailMax = getReportDetailMax(reason)
+  if (cleanDetail.length > detailMax) throw new RepositoryError('INVALID_INPUT', `자세한 내용은 ${detailMax}자까지 쓸 수 있어요.`)
+  if (reason === UNRELATED_PHOTO_REASON) {
+    // 서버가 아는 사유 'other'로 보내고, 표식으로 구분해요 (위 설명 참고)
+    return { target_type: targetType, target_id: String(targetId), reason: 'other', detail: cleanDetail ? `${UNRELATED_PHOTO_TAG} ${cleanDetail}` : UNRELATED_PHOTO_TAG }
+  }
   return { target_type: targetType, target_id: String(targetId), reason, detail: cleanDetail || null }
 }
 
 const REPORT_COLUMNS = 'id, target_type, target_id, reason, detail, target_user_id, target_snapshot, target_context, status, handled_note, handled_at, created_at'
 
-const toReport = (row, nicknames) => ({
+// 신고된 리뷰의 사진을 운영자 화면에서 바로 볼 수 있게 찾아요 (리뷰는 모두 공개로 읽히고 사진 저장소도 공개 읽기예요).
+// status: 'ready' 사진 있음(url) · 'none' 사진 없는 리뷰 · 'gone' 리뷰가 이미 삭제됨 · 'error' 사진 정보를 못 불러옴
+// 사진 찾기가 실패해도 신고 목록 전체는 그대로 보여요 (그 신고만 'error').
+const lookupReviewPhotos = async (client, reviewIds) => {
+  const result = new Map()
+  if (reviewIds.length === 0) return result
+  try {
+    const { data, error } = await client.from('reviews').select('id, photo_path').in('id', reviewIds)
+    if (error) throw error
+    const pathById = new Map((data ?? []).map((review) => [review.id, review.photo_path]))
+    for (const id of reviewIds) {
+      if (!pathById.has(id)) result.set(id, { status: 'gone', url: null })
+      else if (!pathById.get(id)) result.set(id, { status: 'none', url: null })
+      else result.set(id, { status: 'ready', url: client.storage.from(PHOTO_BUCKET).getPublicUrl(pathById.get(id)).data.publicUrl })
+    }
+  } catch {
+    for (const id of reviewIds) result.set(id, { status: 'error', url: null })
+  }
+  return result
+}
+
+const toReport = (row, nicknames, photos) => ({
   id: row.id,
   targetType: row.target_type,
   targetId: row.target_id,
-  reason: row.reason,
-  detail: row.detail ?? '',
+  ...decodeReason(row.reason, row.detail),
+  // 리뷰 신고만 사진 정보가 있어요 (글 · 댓글은 null)
+  photo: row.target_type === 'review' ? (photos.get(row.target_id) ?? { status: 'error', url: null }) : null,
   targetAuthor: nicknames.get(row.target_user_id) ?? '(탈퇴했거나 알 수 없음)',
   snapshot: row.target_snapshot ?? '',
   context: row.target_context ?? null,
@@ -118,7 +170,9 @@ export const createSupabaseReportRepository = (getClient) => ({
         if (profileError) throw profileError
         for (const profile of profiles ?? []) nicknames.set(profile.id, profile.nickname)
       }
-      return rows.map((row) => toReport(row, nicknames))
+      const reviewIds = [...new Set(rows.filter((row) => row.target_type === 'review').map((row) => row.target_id))]
+      const photos = await lookupReviewPhotos(client, reviewIds)
+      return rows.map((row) => toReport(row, nicknames, photos))
     } catch (error) {
       throw toReportError(error)
     }

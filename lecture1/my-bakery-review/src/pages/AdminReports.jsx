@@ -20,7 +20,7 @@ import { PAGE_TABS_SX } from '../constants/tabStyles'
 import { PARCHMENT_SX } from '../constants/rpgStyles'
 import { useProfile } from '../hooks/useProfile'
 import { reportRepository } from '../storage/reportRepository'
-import { REPORT_NOTE_MAX, REPORT_REASONS } from '../storage/supabaseReportRepository'
+import { REPORT_NOTE_MAX, REPORT_REASONS, UNRELATED_PHOTO_REASON } from '../storage/supabaseReportRepository'
 import { formatPostDate } from '../utils/communityFormat'
 import { RADIUS } from '../theme'
 
@@ -39,6 +39,42 @@ const targetPath = (report) => {
   return report.context ? `/bakery/${report.context}` : null
 }
 
+const PHOTO_NOTES = {
+  none: '이 일지에는 사진이 없어요.',
+  gone: '이 일지는 이미 삭제돼서 사진을 볼 수 없어요.',
+  error: '사진 정보를 불러오지 못했어요. 잠시 후 목록을 새로고침해 주세요.',
+}
+
+// 신고된 일지(리뷰)의 사진 미리보기. 일지 신고에만 나와요 (photo가 null이면 아무것도 그리지 않아요).
+// 사진 없음 · 이미 삭제됨 · 정보 못 불러옴 · 이미지 로딩 실패를 각각 알려줘요.
+const ReportPhotoPreview = ({ photo }) => {
+  const [failedUrl, setFailedUrl] = useState(null) // 못 불러온 주소를 기억해요
+  if (!photo) return null
+  const loadFailed = photo.status === 'ready' && failedUrl === photo.url
+  if (photo.status !== 'ready' || loadFailed) {
+    const message = loadFailed ? '사진을 불러오지 못했어요. 파일이 지워졌거나 주소가 막혔을 수 있어요.' : PHOTO_NOTES[photo.status]
+    return (
+      <Typography role="status" sx={{ p: 1.5, borderRadius: RADIUS.md, border: '1px dashed', borderColor: 'text.secondary', fontSize: '0.85rem', color: 'text.secondary', wordBreak: 'keep-all' }}>
+        신고된 사진: {message}
+      </Typography>
+    )
+  }
+  return (
+    <Box>
+      <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>신고된 사진 (누르면 원본이 새 창에서 열려요)</Typography>
+      <Box component="a" href={photo.url} target="_blank" rel="noopener noreferrer" aria-label="신고된 사진 원본 열기" sx={{ display: 'inline-block', maxWidth: '100%' }}>
+        <Box
+          component="img"
+          src={photo.url}
+          alt="신고된 일지의 사진"
+          onError={() => setFailedUrl(photo.url)}
+          sx={{ display: 'block', maxWidth: '100%', maxHeight: 280, borderRadius: RADIUS.md, border: '2px solid #c9a56a', bgcolor: 'rgba(46,42,37,0.05)' }}
+        />
+      </Box>
+    </Box>
+  )
+}
+
 const ReportCard = ({ report, busy, onHandle }) => {
   const [note, setNote] = useState('')
   const [confirmRemove, setConfirmRemove] = useState(false)
@@ -50,7 +86,7 @@ const ReportCard = ({ report, busy, onHandle }) => {
     <Box component="article" sx={{ ...PARCHMENT_SX, borderRadius: RADIUS.lg, p: { xs: 2, sm: 2.5 }, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
         <Chip size="small" label={TARGET_LABEL[report.targetType]} sx={{ fontWeight: 800, bgcolor: 'wood.main', color: 'gold.light' }} />
-        <Chip size="small" label={reason} sx={{ fontWeight: 800 }} />
+        <Chip size="small" label={reason} color={report.reason === UNRELATED_PHOTO_REASON ? 'warning' : 'default'} sx={{ fontWeight: 800 }} />
         <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', ml: 'auto' }}>{formatPostDate(report.createdAt)}</Typography>
       </Box>
 
@@ -61,6 +97,7 @@ const ReportCard = ({ report, busy, onHandle }) => {
       <Box sx={{ p: 1.5, borderRadius: RADIUS.md, bgcolor: 'rgba(46,42,37,0.05)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.9rem', lineHeight: 1.6 }}>
         {report.snapshot || '(내용 없음)'}
       </Box>
+      <ReportPhotoPreview photo={report.photo} />
       {report.detail && (
         <Typography sx={{ fontSize: '0.85rem', wordBreak: 'break-word' }}>
           <b>신고자 설명:</b> {report.detail}

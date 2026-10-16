@@ -142,6 +142,14 @@ const report = (user, type, targetId, reason = 'spam', detail = null) =>
   check('상세 301자는 거부', longDetail.error !== null)
   const okLong = await report(D, 'post', post, 'other', 'x'.repeat(300))
   check('상세 300자는 통과', okLong.error === null)
+  // 앱의 "빵집과 관련 없는 사진" 사유: 서버 제약은 새 코드를 모르므로, 앱은 'other' + 구분 표식으로 보내요 (src/storage/supabaseReportRepository.js)
+  const newCode = await report(D, 'review', review, 'unrelated_photo', '고양이 사진')
+  check('서버는 새 사유 코드(unrelated_photo)를 거절해요 → 앱이 기존 코드로 매핑하는 이유', newCode.error?.code === '23514', `${newCode.error?.code} ${newCode.error?.message}`)
+  // (D의 하루 한도 시험이 정확한 건수를 세므로, 성공 사례는 다른 일반 사용자(여기서는 운영자 계정이 일반 사용자 자격으로)가 신고해요)
+  const tag = '[빵집과 무관한 사진]'
+  const mapped = await report(ADMIN, 'review', review, 'other', `${tag} ${'x'.repeat(300 - tag.length - 1)}`)
+  check('매핑한 값(other + 표식, 전체 300자)은 서버 제약을 통과해요', mapped.error === null, mapped.error?.message)
+  check('표식은 상세 앞부분에 그대로 저장돼요 (운영자 화면이 읽어서 사유를 구분)', (await root(`select detail from public.reports where id = $1`, [mapped.rows[0]?.id]))[0]?.detail.startsWith(tag))
 }
 {
   // 하루 20건 상한: B가 댓글 21개를 달고(댓글 하루 상한 50), D가 신고

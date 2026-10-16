@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography'
 import OutlinedFlagIcon from '@mui/icons-material/OutlinedFlag'
 import { useProfile } from '../../hooks/useProfile'
 import { reportRepository } from '../../storage/reportRepository'
-import { REPORT_DETAIL_MAX, REPORT_REASONS } from '../../storage/supabaseReportRepository'
+import { REPORT_REASONS, getReportDetailMax } from '../../storage/supabaseReportRepository'
 import { RADIUS } from '../../theme'
 
 const TARGET_LABEL = { post: '글', comment: '댓글', review: '일지' }
@@ -36,6 +36,16 @@ const ReportButton = ({ targetType, targetId, sx }) => {
   if (!isAccountMode || !profile || !reportRepository) return null
 
   const label = TARGET_LABEL[targetType] ?? '글'
+  // 이 대상에 해당하는 사유만 보여줘요 (예: "빵집과 관련 없는 사진"은 일지에만)
+  const reasonItems = REPORT_REASONS.filter((item) => !item.targetTypes || item.targetTypes.includes(targetType))
+  const detailMax = getReportDetailMax(reason)
+
+  // 사유를 바꾸면 사유별 글자 수 한도에 맞게 자세한 내용을 줄여요
+  const handleReasonChange = (event) => {
+    const next = event.target.value
+    setReason(next)
+    setDetail((current) => current.slice(0, getReportDetailMax(next)))
+  }
 
   const handleClose = () => {
     if (submitting) return
@@ -91,8 +101,8 @@ const ReportButton = ({ targetType, targetId, sx }) => {
                 <FormLabel id="report-reason-label" sx={{ fontWeight: 700, mb: 0.5 }}>
                   신고 사유
                 </FormLabel>
-                <RadioGroup aria-labelledby="report-reason-label" value={reason} onChange={(event) => setReason(event.target.value)}>
-                  {REPORT_REASONS.map((item) => (
+                <RadioGroup aria-labelledby="report-reason-label" value={reason} onChange={handleReasonChange}>
+                  {reasonItems.map((item) => (
                     <FormControlLabel key={item.id} value={item.id} control={<Radio />} label={item.label} sx={{ minHeight: 44 }} />
                   ))}
                 </RadioGroup>
@@ -106,8 +116,8 @@ const ReportButton = ({ targetType, targetId, sx }) => {
                 maxRows={5}
                 fullWidth
                 size="small"
-                slotProps={{ htmlInput: { maxLength: REPORT_DETAIL_MAX } }}
-                helperText={`${detail.length}/${REPORT_DETAIL_MAX}`}
+                slotProps={{ htmlInput: { maxLength: detailMax } }}
+                helperText={`${detail.length}/${detailMax}`}
               />
               {error && <Alert severity="error">{error.message}</Alert>}
             </DialogContent>

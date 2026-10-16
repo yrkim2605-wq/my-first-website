@@ -21,6 +21,7 @@ import { createId } from '../../storage/localStore'
 import { buildGameState, diffGameState, predictNewReviewExp } from '../../utils/gameState'
 import { IS_ACCOUNT_MODE } from '../../lib/backend'
 import { resizeImageFile } from '../../utils/resizeImageFile'
+import { REVIEW_PHOTO_ACCEPT, REVIEW_PHOTO_HINT, validateImageFile } from '../../utils/validateImageFile'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
@@ -76,6 +77,12 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
+    // 먼저 형식(JPG · PNG · WebP)과 크기(10MB)를 점검해요. 통과한 사진만 800px JPEG로 줄여요.
+    const check = await validateImageFile(file)
+    if (!check.ok) {
+      setError(check.message)
+      return
+    }
     try {
       setPhoto(await resizeImageFile(file))
       setError(null)
@@ -224,10 +231,15 @@ const ReviewDialog = ({ open, onClose, bakery, isRealBakery, existingReview, onS
                   </Button>
                 </Box>
               ) : (
-                <Button component="label" variant="outlined" size="small" startIcon={<AddAPhotoIcon />}>
-                  사진 붙이기
-                  <input type="file" accept="image/*" hidden onChange={handlePhotoSelect} />
-                </Button>
+                <>
+                  <Button component="label" variant="outlined" size="small" startIcon={<AddAPhotoIcon />}>
+                    사진 붙이기
+                    <input type="file" accept={REVIEW_PHOTO_ACCEPT} hidden onChange={handlePhotoSelect} />
+                  </Button>
+                  <Typography sx={{ mt: 0.5, fontSize: '0.75rem', color: 'text.secondary' }}>
+                    {REVIEW_PHOTO_HINT} · 빵집과 관련된 사진만 올려 주세요
+                  </Typography>
+                </>
               )}
             </Box>
 

@@ -4,7 +4,7 @@
 import { createServer } from 'vite'
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'silent' })
-const { createSupabaseReportRepository, validateReport, toReportError } = await server.ssrLoadModule('/src/storage/supabaseReportRepository.js')
+const { createSupabaseReportRepository, validateReport, toReportError, REPORT_REASONS, UNRELATED_PHOTO_TAG, getReportDetailMax } = await server.ssrLoadModule('/src/storage/supabaseReportRepository.js')
 
 let passed = 0
 const failures = []
@@ -54,6 +54,14 @@ const makeClient = (state = {}) => {
       if (table === 'profiles') {
         return { select: () => ({ in: async (column, ids) => (record('profiles.in', [column, ids]), { data: state.profiles ?? [], error: null }) }) }
       }
+      if (table === 'reviews') {
+        // 신고된 리뷰의 사진 경로 찾기 (운영자 화면 미리보기용)
+        return {
+          select: () => ({
+            in: async (column, ids) => (record('reviews.in', [column, ids]), state.reviewsError ? { data: null, error: state.reviewsError } : { data: state.reviewRows ?? [], error: null }),
+          }),
+        }
+      }
       throw new Error('unexpected table ' + table)
     },
     rpc: async (name, args) => {
@@ -63,6 +71,7 @@ const makeClient = (state = {}) => {
     },
     storage: {
       from: (bucket) => ({
+        getPublicUrl: (path) => ({ data: { publicUrl: `https://cdn.test/${bucket}/${path}` } }),
         remove: async (paths) => {
           record('storage.remove', [bucket, paths])
           if (state.removeError) return { data: null, error: state.removeError }
@@ -178,6 +187,63 @@ for (const [label, input] of [
   check(`처리 입력 거부: ${label} (서버에 보내지 않아요)`, caught?.code === 'INVALID_INPUT' && !client.calls.some(([name]) => name === 'rpc'))
 }
 check('toReportError는 이미 변환된 오류를 그대로 둬요', (() => { const e = toReportError(serverError('OWN_CONTENT')); return toReportError(e) === e })())
+
+// ── "빵집과 관련 없는 사진" 사유: 서버 제약(5가지 코드)을 지키는 매핑 ──
+const throwsInvalid = (input) => { try { validateReport(input); return false } catch (error) { return error.code === 'INVALID_INPUT' } }
+check('사유 목록에 "빵집과 관련 없는 사진"이 있고 일지에만 쓰여요', REPORT_REASONS.some((item) => item.id === 'unrelated_photo' && item.label === '빵집과 관련 없는 사진' && item.targetTypes?.join() === 'review'))
+check('나머지 사유는 모든 대상에 쓸 수 있어요 (기존 5가지 그대로)', ['spam', 'abuse', 'illegal', 'privacy', 'other'].every((id) => REPORT_REASONS.some((item) => item.id === id && !item.targetTypes)))
+{
+  const noDetail = validateReport({ targetType: 'review', targetId: UUID, reason: 'unrelated_photo' })
+  check('서버에는 기존 코드 other로 보내요 (새 코드는 서버 제약이 거절해요)', noDetail.reason === 'other' && !JSON.stringify(noDetail).includes('unrelated_photo'))
+  check('자세한 내용이 없으면 구분 표식만 보내요', noDetail.detail === UNRELATED_PHOTO_TAG)
+  check('자세한 내용이 있으면 표식 + 내용', validateReport({ targetType: 'review', targetId: UUID, reason: 'unrelated_photo', detail: ' 고양이 사진이에요 ' }).detail === `${UNRELATED_PHOTO_TAG} 고양이 사진이에요`)
+}
+check('거부: 글 · 댓글에는 이 사유를 쓸 수 없어요', throwsInvalid({ targetType: 'post', targetId: UUID, reason: 'unrelated_photo' }) && throwsInvalid({ targetType: 'comment', targetId: UUID, reason: 'unrelated_photo' }))
+{
+  const max = getReportDetailMax('unrelated_photo')
+  check('이 사유의 내용 한도는 표식 자리를 뺀 만큼이에요 (보내는 전체는 300자 이내)', getReportDetailMax('spam') === 300 && max === 300 - UNRELATED_PHOTO_TAG.length - 1 && validateReport({ targetType: 'review', targetId: UUID, reason: 'unrelated_photo', detail: 'x'.repeat(max) }).detail.length === 300)
+  check('거부: 이 사유의 한도를 넘으면', throwsInvalid({ targetType: 'review', targetId: UUID, reason: 'unrelated_photo', detail: 'x'.repeat(max + 1) }))
+}
+{
+  const { repo, client } = repoFor({})
+  await repo.createReport({ targetType: 'review', targetId: UUID, reason: 'unrelated_photo', detail: '무관해요' })
+  const row = client.calls.find(([name]) => name === 'insert')[1][1]
+  check('신고하기가 보내는 값: other + 표식, 4칸만', row.reason === 'other' && row.detail === `${UNRELATED_PHOTO_TAG} 무관해요` && Object.keys(row).length === 4)
+}
+
+// ── 운영자 목록: 사유 구분 · 사진 미리보기 ──
+{
+  const rid = ['a', 'b', 'c'].map((ch) => ch.repeat(8) + '-1111-4111-8111-' + ch.repeat(12)) // 리뷰 id 3개
+  const base = { target_user_id: 'u9', target_snapshot: '일지 내용', target_context: '123', status: 'open', handled_note: null, handled_at: null, created_at: '2026-10-14T00:00:00Z' }
+  const rows = [
+    { ...base, id: UUID, target_type: 'review', target_id: rid[0], reason: 'other', detail: `${UNRELATED_PHOTO_TAG} 고양이 사진` },
+    { ...base, id: UUID2, target_type: 'review', target_id: rid[1], reason: 'other', detail: '그냥 기타 사유' },
+    { ...base, id: '33333333-3333-4333-8333-333333333333', target_type: 'review', target_id: rid[2], reason: 'spam', detail: `${UNRELATED_PHOTO_TAG} 표식을 흉내냄` },
+    { ...base, id: '44444444-4444-4444-8444-444444444444', target_type: 'post', target_id: UUID2, reason: 'spam', detail: null },
+  ]
+  const { repo, client } = repoFor({ rows, profiles: [{ id: 'u9', nickname: '작성자9' }], reviewRows: [{ id: rid[0], photo_path: 'u1/p.jpg' }, { id: rid[1], photo_path: null }] })
+  const list = await repo.listReports({ status: 'open' })
+  check('표식이 붙은 기타 사유는 "관련 없는 사진"으로 구분되고 표식은 내용에서 빠져요', list[0].reason === 'unrelated_photo' && list[0].detail === '고양이 사진')
+  check('일반 기타 사유는 그대로', list[1].reason === 'other' && list[1].detail === '그냥 기타 사유')
+  check('기타가 아닌 사유는 표식을 흉내내도 바뀌지 않아요', list[2].reason === 'spam' && list[2].detail.startsWith(UNRELATED_PHOTO_TAG))
+  check('사진 있는 리뷰: 공개 주소로 미리보기', list[0].photo.status === 'ready' && list[0].photo.url === 'https://cdn.test/photos/u1/p.jpg')
+  check('사진 없는 리뷰: none', list[1].photo.status === 'none' && list[1].photo.url === null)
+  check('이미 삭제된 리뷰(조회 결과에 없음): gone', list[2].photo.status === 'gone')
+  check('글 · 댓글 신고에는 사진 정보가 없어요 (null)', list[3].photo === null)
+  const lookups = client.calls.filter(([name]) => name === 'reviews.in')
+  check('리뷰 사진은 한 번에 모아서 조회해요 (리뷰 신고 3건만)', lookups.length === 1 && lookups[0][1][1].length === 3)
+}
+{
+  const { repo, client } = repoFor({ rows: [{ id: UUID, target_type: 'post', target_id: UUID2, reason: 'spam', detail: null, target_user_id: 'u9', target_snapshot: '글', target_context: null, status: 'open', handled_note: null, handled_at: null, created_at: '2026-10-14T00:00:00Z' }], profiles: [] })
+  await repo.listReports({ status: 'open' })
+  check('리뷰 신고가 없으면 리뷰를 조회하지 않아요', !client.calls.some(([name]) => name === 'reviews.in'))
+}
+{
+  const rid = 'dddddddd-1111-4111-8111-dddddddddddd'
+  const rows = [{ id: UUID, target_type: 'review', target_id: rid, reason: 'illegal', detail: null, target_user_id: 'u9', target_snapshot: '일지', target_context: '1', status: 'open', handled_note: null, handled_at: null, created_at: '2026-10-14T00:00:00Z' }]
+  const list = await repoFor({ rows, profiles: [], reviewsError: serverError('boom') }).repo.listReports({ status: 'open' })
+  check('사진 조회가 실패해도 신고 목록은 그대로 보여요 (그 신고만 error)', list.length === 1 && list[0].photo.status === 'error' && list[0].reason === 'illegal')
+}
 
 await server.close()
 console.log(`\n통과 ${passed} · 실패 ${failures.length}`)
