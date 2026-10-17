@@ -9,6 +9,7 @@ import Box from '@mui/material/Box'
 //  - 마을 소품 (홈 장식용으로 요소.png에서 새로 잘랐어요): barrel · lamp-post · chalkboard · camp-birdhouses(새집 · 우체통 · 그루터기 장면) · stall(가판대) · sign-vines · sign-hanging(글자 없는 나무 간판)
 //  - 말풍선: bubble-pin · bubble-heart · bubble-alert · bubble-question · bubble-music
 //  - 풀 · 꽃: bush-flowers · bush-leafy · plant-leaf · flower-white · flower-yellow
+//  - 덤불 시트(덤불.png)에서 잘라낸 큰 덤불: grove-rock · grove-rocks · grove-stones · grove-stump · grove-fence · grove-long · grove-low · grove-round · grove-white · grove-leaf · grove-leaf-rock · grove-grass · grove-strip
 // 원본 크기가 작아서 화면에서는 원본 가로(대부분 100~300px)보다 크게 쓰지 않아요 (늘리면 흐려져요).
 const STICKER_URLS = Object.fromEntries(
   Object.entries(import.meta.glob('../../../assets/stickers/*.webp', { eager: true, query: '?url', import: 'default' })).map(([file, url]) => [

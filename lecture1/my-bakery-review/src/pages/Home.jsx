@@ -13,7 +13,7 @@ import BakeryMapHero from '../components/home/BakeryMapHero'
 import BakerySearchBar from '../components/home/BakerySearchBar'
 import LevelUpTeaser from '../components/home/LevelUpTeaser'
 import ScallopEdge from '../components/common/decor/ScallopEdge'
-import FlatFlower from '../components/common/decor/FlatFlower'
+import Sticker from '../components/common/decor/Sticker'
 import StatusMessage from '../components/common/StatusMessage'
 import BakeryCardSkeleton from '../components/common/BakeryCardSkeleton'
 import { BAKERIES } from '../constants/bakeries'
@@ -204,9 +204,9 @@ const Home = () => {
       <Box sx={{ ...FULL_BLEED_SX }}>
         <ScallopEdge color={sageColor} position="top" />
         <Box sx={{ position: 'relative', bgcolor: 'secondary.main', py: SECTION_PY, overflow: 'hidden' }}>
-          <FlatFlower petal={palette.background.paper} center={palette.mustard.main} size={72} sx={{ position: 'absolute', top: 36, left: { xs: -18, md: 64 }, opacity: 0.9 }} />
-          <FlatFlower petal={palette.terracotta.main} center={palette.background.paper} size={44} sx={{ position: 'absolute', top: 118, left: { xs: 40, md: 150 }, display: { xs: 'none', md: 'block' } }} />
-          <FlatFlower petal={palette.primary.main} center={palette.mustard.main} size={56} sx={{ position: 'absolute', top: 44, right: { xs: -12, md: 90 } }} />
+          <Sticker name="grove-flower-white" width={72} sx={{ position: 'absolute', top: 36, left: { xs: -18, md: 64 } }} />
+          <Sticker name="grove-flower-red" width={46} sx={{ position: 'absolute', top: 118, left: { xs: 40, md: 150 }, display: { xs: 'none', md: 'block' } }} />
+          <Sticker name="grove-flower-yellow" width={58} sx={{ position: 'absolute', top: 44, right: { xs: -12, md: 90 } }} />
           <SectionHeading
             variant="journal"
             eyebrow="ADVENTURER'S LOG"

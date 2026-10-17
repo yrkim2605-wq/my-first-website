@@ -16,7 +16,7 @@ const StatTile = ({ label, value }) => (
   </Box>
 )
 
-// 모험가 상태창: 빵 기사 + 레벨 메달 + 닉네임 · 칭호 + 경험치 바 + 기록 요약.
+// 모험가 상태창: 빵 기사 + (레벨 메달 + 닉네임) · 칭호 + 경험치 바 + 기록 요약.
 // 모두 저장된 모험 일지에서 계산한 실제 값이에요 (game: useGameState의 결과).
 const AdventurerStatusWindow = ({ game, discoveredCount, onOpenLevelBook }) => {
   const { profile, progress, stats, quests } = game
@@ -39,37 +39,38 @@ const AdventurerStatusWindow = ({ game, discoveredCount, onOpenLevelBook }) => {
       </Box>
 
       <Box sx={{ p: { xs: 2.5, sm: 3.5 }, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr' }, gap: { xs: 2, sm: 4 }, alignItems: 'center' }}>
-        {/* 빵 기사 + 현재 레벨 메달 */}
+        {/* 빵 기사 (레벨 메달은 닉네임 앞으로 옮겼어요: 캐릭터와 겹치지 않게) */}
         <Box sx={{ position: 'relative', width: 'fit-content', mx: { xs: 'auto', sm: 0 } }}>
           <Illustration name="knightHero" width={{ xs: 150, sm: 190 }} className="float-soft" eager />
           <Sparkle size={22} twinkle sx={{ position: 'absolute', top: 6, left: -10 }} />
-          <Box
-            sx={{
-              position: 'absolute',
-              right: -14,
-              bottom: 6,
-              width: 64,
-              height: 64,
-              display: 'grid',
-              placeItems: 'center',
-              borderRadius: RADIUS.round,
-              bgcolor: 'parchment.light',
-              border: '3px solid',
-              borderColor: 'gold.main',
-              boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
-            }}
-          >
-            <Box component="img" src={level.iconImage} alt={`${level.name} 메달`} sx={{ width: '82%', height: '82%', objectFit: 'contain', transform: `scale(${level.iconScale ?? 1})` }} />
-          </Box>
         </Box>
 
         <Box sx={{ minWidth: 0 }}>
           <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: 'terracotta.dark' }}>
             Lv.{progress.currentIndex + 1} {level.name}
           </Typography>
-          <Typography component="h2" sx={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '1.6rem', sm: '1.9rem' }, lineHeight: 1.3, color: 'text.primary', wordBreak: 'break-all' }}>
-            {profile.nickname}
-          </Typography>
+          {/* 레벨 메달 + 닉네임: 메달이 닉네임 바로 앞에 와요 */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+            <Box
+              sx={{
+                flexShrink: 0,
+                width: 46,
+                height: 46,
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: RADIUS.round,
+                bgcolor: 'parchment.light',
+                border: '3px solid',
+                borderColor: 'gold.main',
+                boxShadow: '0 2px 0 rgba(33,20,10,0.35)',
+              }}
+            >
+              <Box component="img" src={level.iconImage} alt={`${level.name} 메달`} sx={{ width: '82%', height: '82%', objectFit: 'contain', transform: `scale(${level.iconScale ?? 1})` }} />
+            </Box>
+            <Typography component="h2" sx={{ minWidth: 0, fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: { xs: '1.6rem', sm: '1.9rem' }, lineHeight: 1.3, color: 'text.primary', wordBreak: 'break-all' }}>
+              {profile.nickname}
+            </Typography>
+          </Box>
           <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', mb: 2 }}>
             {profile.createdAt.slice(0, 10)} 모험 시작 · {IS_ACCOUNT_MODE ? '내 계정에 저장된 프로필' : '이 브라우저에 저장된 임시 프로필'}
           </Typography>

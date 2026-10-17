@@ -9,7 +9,7 @@ import { DISTRICTS } from '../../constants/districts'
 import { JOURNAL_PAPER_SX } from '../../constants/rpgStyles'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
 
-// 내 모험 일지 목록: 내가 쓴 일지를 최신 순으로 보여줘요. 고쳐 쓰거나 지우는 건 해당 빵집 페이지에서 해요.
+// 내 모험 일지 목록: 내가 쓴 일지를 최신 순으로 보여줘요. (왼쪽 제본 띠가 14px라서 글은 34px부터 시작해요. p와 pl을 같이 쓰면 JOURNAL_PAPER_SX의 pl 순서 때문에 pl이 덮여서 py/pr/pl로 나눠 줘요.) 고쳐 쓰거나 지우는 건 해당 빵집 페이지에서 해요.
 const MyLogList = ({ reviews }) => (
   <Box component="section" aria-label="내 모험 일지" sx={{ mb: 6 }}>
     <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 2 }}>
@@ -33,7 +33,7 @@ const MyLogList = ({ reviews }) => (
     ) : (
       <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {reviews.map((review) => (
-          <Box component="li" key={review.id} sx={{ ...JOURNAL_PAPER_SX, borderRadius: RADIUS.lg, p: 2, pl: '32px' }}>
+          <Box component="li" key={review.id} sx={{ ...JOURNAL_PAPER_SX, borderRadius: RADIUS.lg, py: 2, pr: 2, pl: '34px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap', mb: 0.75 }}>
               <Box component={Link} to={`/bakery/${review.bakeryId}`} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, minWidth: 0, minHeight: 44, color: 'primary.main', textDecoration: 'none', fontWeight: 800, '&:hover': { textDecoration: 'underline' } }}>
                 <PlaceIcon sx={{ fontSize: '1.05rem' }} />

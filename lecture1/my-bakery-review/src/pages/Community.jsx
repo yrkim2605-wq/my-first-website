@@ -136,7 +136,7 @@ const Community = () => {
           variant="sign"
           eyebrow="ADVENTURERS' SQUARE"
           title="모험가 광장"
-          flank={{ left: { name: 'knight-coffee', width: 118 }, right: { name: 'knight-camera', width: 118 } }}
+          flank={{ right: { name: 'knight-camera', width: 118 } }}
           description="부산 빵집에서 있었던 일, 새로 나온 메뉴, 오픈런 후기를 나눠요."
           sx={{ mb: { xs: 2, sm: 2.5 } }}
         />
