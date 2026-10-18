@@ -100,8 +100,8 @@ const MyPage = () => {
 
   // 로그인하지 않았으면 상태창 대신 모험가 만들기 안내를 보여줘요
   if (!game.profile) {
+    // 로그아웃 상태: 양옆 장식 그림 없이 안내 카드만 보여줘요
     return (
-      <MyPageSides>
       <Container maxWidth="sm">
         <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 4, sm: 6 } }}>
           <SectionHeading variant="sign" eyebrow="MY ADVENTURER" title="내 모험가 상태창" description="레벨, 퀘스트, 빵집 도감을 한곳에서 확인해요." sx={{ mb: 4 }} />
@@ -130,7 +130,6 @@ const MyPage = () => {
           )}
         </Box>
       </Container>
-    </MyPageSides>
     )
   }
 
