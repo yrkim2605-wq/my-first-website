@@ -28,6 +28,7 @@ import { useDiscovery } from '../hooks/useDiscovery'
 import { useVisitedBakeries } from '../hooks/useVisitedBakeries'
 import { useBookmarks } from '../hooks/useBookmarks'
 import { evaluateBadges } from '../utils/badgeRules'
+import { IS_ACCOUNT_MODE } from '../lib/backend'
 import { DISPLAY_FONT, RADIUS } from '../theme'
 
 const SUBHEAD_SX = {
@@ -111,7 +112,7 @@ const MyPage = () => {
               아직 모험가가 없어요
             </Typography>
             <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary', mb: 2.5, wordBreak: 'keep-all' }}>
-              닉네임만 정하면 바로 시작할 수 있어요. 모험 일지를 남기면 EXP가 쌓이고 빵집 도감이 채워져요.
+              {IS_ACCOUNT_MODE ? '이메일로 가입하고 인증을 마치면 시작할 수 있어요.' : '닉네임만 정하면 바로 시작할 수 있어요.'} 모험 일지를 남기면 EXP가 쌓이고 빵집 도감이 채워져요.
             </Typography>
             <Box sx={{ display: 'flex', gap: 1.25, justifyContent: 'center', flexWrap: 'wrap', mb: 2.5 }}>
               <WoodButton component={Link} to="/signup">

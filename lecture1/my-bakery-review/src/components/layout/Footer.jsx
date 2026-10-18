@@ -7,6 +7,7 @@ import Sparkle from '../common/decor/Sparkle'
 import HandNote from '../common/decor/HandNote'
 import Illustration from '../common/decor/Illustration'
 import logo from '../../assets/logo.webp'
+import { useProfile } from '../../hooks/useProfile'
 import communityScene from '../../assets/community-bg.webp'
 
 const FOOTER_LINKS = [
@@ -20,7 +21,7 @@ const FOOTER_LINKS = [
 
 // 푸터 윗공간 배경 그림: 마을 광장 그림(위 · 안쪽 흐림 포함)이 모든 페이지에서 똑같이 나와요 (하위 주소 포함). 그림을 뺄 페이지는 NO_SCENE_PATHS에 적어요.
 //  - 커뮤니티: 마을 광장 + 푸터를 위로 많이 끌어올려요 (mt: 페이지 아래 여백 64px + 300px. 좁은 PC 화면에서는 가로의 1/3 + 20px까지만, 폰은 108px까지만)
-//  - 내 모험가: 같은 광장 그림, 푸터를 PC 188px 위로 (폰은 108px)
+//  - 내 모험가: 같은 광장 그림, 푸터를 PC 188px 위로 (폰은 108px). 로그아웃 상태는 PC 288px
 //  - 명예의 전당: 같은 광장 그림, 푸터를 PC 388px 위로 (폰은 108px)
 //  - 그 밖의 페이지(홈 · 빵집 상세 · 약관 등): 같은 광장 그림, 끌어올리는 양만 작게 (PC 88px · 폰 40px)
 const NO_SCENE_PATHS = []
@@ -29,6 +30,8 @@ const SCENE_BASE = { image: communityScene, aspectRatio: '1800 / 600', fade: tru
 const COMMUNITY_SCENE = { ...SCENE_BASE, mt: { xs: '-108px', md: 'max(-364px, calc(-100vw / 3 - 20px))' } }
 const MYPAGE_PATH = '/mypage'
 const MYPAGE_SCENE = { ...SCENE_BASE, mt: { xs: '-108px', md: '-188px' } }
+// 로그아웃 상태의 내 모험가(안내 카드만 있는 짧은 페이지): 푸터와 그림을 로그인 상태보다 100px 더 올려요 (폰은 안내 카드가 푸터에 닿지 않게 올리지 않고 기본 40px만)
+const MYPAGE_LOGGED_OUT_SCENE = { ...SCENE_BASE, mt: { xs: -5, md: '-288px' } }
 const RANKING_PATH = '/ranking'
 const RANKING_SCENE = { ...SCENE_BASE, mt: { xs: '-108px', md: 'max(-388px, calc(-100vw / 3 - 20px))' } } // 명예의 전당: PC 388px(좁은 PC 화면에서는 가로의 1/3 + 20px까지만) · 폰 108px
 const DEFAULT_SCENE = { ...SCENE_BASE, mt: { xs: -5, md: -11 } }
@@ -41,7 +44,9 @@ const isUnder = (path, base) => path === base || path.startsWith(`${base}/`)
 const Footer = () => {
   const { palette } = useTheme()
   const { pathname } = useLocation()
-  const scene = NO_SCENE_PATHS.some((path) => isUnder(pathname, path)) ? null : isUnder(pathname, COMMUNITY_PATH) ? COMMUNITY_SCENE : isUnder(pathname, MYPAGE_PATH) ? MYPAGE_SCENE : isUnder(pathname, RANKING_PATH) ? RANKING_SCENE : DEFAULT_SCENE
+  const { profile, ready } = useProfile()
+  const isLoggedOut = ready && !profile
+  const scene = NO_SCENE_PATHS.some((path) => isUnder(pathname, path)) ? null : isUnder(pathname, COMMUNITY_PATH) ? COMMUNITY_SCENE : isUnder(pathname, MYPAGE_PATH) ? (isLoggedOut ? MYPAGE_LOGGED_OUT_SCENE : MYPAGE_SCENE) : isUnder(pathname, RANKING_PATH) ? RANKING_SCENE : DEFAULT_SCENE
 
   return (
     // 그림이 있으면 그림마다 정한 mt로(음수면 위 콘텐츠와의 간격을 좁혀요), 없으면 원래 위쪽 여백이에요.
