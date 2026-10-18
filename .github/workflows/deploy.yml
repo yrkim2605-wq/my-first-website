@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # 20은 npm 10.8의 설치 버그(edgesOut)로 실패해서 22로 올렸어요
 
       - name: Install my-fashion-shop dependencies
         working-directory: lecture1/my-fashion-shop
