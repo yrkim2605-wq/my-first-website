@@ -63,6 +63,11 @@ jobs:
           # 카카오 JavaScript 키: 카카오 콘솔에 등록한 도메인에서만 동작해요.
           # (REST 키는 빌드 결과에 그대로 노출되므로 쓰지 않아요)
           VITE_KAKAO_JS_KEY: ${{ secrets.VITE_KAKAO_JS_KEY }}
+          # 계정 모드(Supabase): 이메일 가입 · 로그인과 서버 저장. 아래 키는 브라우저에 공개되는 "publishable" 키예요 (비밀 키(sb_secret_ · service_role)는 절대 넣지 않아요).
+          # 되돌리려면 이 세 줄을 지우면 닉네임 데모(로컬 모드)로 돌아가요. (git 태그 main-before-account-mode = 계정 모드 켜기 전)
+          VITE_DATA_BACKEND: supabase
+          VITE_SUPABASE_URL: https://ujgklqbtoimazuzwjuhv.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_H9ec5M1WF5OTvjceB6OGOQ_rnFGnzgF
         run: npm run build
 
       - name: Install intro-portfolio dependencies
