@@ -43,6 +43,8 @@ const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
           alignItems: 'center',
           gap: 0.4,
           minHeight: 44,
+          minWidth: 44, // 숫자가 한 자리여도 터치 영역이 44px 이상이 되게
+          justifyContent: 'center',
           px: 0.75,
           border: 'none',
           background: 'none',
@@ -71,6 +73,8 @@ const VoteButtons = ({ itemId, likeCount, dislikeCount, vote, onVote }) => {
           alignItems: 'center',
           gap: 0.4,
           minHeight: 44,
+          minWidth: 44, // 숫자가 한 자리여도 터치 영역이 44px 이상이 되게
+          justifyContent: 'center',
           px: 0.75,
           border: 'none',
           background: 'none',

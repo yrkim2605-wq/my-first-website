@@ -148,9 +148,9 @@ const LevelUpTeaser = () => {
                             borderRadius: RADIUS.pill,
                             bgcolor: 'wood.main',
                             color: 'gold.light',
-                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                            fontSize: { xs: '0.75rem', sm: '0.7rem' },
                             fontWeight: 800,
-                            lineHeight: 1.7,
+                            lineHeight: 1.5,
                           }}
                         >
                           현재
@@ -182,14 +182,14 @@ const LevelUpTeaser = () => {
                         sx={{ width: '82%', height: '82%', objectFit: 'contain', transform: `scale(${level.iconScale ?? 1})` }}
                       />
                     </Box>
-                    <Typography sx={{ mt: { xs: 0.5, sm: 0.75 }, fontSize: { xs: '0.62rem', sm: '0.7rem' }, fontWeight: 800, color: 'terracotta.dark', lineHeight: 1.2 }}>
+                    <Typography sx={{ mt: { xs: 0.5, sm: 0.75 }, fontSize: { xs: '0.75rem', sm: '0.7rem' }, fontWeight: 800, color: 'terracotta.dark', lineHeight: 1.2 }}>
                       Lv.{index + 1}
                     </Typography>
                     <Typography
                       sx={{
                         fontFamily: DISPLAY_FONT,
                         fontWeight: 900,
-                        fontSize: { xs: '0.7rem', sm: '1rem' },
+                        fontSize: { xs: '0.75rem', sm: '1rem' },
                         color: reached ? 'primary.main' : 'text.secondary',
                         wordBreak: 'keep-all',
                         textAlign: 'center',

@@ -43,7 +43,7 @@ const BakeryTile = ({ bakery, discovered }) => (
     {discovered ? (
       <StarRoundedIcon sx={{ position: 'absolute', top: 6, right: 6, fontSize: '1.15rem', color: 'gold.main' }} />
     ) : (
-      <Box component="span" sx={{ position: 'absolute', top: 6, right: 8, fontSize: '0.65rem', fontWeight: 800, color: 'text.secondary' }}>
+      <Box component="span" sx={{ position: 'absolute', top: 6, right: 8, fontSize: '0.72rem', fontWeight: 800, color: 'text.secondary' }}>
         미발견
       </Box>
     )}

@@ -19,7 +19,7 @@ const XpProgressBar = ({ levelName, nextLevelName, percent, exp, expToNext, isMa
               borderRadius: RADIUS.pill,
               bgcolor: 'wood.main',
               color: 'gold.light',
-              fontSize: '0.7rem',
+              fontSize: '0.75rem',
               fontWeight: 800,
               letterSpacing: '0.08em',
               lineHeight: 1.6,

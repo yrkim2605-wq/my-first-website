@@ -8,6 +8,7 @@ import Footer from './Footer'
 import ScrollToTopButton from '../common/ScrollToTopButton'
 import ErrorBoundary from '../common/ErrorBoundary'
 import { useProfile } from '../../hooks/useProfile'
+import { getPageTitle } from '../../utils/pageTitle'
 
 const Layout = () => {
   const location = useLocation()
@@ -19,6 +20,12 @@ const Layout = () => {
     if (lenis) lenis.scrollTo(0, { immediate: true })
     else window.scrollTo(0, 0)
   }, [location.pathname, lenis])
+
+  // 페이지마다 탭 제목이 달라요 (빵집 상세는 BakeryDetail이 빵집 이름으로 정해요)
+  useEffect(() => {
+    const title = getPageTitle(location.pathname)
+    if (title) document.title = title
+  }, [location.pathname])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

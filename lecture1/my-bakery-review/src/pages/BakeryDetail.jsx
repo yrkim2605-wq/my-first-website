@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -38,6 +38,8 @@ import { getAuthorLevel } from '../utils/authorLevel'
 import WoodButton from '../components/common/WoodButton'
 import SectionHeading from '../components/common/SectionHeading'
 import LocalProfileNotice from '../components/common/LocalProfileNotice'
+import StatusMessage from '../components/common/StatusMessage'
+import { bakeryTitle, getPageTitle } from '../utils/pageTitle'
 import ReviewDialog from '../components/bakery/ReviewDialog'
 import RewardDialog from '../components/bakery/RewardDialog'
 import LevelUpDialog from '../components/bakery/LevelUpDialog'
@@ -68,6 +70,7 @@ const formatDate = (isoString) => kstDate(isoString)
 
 const BakeryDetail = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { bakeries: realBakeries, loading: realBakeriesLoading } = useBusanBakeries()
   const { visitedIds, toggleVisited, pendingIds } = useVisitedBakeries()
   const { photosByBakeryId } = useRealBakeryPhotos()
@@ -84,6 +87,11 @@ const BakeryDetail = () => {
   const mockBakery = BAKERIES.find((b) => String(b.id) === id)
   const realBakery = realBakeries.find((b) => String(b.id) === id)
   const bakery = mockBakery || realBakery
+
+  // 탭 제목: 빵집 이름 (찾는 중이거나 없는 빵집이면 안내 제목)
+  useEffect(() => {
+    document.title = bakery ? bakeryTitle(bakery.name) : realBakeriesLoading ? bakeryTitle('빵집 정보') : getPageTitle('/not-found')
+  }, [bakery, realBakeriesLoading])
 
   // 일지 창은 열 때마다 key를 바꿔서 새로 만들어요 (이전 입력값이 남지 않게)
   const [dialog, setDialog] = useState({ open: false, session: 0 })
@@ -108,7 +116,20 @@ const BakeryDetail = () => {
         </Container>
       )
     }
-    return <Navigate to="/" replace />
+    // 없는 빵집 주소: 조용히 홈으로 보내지 않고 안내해요
+    return (
+      <Container maxWidth="sm">
+        <Box sx={{ py: { xs: 5, sm: 8 } }}>
+          <StatusMessage
+            mood="notfound"
+            title="빵집을 찾을 수 없어요"
+            description="주소가 잘못됐거나 지도에서 사라진 빵집이에요. 첫 화면에서 다시 찾아보세요."
+            actionLabel="첫 화면으로"
+            onAction={() => navigate('/')}
+          />
+        </Box>
+      </Container>
+    )
   }
 
   const isRealBakery = !mockBakery && Boolean(realBakery)
