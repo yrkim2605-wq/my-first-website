@@ -11,7 +11,30 @@ import Illustration from '../common/decor/Illustration'
 import { LEVELS } from '../../constants/levels'
 import { PARCHMENT_SX } from '../../constants/rpgStyles'
 import { useGameState } from '../../hooks/useGameState'
+import guildBackground from '../../assets/guild-bg.webp'
 import { DISPLAY_FONT, RADIUS } from '../../theme'
+
+// 모험가 길드 뒷배경: 천막 · 보물상자가 있는 야영지 풍경이 화면 아래 좌우 가장자리에 깔려요 (가운데는 비어 있어요).
+// 길드 카드(양피지)는 그 위에 놓여서 글자와 겹치지 않아요. 그림 아래쪽은 다음 세이지 블록(zIndex 1) 뒤로 들어가서, 물결 가장자리의 틈으로만 살짝 보여요. 투명 배경 그림이라 마스크는 필요 없어요.
+const GUILD_SCENE_SX = {
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    // 그림을 자르지 않고 가로에 맞춰 통째로 보여요 (원본 3:1 비율). 아주 넓은 화면에서는 1920px까지만 커지고 가운데에 놓여요.
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 'min(100%, 1920px)',
+    aspectRatio: '3 / 1',
+    bottom: -70,
+    opacity: 0.4, // 앞의 카드 · 글자가 잘 읽히도록 흐리게
+    backgroundImage: `url(${guildBackground})`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    pointerEvents: 'none',
+    zIndex: 0,
+  },
+}
 
 // levels.js의 실제 기준으로 "EXP 180" 같은 문구를 만들어요
 const getCriteriaParts = (level) => (level.minExp === 0 ? ['누구나 여기서 시작'] : [`EXP ${level.minExp}`])
@@ -30,7 +53,8 @@ const LevelUpTeaser = () => {
   return (
     // 위쪽은 추천 퀘스트 섹션이 여백을 갖고 있고, 아래쪽은 이어지는 세이지 블록(물결 가장자리)과 간격을 둬요
     // 폰(sm 미만)에서는 세로 길이를 줄여요: 설명 문구 숨김 · 여백 축소 · 메달 작게 · 단계별 EXP 기준 글자 숨김 (진행 막대와 "다음 레벨까지"는 그대로)
-    <Container maxWidth="lg" component="section" aria-labelledby="level-up-title" sx={{ pb: { xs: 4, md: 8 } }}>
+    <Box sx={GUILD_SCENE_SX}>
+    <Container maxWidth="lg" component="section" aria-labelledby="level-up-title" sx={{ position: 'relative', zIndex: 1, pb: { xs: 4, md: 8 } }}>
       <Reveal>
       <Box
         sx={{
@@ -252,6 +276,7 @@ const LevelUpTeaser = () => {
       </Box>
       </Reveal>
     </Container>
+    </Box>
   )
 }
 

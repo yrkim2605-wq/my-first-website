@@ -1,12 +1,13 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import ScallopEdge from '../common/decor/ScallopEdge'
 import Sparkle from '../common/decor/Sparkle'
 import HandNote from '../common/decor/HandNote'
 import Illustration from '../common/decor/Illustration'
 import logo from '../../assets/logo.webp'
+import communityScene from '../../assets/community-bg.webp'
 
 const FOOTER_LINKS = [
   { to: '/', label: '홈' },
@@ -17,15 +18,84 @@ const FOOTER_LINKS = [
   { to: '/privacy', label: '개인정보처리방침' },
 ]
 
+// 푸터 윗공간 배경 그림: 마을 광장 그림(위 · 안쪽 흐림 포함)이 모든 페이지에서 똑같이 나와요 (하위 주소 포함). 그림을 뺄 페이지는 NO_SCENE_PATHS에 적어요.
+//  - 커뮤니티: 마을 광장 + 푸터를 위로 많이 끌어올려요 (mt: 페이지 아래 여백 64px + 300px. 좁은 PC 화면에서는 가로의 1/3 + 20px까지만, 폰은 108px까지만)
+//  - 내 모험가: 같은 광장 그림, 푸터를 PC 188px 위로 (폰은 108px)
+//  - 명예의 전당: 같은 광장 그림, 푸터를 PC 388px 위로 (폰은 108px)
+//  - 그 밖의 페이지(홈 · 빵집 상세 · 약관 등): 같은 광장 그림, 끌어올리는 양만 작게 (PC 88px · 폰 40px)
+const NO_SCENE_PATHS = []
+const COMMUNITY_PATH = '/community'
+const SCENE_BASE = { image: communityScene, aspectRatio: '1800 / 600', fade: true }
+const COMMUNITY_SCENE = { ...SCENE_BASE, mt: { xs: '-108px', md: 'max(-364px, calc(-100vw / 3 - 20px))' } }
+const MYPAGE_PATH = '/mypage'
+const MYPAGE_SCENE = { ...SCENE_BASE, mt: { xs: '-108px', md: '-188px' } }
+const RANKING_PATH = '/ranking'
+const RANKING_SCENE = { ...SCENE_BASE, mt: { xs: '-108px', md: 'max(-388px, calc(-100vw / 3 - 20px))' } } // 명예의 전당: PC 388px(좁은 PC 화면에서는 가로의 1/3 + 20px까지만) · 폰 108px
+const DEFAULT_SCENE = { ...SCENE_BASE, mt: { xs: -5, md: -11 } }
+// 위쪽 흐림: 그림 전체의 위쪽 45%가 서서히 나타나요.
+const FADE_TOP_MASK = 'linear-gradient(180deg, transparent 0%, #000 45%)'
+// 안쪽 흐림: 덤불 · 소품이 가운데로 갈수록 절반(50%)까지만 투명해져요 (양 끝 16%는 그대로). 아래 30%에는 바닥이 서서히 나타나는 칸을 더해서(add) 바닥은 그대로 보이고, 덤불과 바닥 사이에 딱딱한 선이 생기지 않아요.
+const FADE_INNER_MASK = 'linear-gradient(180deg, transparent 0%, #000 70%), linear-gradient(90deg, #000 0%, #000 16%, rgba(0,0,0,0.5) 38%, rgba(0,0,0,0.5) 62%, #000 84%, #000 100%)'
+const isUnder = (path, base) => path === base || path.startsWith(`${base}/`)
+
 const Footer = () => {
   const { palette } = useTheme()
+  const { pathname } = useLocation()
+  const scene = NO_SCENE_PATHS.some((path) => isUnder(pathname, path)) ? null : isUnder(pathname, COMMUNITY_PATH) ? COMMUNITY_SCENE : isUnder(pathname, MYPAGE_PATH) ? MYPAGE_SCENE : isUnder(pathname, RANKING_PATH) ? RANKING_SCENE : DEFAULT_SCENE
 
   return (
-    <Box component="footer" sx={{ mt: { xs: 5, md: 6 } }}>
-      <ScallopEdge color={palette.primary.main} position="top" />
+    // 그림이 있으면 그림마다 정한 mt로(음수면 위 콘텐츠와의 간격을 좁혀요), 없으면 원래 위쪽 여백이에요.
+    <Box component="footer" sx={{ mt: scene ? scene.mt : { xs: 5, md: 6 } }}>
+      {scene && (
+        // 푸터 윗공간: 마을 길 풍경이 푸터와 겹쳐요. 그림 아래 44px가 푸터 물결 · 푸터 본문 뒤로 들어가서(물결 위 · 푸터는 zIndex 1) 물결 틈으로만 살짝 보여요.
+        // 장식이라 화면 읽기 프로그램은 건너뛰어요.
+        <Box
+          aria-hidden="true"
+          sx={{
+            position: 'relative',
+            top: 20, // 그림만 20px 아래로 (뒤의 위치는 그대로)
+            zIndex: 0,
+            mb: '-44px',
+            opacity: 0.6,
+            // 그림을 가로에 맞춰 통째로 보여줘요 (자르지 않아요). 아주 넓은 화면에서는 1920px까지만 커져요.
+            width: 'min(100%, 1920px)',
+            mx: 'auto',
+            aspectRatio: scene.aspectRatio,
+            // 위쪽 흐림은 바깥 칸에서 (바닥 띠에는 영향이 없어요)
+            ...(scene.fade && { WebkitMaskImage: FADE_TOP_MASK, maskImage: FADE_TOP_MASK }),
+            pointerEvents: 'none',
+          }}
+        >
+          {/* 그림 칸: 안쪽 흐림 마스크는 여기에 걸어요 */}
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(${scene.image})`,
+              backgroundSize: '100% auto',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center bottom',
+              ...(scene.fade && {
+                WebkitMaskImage: FADE_INNER_MASK,
+                maskImage: FADE_INNER_MASK,
+                WebkitMaskSize: '100% 30%, 100% 100%',
+                maskSize: '100% 30%, 100% 100%',
+                WebkitMaskPosition: 'bottom, top',
+                maskPosition: 'bottom, top',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+              }),
+            }}
+          />
+        </Box>
+      )}
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
+        <ScallopEdge color={palette.primary.main} position="top" />
+      </Box>
       <Box
         sx={{
           position: 'relative',
+          zIndex: 1,
           overflow: 'hidden',
           bgcolor: 'primary.main',
           color: 'primary.contrastText',

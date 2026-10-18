@@ -36,6 +36,9 @@ const FULL_BLEED_SX = {
 
 const SECTION_PY = { xs: 6, md: 9 }
 
+// 월드맵 바로 아래 추천 퀘스트의 위 여백: 월드맵 아래 여백(pb)과 합쳐서 두 섹션 사이가 너무 벌어지지 않게 다른 섹션(SECTION_PY)보다 좁게 둬요
+const QUEST_PT = { xs: 4, md: 6 }
+
 // 추천 퀘스트 뒤에 깔리는 옅은 양피지 띠: 위아래가 서서히 사라져서 월드맵 · 모험가 길드와 경계가 부드럽게 이어져요
 const QUEST_BAND_BG =
   'linear-gradient(180deg, rgba(249,237,203,0) 0%, rgba(249,237,203,0.6) 22%, rgba(249,237,203,0.6) 78%, rgba(249,237,203,0) 100%)'
@@ -172,7 +175,7 @@ const Home = () => {
       />
 
       {/* 오늘 인기 빵집 */}
-      <Box sx={{ pt: SECTION_PY, pb: { xs: 5, md: 7 }, background: QUEST_BAND_BG }}>
+      <Box sx={{ pt: QUEST_PT, pb: { xs: 5, md: 7 }, background: QUEST_BAND_BG }}>
         <SectionHeading
           variant="board"
           eyebrow="TODAY'S QUEST"
@@ -200,8 +203,8 @@ const Home = () => {
       {/* 모험가 길드: 레벨 · EXP 안내 (리뷰보다 먼저: 성장 시스템을 먼저 알려요) */}
       <LevelUpTeaser />
 
-      {/* 이번 주 인기 리뷰: 세이지 색 블록 */}
-      <Box sx={{ ...FULL_BLEED_SX }}>
+      {/* 이번 주 인기 리뷰: 세이지 색 블록 (zIndex 1: 모험가 길드 뒷배경 그림이 이 블록의 물결 뒤로 들어가요) */}
+      <Box sx={{ ...FULL_BLEED_SX, position: 'relative', zIndex: 1 }}>
         <ScallopEdge color={sageColor} position="top" />
         <Box sx={{ position: 'relative', bgcolor: 'secondary.main', py: SECTION_PY, overflow: 'hidden' }}>
           <Sticker name="grove-flower-white" width={72} sx={{ position: 'absolute', top: 36, left: { xs: -18, md: 64 } }} />

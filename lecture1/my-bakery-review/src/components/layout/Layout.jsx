@@ -65,7 +65,8 @@ const Layout = () => {
         </Typography>
       </Box>
       <Header />
-      <Box component="main" sx={{ flexGrow: 1 }}>
+      {/* position/zIndex 1: 푸터 윗공간 배경 그림(zIndex 0)이 페이지 내용 뒤로 가도록 해요 (그림이 위 콘텐츠 쪽으로 올라와 겹칠 때 글을 가리지 않아요) */}
+      <Box component="main" sx={{ flexGrow: 1, position: 'relative', zIndex: 1 }}>
         <Box key={location.pathname} className="page-fade">
           {/* 페이지 파일을 불러오는 동안 푸터가 위로 튀지 않도록 빈 공간을 잡아둬요 */}
           {/* 한 페이지에서 오류가 나도 헤더 · 푸터는 그대로 두고, 다른 페이지로 가면 다시 시도해요 */}

@@ -16,6 +16,7 @@ import LocalProfileNotice from '../components/common/LocalProfileNotice'
 import StatusMessage from '../components/common/StatusMessage'
 import BookmarkedBakeryList from '../components/mypage/BookmarkedBakeryList'
 import LocalImportCard from '../components/mypage/LocalImportCard'
+import MyPageSides from '../components/mypage/MyPageSides'
 import AccountDangerZone from '../components/mypage/AccountDangerZone'
 import WoodButton from '../components/common/WoodButton'
 import Illustration from '../components/common/decor/Illustration'
@@ -100,6 +101,7 @@ const MyPage = () => {
   // 로그인하지 않았으면 상태창 대신 모험가 만들기 안내를 보여줘요
   if (!game.profile) {
     return (
+      <MyPageSides>
       <Container maxWidth="sm">
         <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 4, sm: 6 } }}>
           <SectionHeading variant="sign" eyebrow="MY ADVENTURER" title="내 모험가 상태창" description="레벨, 퀘스트, 빵집 도감을 한곳에서 확인해요." sx={{ mb: 4 }} />
@@ -128,12 +130,14 @@ const MyPage = () => {
           )}
         </Box>
       </Container>
+    </MyPageSides>
     )
   }
 
   // 계정 모드: 내 기록을 다 불러오기 전이나 불러오지 못했을 때는 "EXP 0 · Lv.1" 같은 빈 값을 보여주지 않아요
   if (game.isLoading || game.loadError) {
     return (
+      <MyPageSides>
       <Container maxWidth="md">
         <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 4, sm: 6 } }}>
           <SectionHeading variant="sign" eyebrow="MY ADVENTURER" title="내 모험가 상태창" description="레벨, 퀘스트, 빵집 도감, 모험 일지를 모아봤어요." sx={{ mb: { xs: 3, sm: 4 } }} />
@@ -150,13 +154,15 @@ const MyPage = () => {
           )}
         </Box>
       </Container>
+    </MyPageSides>
     )
   }
 
   const earnedBadgeCount = badges.filter((badge) => badge.earned).length
 
   return (
-    <Container maxWidth="md">
+    <MyPageSides>
+      <Container maxWidth="md">
       <Box sx={{ pt: { xs: 5, sm: 7 }, pb: { xs: 4, sm: 6 } }}>
         <SectionHeading
           variant="sign"
@@ -238,6 +244,7 @@ const MyPage = () => {
 
       <LevelBookDialog open={levelBookOpen} onClose={() => setLevelBookOpen(false)} currentLevelId={game.progress.currentLevel.id} />
     </Container>
+    </MyPageSides>
   )
 }
 

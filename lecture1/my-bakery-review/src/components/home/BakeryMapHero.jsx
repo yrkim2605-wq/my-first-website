@@ -44,7 +44,7 @@ const BakeryMapHero = ({ bakeries, selectedId, onSelectBakery, loading, error, o
       id={WORLD_MAP_SECTION_ID}
       aria-labelledby="map-hero-title"
       // lg 이상은 프레임 아래로 덤불이 내다볼 자리(pb)를 조금 더 둬요. overflowX: clip은 장식이 칸 밖으로 나가도 가로 스크롤을 만들지 않게 하는 안전장치예요.
-      sx={{ bgcolor: 'background.default', pt: { xs: 5, md: 7 }, pb: { xs: 4, lg: 9 }, overflowX: 'clip' }}
+      sx={{ bgcolor: 'background.default', pt: { xs: 5, md: 7 }, pb: { xs: 4, lg: 7 }, overflowX: 'clip' }}
     >
       <Container maxWidth="lg">
         <SectionHeading

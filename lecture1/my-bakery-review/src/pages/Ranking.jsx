@@ -117,7 +117,7 @@ const Ranking = () => {
           variant="sign"
           eyebrow="HALL OF FAME"
           title="이번 달 명예의 전당"
-          flank={{ left: { name: 'medal-gold', width: 62, float: true }, right: { name: 'gem-ruby', width: 46, float: true } }}
+          flank={{ left: { name: 'medal-gold', width: 62, float: true, lift: 40, inward: 30 } }}
           description={IS_ACCOUNT_MODE ? '모든 모험가의 실제 기록으로 계산한 순위예요.' : '내 기록과 이 브라우저의 실제 순위, 그리고 예시 순위표를 볼 수 있어요.'}
           sx={{ mb: { xs: 3, sm: 4 } }}
         />

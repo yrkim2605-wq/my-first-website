@@ -11,7 +11,7 @@ import { PARCHMENT_SX } from '../../constants/rpgStyles'
 //   ribbon  : 버건디 리본 배너 (지도 · 이동 느낌)
 //   board   : 퀘스트 보드에 압정으로 꽂은 양피지 메모
 //   journal : 손글씨 일지 제목 + 형광펜 밑줄
-// flank={{ left: { name, width }, right: { name, width } }}: 제목 양옆에 꾸밈 스티커를 놓아요 (넓은 화면에서만 보여요).
+// flank={{ left: { name, width, lift }, right: { name, width, lift } }} (lift: 위로 올릴 px, inward: 안쪽(가운데 방향)으로 밀 px):제목 양옆에 꾸밈 스티커를 놓아요 (넓은 화면에서만 보여요).
 // tone="onColor"는 와인처럼 어두운 색 블록 위에(크림색 글자), tone="onSage"는 세이지처럼 밝은 색 블록 위에(진한 갈색 글자) 올릴 때 써요.
 // 세이지 위에 크림색 글자를 올리면 대비가 2.5:1이라 읽기 어려워서 나눴어요. titleId를 주면 aria-labelledby에 연결할 수 있어요.
 // size: 홈에서 섹션 중요도에 맞춰 제목 크기에 강약을 줄 때 써요. lg(가장 중요) · md(기본) · sm(보조). 일지(journal)는 자기 글꼴 크기를 써요.
@@ -29,7 +29,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, descriptionSx, t
   const titleSx = {
     plain: { color: onColor ? 'primary.contrastText' : onSage ? 'text.primary' : 'primary.main' },
     sign: { color: 'wood.contrastText' },
-    ribbon: { color: 'primary.contrastText', letterSpacing: '0.02em' },
+    ribbon: { color: 'primary.contrastText', letterSpacing: '0.02em', wordBreak: 'keep-all', textWrap: 'balance' },
     board: { color: 'primary.main' },
     journal: {
       fontFamily: '"Gaegu", cursive',
@@ -139,7 +139,7 @@ const SectionHeading = ({ eyebrow, title, titleId, description, descriptionSx, t
                   name={flank[side].name}
                   width={flank[side].width}
                   float={flank[side].float}
-                  sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', top: '50%', transform: 'translateY(-50%)', [side]: '4%' }}
+                  sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', top: `calc(50% - ${flank[side].lift ?? 0}px)`, transform: 'translateY(-50%)', [side]: `calc(4% + ${flank[side].inward ?? 0}px)` }}
                 />
               ),
           )}

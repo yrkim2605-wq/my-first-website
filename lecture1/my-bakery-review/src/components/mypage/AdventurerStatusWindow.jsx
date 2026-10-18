@@ -32,7 +32,20 @@ const AdventurerStatusWindow = ({ game, discoveredCount, onOpenLevelBook }) => {
           onClick={onOpenLevelBook}
           size="small"
           startIcon={<MenuBookIcon />}
-          sx={{ color: 'parchment.light', borderRadius: RADIUS.pill, '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } }}
+          // 캡슐: 나무 띠 위에서 눈에 띄되 튀지 않게, 부드러운 크림 금색 그라데이션 알약 + 얇은 테두리 + 은은한 그림자 (글자는 짙은 갈색)
+          sx={{
+            background: 'linear-gradient(180deg, #f6dd9c 0%, #e8bf62 100%)',
+            color: '#3e2713',
+            fontWeight: 700,
+            px: 1.75,
+            border: '1px solid rgba(255,244,214,0.75)',
+            borderRadius: RADIUS.pill,
+            boxShadow: '0 1px 0 rgba(255,250,235,0.45) inset, 0 2px 6px rgba(33,20,10,0.35)',
+            transition: 'filter 0.15s ease, transform 0.15s ease',
+            '&:hover': { filter: 'brightness(1.06)', boxShadow: '0 1px 0 rgba(255,250,235,0.45) inset, 0 3px 8px rgba(33,20,10,0.4)' },
+            '&:active': { transform: 'translateY(1px)' },
+            '@media (pointer: coarse)': { minHeight: 44 },
+          }}
         >
           레벨북
         </Button>
