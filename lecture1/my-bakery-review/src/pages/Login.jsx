@@ -18,11 +18,13 @@ import { profileRepository, NICKNAME_MAX } from '../storage/profileRepository'
 // 임시 로컬 프로필로 이어서 시작하기. (진짜 로그인이 아니에요: 비밀번호 없이, 이 브라우저에 만든 프로필만 고를 수 있어요.)
 const Login = () => {
   const navigate = useNavigate()
-  const { profile, signIn } = useProfile()
+  const { profile, signIn, signUp } = useProfile()
   const [nickname, setNickname] = useState('')
   const [savedProfiles, setSavedProfiles] = useState([])
   const [feedback, setFeedback] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  // 이 브라우저에 없는 닉네임으로 로그인하려 했을 때: 그 닉네임으로 바로 새 모험가를 만들 수 있게 안내를 남겨 둬요 (잠깐 떴다 사라지는 알림만으로는 놓치기 쉬워요)
+  const [missingNickname, setMissingNickname] = useState(null)
 
   useEffect(() => {
     profileRepository.list().then(setSavedProfiles)
@@ -36,6 +38,22 @@ const Login = () => {
       // 성공했을 때만 환영 메시지를 보여줘요
       const signedIn = await signIn(nickname)
       setFeedback({ severity: 'success', message: `${signedIn.nickname} 모험가님, 다시 오셨네요!` })
+      setTimeout(() => navigate('/mypage'), 900)
+    } catch (error) {
+      if (error.code === 'PROFILE_NOT_FOUND') setMissingNickname(nickname.trim())
+      else setFeedback({ severity: 'error', message: error.message })
+      setSubmitting(false)
+    }
+  }
+
+  // 안내의 [이 닉네임으로 새 모험가 만들기]: 입력한 닉네임 그대로 새 프로필을 만들고 시작해요
+  const handleCreateMissing = async () => {
+    if (submitting || !missingNickname) return
+    setSubmitting(true)
+    try {
+      const created = await signUp(missingNickname)
+      setMissingNickname(null)
+      setFeedback({ severity: 'success', message: `${created.nickname} 모험가가 만들어졌어요! 모험을 시작해요.` })
       setTimeout(() => navigate('/mypage'), 900)
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message })
@@ -67,12 +85,29 @@ const Login = () => {
             <TextField
               label="닉네임"
               value={nickname}
-              onChange={(event) => setNickname(event.target.value)}
+              onChange={(event) => {
+                setNickname(event.target.value)
+                setMissingNickname(null)
+              }}
               fullWidth
               size="small"
               autoComplete="off"
               slotProps={{ htmlInput: { maxLength: NICKNAME_MAX } }}
             />
+            {missingNickname && (
+              <Alert
+                severity="info"
+                role="status"
+                sx={{ alignItems: 'center', '& .MuiAlert-message': { width: '100%' } }}
+              >
+                <Typography sx={{ fontSize: '0.9rem', mb: 1, wordBreak: 'keep-all' }}>
+                  이 브라우저에는 <b>{missingNickname}</b> 모험가가 없어요. 이 데모는 비밀번호 없이 이 브라우저에만 저장돼요.
+                </Typography>
+                <Button onClick={handleCreateMissing} variant="contained" size="small" disabled={submitting} sx={{ minHeight: 44, wordBreak: 'keep-all' }}>
+                  ‘{missingNickname}’(으)로 새 모험가 만들기
+                </Button>
+              </Alert>
+            )}
             {savedProfiles.length > 0 && (
               <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>이 브라우저의 모험가</Typography>
