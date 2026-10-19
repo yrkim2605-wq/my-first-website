@@ -116,6 +116,8 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
   const u = L.unit;
   const { sections } = project;
   const { title, description, rows, persona, sheet, book, master, character } = data;
+  // 01 화면의 대표 이미지에서 열릴 리디자인 사이트 주소 (없으면 이미지는 링크가 아니다)
+  const siteLink = data === project ? project.compare?.site : undefined;
   // 시트 위치·크기 — 프로젝트에서 sheet.left / width / aspect를 주면 그 값을 쓴다 (모바일은 화면 너비에 꽉 차게)
   // book이 있으면 시트 대신 넘겨 보는 책자가 전등 아래 걸리고, 선은 책 표지 왼쪽 끝에 닿는다
   const sheetAspect = sheet?.aspect ?? SHEET.aspect;
@@ -291,6 +293,15 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
         />
       ) : (
       <Box
+        // 리디자인 사이트가 있으면 대표 이미지를 눌러 새 탭으로 연다 — 마우스를 올리면 ClickCursor(CLICK · VIEW PROJECT)가 뜬다
+        {...(siteLink && {
+          component: 'a',
+          href: siteLink,
+          target: '_blank',
+          rel: 'noreferrer',
+          'aria-label': 'Dr.Jart+ 리디자인 사이트 열기 (새 탭)',
+          'data-click-cursor': '',
+        })}
         sx={{
           position: 'absolute',
           left: u(sheetBox.left),
@@ -299,6 +310,7 @@ const ProjectDetailIntro = ({ project, data = project, activeIndex = 0, id }) =>
           aspectRatio: sheetBox.aspect,
           boxShadow: `0 ${u(22)} ${u(50)} rgba(0, 0, 0, 0.55)`,
           transformOrigin: 'top center',
+          ...(siteLink && { cursor: 'pointer', '@media (hover: hover) and (pointer: fine)': { cursor: 'none' } }),
           ...enterSx('sheetIn', TIMING.sheet, 1.2),
         }}
       >

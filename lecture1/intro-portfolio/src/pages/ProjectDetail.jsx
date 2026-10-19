@@ -5,6 +5,7 @@ import ProjectDetailIntro from '../components/project-detail/ProjectDetailIntro'
 import ProjectDetailGallery from '../components/project-detail/ProjectDetailGallery';
 import SceneFade from '../components/about-me/SceneFade';
 import SiteEffects from '../components/SiteEffects';
+import ClickCursor from '../components/ClickCursor';
 import EdgeNav from '../components/EdgeNav';
 import { PAGE_LINKS } from '../constants/pageLinks';
 import useSmoothScroll from '../hooks/useSmoothScroll';
@@ -36,6 +37,8 @@ const ProjectDetail = ({ project }) => {
       <BackButton section="projects" />
       <EdgeNav {...EDGE_PAGES[project.key]} />
       <SiteEffects />
+      {/* 대표 이미지가 사이트 링크일 때, 그 위에서 커서가 CLICK · VIEW PROJECT 동그라미로 바뀐다 */}
+      {project.compare?.site && <ClickCursor />}
 
       {project.caseStudy ? (
         <>
