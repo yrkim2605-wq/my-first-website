@@ -351,12 +351,3 @@ button:focus-visible,
   }
 }
 
-/* 히어로 원기둥(src/components/RibbonBand.jsx)이 저절로 도는 회전 — 합성 단계에서 돌아 메인 스레드를 쓰지 않는다 */
-@keyframes ribbonSpin {
-  from {
-    transform: rotateY(0deg);
-  }
-  to {
-    transform: rotateY(360deg);
-  }
-}
