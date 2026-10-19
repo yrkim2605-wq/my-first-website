@@ -12,13 +12,14 @@ import { navigateWithFade } from '../utils/pageTransition';
 import drJartThumb from '../assets/project-drjart.webp';
 import aiInfluencerThumb from '../assets/project-ai-influencer.webp';
 import illustrationThumb from '../assets/project-illustration.webp';
+import bakeryThumb from '../assets/project-bakery.webp';
 import RollingNumber from './RollingNumber';
 import Reveal from './Reveal';
 
 // image: 나중에 이미지 경로를 넣으면 회색 박스 대신 이미지가 보인다
 // link: 썸네일을 눌렀을 때 열릴 주소 (없으면 null)
 //   외부 사이트(http…)는 새 탭으로, 포트폴리오 안의 페이지는 같은 탭에서 화면이 어두워지며 넘어간다
-// backdrop: 카드가 맨 위에 있을 때 뒤에 깔리는 선 장식 ('rays' | 'petals' | 'arcs')
+// backdrop: 카드가 맨 위에 있을 때 뒤에 깔리는 선 장식 ('rays' | 'petals' | 'arcs' | 'rings')
 // aspect: 카드 비율
 // framed: true면 카드에 흰 테두리를 둘러 검은 배경에서 또렷하게 보이게 한다
 const PROJECTS = [
@@ -47,6 +48,14 @@ const PROJECTS = [
     aspect: '1 / 1',
     framed: true, // 이미지 가장자리가 검은색이라 배경과 섞이므로
   },
+  {
+    title: 'BAKERY REVIEW RPG',
+    body: '빵집 리뷰를 쓰며 레벨업하는 빵집 탐험 RPG 웹사이트. 리뷰·퀘스트·도감·랭킹 시스템을 기획하고, React와 Supabase로 직접 개발해 배포',
+    image: bakeryThumb, // 사용자가 만든 썸네일(my-bakery-review/썸네일.png)
+    link: 'https://yrkim2605-wq.github.io/my-first-website/my-bakery-review/', // 배포된 실제 사이트 (새 탭)
+    backdrop: 'rings',
+    aspect: '1440 / 800', // 닥터자르트 카드와 같은 크기 — 이미지는 가로 양쪽만 살짝 잘린다
+  },
 ];
 
 // 좌표·크기는 2000 × 955 시안 기준 (cqw = 무대 너비의 1%)
@@ -58,6 +67,7 @@ const STACK_LAYOUTS = [
   [{ top: 14.25, scale: 1 }],
   [{ top: 9.85, scale: 0.9 }, { top: 14.25, scale: 1 }],
   [{ top: 7.25, scale: 0.78 }, { top: 8.75, scale: 0.87 }, { top: 10.4, scale: 1 }],
+  [{ top: 6.65, scale: 0.7 }, { top: 8.05, scale: 0.8 }, { top: 9.65, scale: 0.9 }, { top: 14.25, scale: 1 }],
 ];
 // 카드 높이(cqw) — 너비와 비율로 계산한다
 const cardHeight = (i) => {
@@ -242,7 +252,19 @@ const Arcs = () => (
   </g>
 );
 
-const BACKDROPS = { rays: Rays, petals: Petals, arcs: Arcs };
+// 동심원: 카드 뒤 한가운데에서 번져 나가는 원들 (지도 위 탐험 범위처럼) [반지름]
+const RING_CENTER = [1000, 560];
+const RING_RADII = [330, 470, 630, 810, 1010];
+
+const Rings = () => (
+  <g>
+    {RING_RADII.map((r) => (
+      <circle key={r} cx={RING_CENTER[0]} cy={RING_CENTER[1]} r={r} fill="none" stroke={LINE_STROKE} strokeWidth={1.5} />
+    ))}
+  </g>
+);
+
+const BACKDROPS = { rays: Rays, petals: Petals, arcs: Arcs, rings: Rings };
 
 // link: 주소가 있으면 썸네일을 눌러 그 프로젝트를 연다
 // 마우스를 올리면 커서가 CLICK 동그라미로 바뀐다 (ClickCursor — data-click-cursor가 붙은 요소에서)
