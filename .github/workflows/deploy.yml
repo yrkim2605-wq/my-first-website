@@ -78,14 +78,23 @@ jobs:
         # 로컬 개발(npm run dev)은 그대로 두고, 배포 빌드에서만 하위 경로를 지정한다
         run: npm run build -- --base=/my-first-website/intro-portfolio/
 
+      - name: Install dr-evers-website dependencies
+        working-directory: lecture1/dr-evers-website
+        run: npm install
+      - name: Build dr-evers-website
+        working-directory: lecture1/dr-evers-website
+        # 배포 빌드에서만 하위 경로를 지정한다
+        run: npm run build -- --base=/my-first-website/dr-evers-website/
+
       - name: Assemble Pages site
         run: |
-          mkdir -p site/my-portfolio site/my-community site/my-bakery-review site/intro-portfolio
+          mkdir -p site/my-portfolio site/my-community site/my-bakery-review site/intro-portfolio site/dr-evers-website
           cp -r lecture1/my-fashion-shop/dist/. site/
           cp -r my-portfolio/. site/my-portfolio/
           cp -r my-community/. site/my-community/
           cp -r my-bakery-review/. site/my-bakery-review/
           cp -r lecture1/intro-portfolio/dist/. site/intro-portfolio/
+          cp -r lecture1/dr-evers-website/dist/. site/dr-evers-website/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
