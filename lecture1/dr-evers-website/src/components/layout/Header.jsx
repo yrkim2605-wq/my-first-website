@@ -8,6 +8,7 @@ import {
   List,
   ListItemButton,
   ListItemText,
+  NativeSelect,
   Toolbar,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
@@ -17,6 +18,16 @@ import MenuIcon from '@mui/icons-material/Menu'
 import logo from '../../assets/logo.png'
 
 const NAV_ITEMS = ['이벤트', '시술전후', '의료진', '지점안내']
+const LANGUAGES = ['KOR', 'ENG', 'JPN', 'CHN']
+const BRANCHES = ['부산서면점']
+
+// 청록색 바 위에서 보이도록 글자와 화살표를 흰색으로 맞춘 선택 상자 스타일
+const SELECT_SX = {
+  color: 'inherit',
+  fontSize: 13,
+  '& .MuiNativeSelect-icon': { color: 'inherit' },
+  '& option': { color: 'text.primary' },
+}
 
 const Header = () => {
   // 서랍 메뉴가 열려 있는지 기억하는 상태 (처음에는 닫힘)
@@ -45,6 +56,26 @@ const Header = () => {
         </Box>
 
         <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2, mr: 2 }}>
+            <NativeSelect defaultValue="" disableUnderline inputProps={{ 'aria-label': '언어 선택' }} sx={SELECT_SX}>
+              <option value="" disabled>
+                Lang
+              </option>
+              {LANGUAGES.map((language) => (
+                <option key={language} value={language}>
+                  {language}
+                </option>
+              ))}
+            </NativeSelect>
+            <NativeSelect defaultValue={BRANCHES[0]} disableUnderline inputProps={{ 'aria-label': '지점 선택' }} sx={SELECT_SX}>
+              {BRANCHES.map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
+                </option>
+              ))}
+            </NativeSelect>
+          </Box>
+
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
             <IconButton color="inherit" size="small" aria-label="검색">
               <SearchIcon fontSize="small" />
