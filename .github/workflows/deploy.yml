@@ -86,9 +86,23 @@ jobs:
         # 배포 빌드에서만 하위 경로를 지정한다
         run: npm run build -- --base=/my-first-website/dr-evers-website/
 
+      # 공부용 브랜치는 따로 받아서 별도 주소(dr-evers-study)로 올린다
+      - name: Checkout dr-evers study branch
+        uses: actions/checkout@v4
+        with:
+          ref: study/header-hero
+          path: study-src
+      - name: Install dr-evers study dependencies
+        working-directory: study-src/lecture1/dr-evers-website
+        run: npm install
+      - name: Build dr-evers study
+        working-directory: study-src/lecture1/dr-evers-website
+        run: npm run build -- --base=/my-first-website/dr-evers-study/
+
       - name: Assemble Pages site
         run: |
-          mkdir -p site/my-portfolio site/my-community site/my-bakery-review site/intro-portfolio site/dr-evers-website
+          mkdir -p site/my-portfolio site/my-community site/my-bakery-review site/intro-portfolio site/dr-evers-website site/dr-evers-study
+          cp -r study-src/lecture1/dr-evers-website/dist/. site/dr-evers-study/
           cp -r lecture1/my-fashion-shop/dist/. site/
           cp -r my-portfolio/. site/my-portfolio/
           cp -r my-community/. site/my-community/
