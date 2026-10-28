@@ -19,7 +19,7 @@ const BestSellerSection = () => {
 
   return (
     <Box id="best-seller" sx={{ py: 10, scrollMarginTop: 64 }}>
-      <Container maxWidth="lg">
+      <Container maxWidth={false} sx={{ maxWidth: 1700 }}>
         <Typography variant="h2" sx={{ textAlign: 'center', mb: 1 }}>
           Best Seller
         </Typography>
@@ -31,25 +31,23 @@ const BestSellerSection = () => {
           sx={{
             position: 'relative',
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gridTemplateColumns: { xs: '1fr', md: '1fr 520px' },
             gap: 4,
             p: { xs: 3, md: 5 },
-            borderRadius: 6,
+            borderRadius: 1,
             bgcolor: 'primary.main',
             color: 'white',
           }}
         >
-          <ImagePlaceholder
-            label={current.name}
-            sx={{ height: { xs: 220, md: 340 }, borderRadius: 4, bgcolor: 'primary.light' }}
-          />
+          <ImagePlaceholder sx={{ height: { xs: 220, md: 520 }, borderRadius: 1 }} />
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               p: 4,
-              borderRadius: 4,
+              aspectRatio: { md: '1 / 1' },
+              borderRadius: 1,
               bgcolor: 'white',
               color: 'text.primary',
             }}

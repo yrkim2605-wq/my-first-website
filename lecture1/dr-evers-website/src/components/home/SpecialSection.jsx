@@ -25,7 +25,7 @@ const SpecialSection = () => {
             key={item.id}
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gridTemplateColumns: { xs: '1fr', md: index % 2 === 0 ? '380px 1fr' : '1fr 380px' },
               alignItems: 'center',
               gap: { xs: 3, md: 8 },
               mb: 8,
@@ -33,10 +33,9 @@ const SpecialSection = () => {
           >
             {/* 짝수 번째는 사진과 글의 좌우 순서를 바꿔요 */}
             <ImagePlaceholder
-              label="DOCTOR"
               sx={{
-                height: { xs: 260, md: 380 },
-                borderRadius: index % 2 === 0 ? '200px 32px 32px 32px' : '32px 200px 32px 32px',
+                height: { xs: 360, md: 560 },
+                borderRadius: index % 2 === 0 ? '300px 80px 80px 80px' : '80px 300px 80px 80px',
                 order: { md: index % 2 === 0 ? 0 : 1 },
               }}
             />

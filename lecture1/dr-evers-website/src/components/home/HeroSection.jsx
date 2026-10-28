@@ -22,24 +22,11 @@ const HeroSection = () => {
         alignItems: 'center',
         overflow: 'hidden',
         pt: '59px',
-        background: 'linear-gradient(90deg, #f4f6f8 0%, #e2e6ea 45%, #c9cfd6 100%)',
+        bgcolor: '#e4e7ea',
       }}
     >
-      {/* 모델 사진 자리: 가운데에 세로로 길게 */}
-      <ImagePlaceholder
-        label="MODEL IMAGE"
-        sx={{
-          position: 'absolute',
-          left: '50%',
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          width: { xs: 180, md: 300 },
-          height: { xs: '55%', md: '82%' },
-          borderRadius: '150px 150px 0 0',
-          background: 'linear-gradient(180deg, #8a949e 0%, #5f6a74 100%)',
-          opacity: 0.55,
-        }}
-      />
+      {/* 히어로 배경 사진 자리: 섹션 전체를 채워요 */}
+      <ImagePlaceholder sx={{ position: 'absolute', inset: 0 }} />
 
       <Box sx={{ position: 'relative', zIndex: 1, px: { xs: 3, md: 7.5 }, maxWidth: 560 }}>
         <Typography
@@ -81,35 +68,6 @@ const HeroSection = () => {
         >
           관련 정보 더보기
         </Button>
-      </Box>
-
-      {/* 오른쪽 장식 문구 */}
-      <Box
-        sx={{
-          display: { xs: 'none', md: 'block' },
-          position: 'absolute',
-          right: '10%',
-          top: '50%',
-          textAlign: 'center',
-          color: '#1b2b2a',
-        }}
-      >
-        <Typography
-          sx={{
-            fontFamily: 'fontFamilySerif',
-            fontWeight: 400,
-            fontSize: 72,
-            letterSpacing: '0.35em',
-            lineHeight: 1.1,
-            borderBottom: '1px solid #1b2b2a',
-            pb: 1,
-          }}
-        >
-          고주파
-        </Typography>
-        <Typography sx={{ fontWeight: 700, fontSize: 26, letterSpacing: '0.45em', mt: 3 }}>
-          에버스가 묻다
-        </Typography>
       </Box>
 
       {/* 간편 상담 신청 바 (화면만 있는 UI예요. 전송 기능은 아직 없어요) */}

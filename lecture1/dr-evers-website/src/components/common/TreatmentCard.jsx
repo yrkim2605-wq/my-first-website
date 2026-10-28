@@ -18,7 +18,6 @@ const TreatmentCard = ({ title, description, tags, Icon }) => {
       }}
     >
       <ImagePlaceholder
-        label="SKIN IMAGE"
         sx={{ flexShrink: 0, width: { xs: '100%', sm: 220 }, height: { xs: 200, sm: 'auto' }, minHeight: 220, borderRadius: 3 }}
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 1 }}>

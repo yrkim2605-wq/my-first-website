@@ -57,7 +57,7 @@ const ClinicSection = () => {
             </Box>
           </Box>
 
-          <ImagePlaceholder label="MAP" sx={{ minHeight: 280, borderRadius: 4 }} />
+          <ImagePlaceholder sx={{ minHeight: 280, borderRadius: 4 }} />
         </Box>
       </Container>
     </Box>
