@@ -86,6 +86,14 @@ jobs:
         # 배포 빌드에서만 하위 경로를 지정한다
         run: npm run build -- --base=/my-first-website/dr-evers-website/
 
+      - name: Install duckmyeong-nunsol dependencies
+        working-directory: lecture1/duckmyeong-nunsol
+        run: npm install
+      - name: Build duckmyeong-nunsol
+        working-directory: lecture1/duckmyeong-nunsol
+        # 배포 빌드에서만 하위 경로를 지정한다
+        run: npm run build -- --base=/my-first-website/duckmyeong-nunsol/
+
       # 공부용 브랜치는 따로 받아서 별도 주소(dr-evers-study)로 올린다
       - name: Checkout dr-evers study branch
         uses: actions/checkout@v4
@@ -101,7 +109,7 @@ jobs:
 
       - name: Assemble Pages site
         run: |
-          mkdir -p site/my-portfolio site/my-community site/my-bakery-review site/intro-portfolio site/dr-evers-website site/dr-evers-study
+          mkdir -p site/my-portfolio site/my-community site/my-bakery-review site/intro-portfolio site/dr-evers-website site/dr-evers-study site/duckmyeong-nunsol
           cp -r study-src/lecture1/dr-evers-website/dist/. site/dr-evers-study/
           cp -r lecture1/my-fashion-shop/dist/. site/
           cp -r my-portfolio/. site/my-portfolio/
@@ -109,6 +117,7 @@ jobs:
           cp -r my-bakery-review/. site/my-bakery-review/
           cp -r lecture1/intro-portfolio/dist/. site/intro-portfolio/
           cp -r lecture1/dr-evers-website/dist/. site/dr-evers-website/
+          cp -r lecture1/duckmyeong-nunsol/dist/. site/duckmyeong-nunsol/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
