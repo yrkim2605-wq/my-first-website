@@ -1,23 +1,25 @@
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
-import HeroSection from './components/home/HeroSection'
+import FloatingMenu from './components/layout/FloatingMenu'
 import CategoryCards from './components/home/CategoryCards'
+import HeroSection from './components/home/HeroSection'
 import ProductSection from './components/home/ProductSection'
 import BrandSection from './components/home/BrandSection'
-import IndustrySection from './components/home/IndustrySection'
+import ServiceStrip from './components/home/ServiceStrip'
 
 const App = () => {
   return (
     <>
       <Header />
       <main>
-        <HeroSection />
         <CategoryCards />
+        <HeroSection />
         <ProductSection />
         <BrandSection />
-        <IndustrySection />
+        <ServiceStrip />
       </main>
       <Footer />
+      <FloatingMenu />
     </>
   )
 }

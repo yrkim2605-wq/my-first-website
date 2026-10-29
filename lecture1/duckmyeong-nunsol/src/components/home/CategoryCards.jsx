@@ -1,40 +1,62 @@
 import { Box, Container, Paper, Typography } from '@mui/material'
-import ImagePlaceholder from '../common/ImagePlaceholder'
 import { CATEGORIES } from '../../constants/siteData'
 
-// 히어로 아래로 살짝 겹쳐 올라오는 카테고리 카드
+// 헤더 바로 아래, 히어로 위에 놓이는 카테고리 카드
 const CategoryCards = () => {
   return (
-    <Container maxWidth="lg" sx={{ mt: { xs: -6, md: -9 }, position: 'relative', zIndex: 1 }}>
-      <Paper
-        elevation={3}
+    <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 3 }, pb: { xs: 2, md: 3 } }}>
+      <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(4, 1fr)', md: 'repeat(7, 1fr)' },
-          borderRadius: 3,
-          overflow: 'hidden',
+          gridTemplateColumns: { xs: 'repeat(4, 1fr)', md: 'repeat(8, 1fr)' },
+          gap: { xs: 1, md: 1.5 },
         }}
       >
         {CATEGORIES.map((category) => (
-          <Box
-            key={category}
+          <Paper
+            key={category.id}
+            variant="outlined"
             sx={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               gap: 1,
-              py: 2.5,
+              px: 0.5,
+              py: 1.5,
+              borderRadius: 2,
               cursor: 'pointer',
-              '&:hover': { bgcolor: '#FFF4ED' },
+              transition: 'border-color .2s, background-color .2s, box-shadow .2s',
+              '&:hover': {
+                borderColor: 'primary.main',
+                bgcolor: '#FFF4ED',
+                boxShadow: '0 4px 12px rgba(242,106,27,0.15)',
+              },
             }}
           >
-            <ImagePlaceholder label="" sx={{ width: 56, height: 56, borderRadius: 2 }} />
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {category}
+            <Box
+              component="img"
+              src={category.image}
+              alt={category.name}
+              sx={{ width: { xs: 56, md: 72 }, height: { xs: 56, md: 72 }, objectFit: 'contain', mixBlendMode: 'multiply' }}
+            />
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                textAlign: 'center',
+                wordBreak: 'keep-all',
+                lineHeight: 1.4,
+                minHeight: '2.8em',
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: { xs: '0.75rem', md: '0.8125rem' },
+              }}
+            >
+              {category.name}
             </Typography>
-          </Box>
+          </Paper>
         ))}
-      </Paper>
+      </Box>
     </Container>
   )
 }
