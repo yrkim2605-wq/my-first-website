@@ -53,7 +53,13 @@ const BrandSection = () => {
               }}
             >
               {brand.logoImage ? (
-                <Box component="img" src={brand.logoImage} alt={brand.logo} sx={{ maxWidth: '70%', maxHeight: 36 }} />
+                <Box
+                  component="img"
+                  src={brand.logoImage}
+                  alt={brand.logo}
+                  // 흰 배경이 호버 색 위에서 네모로 보이지 않게 multiply로 섞음
+                  sx={{ height: brand.logoHeight ?? 24, maxWidth: '75%', objectFit: 'contain', mixBlendMode: 'multiply' }}
+                />
               ) : (
                 brand.logo
               )}
