@@ -4,7 +4,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import PauseIcon from '@mui/icons-material/Pause'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
-import { HERO_SLIDES } from '../../constants/siteData'
+import { HERO_OBJECT_POSITIONS, HERO_SLIDES } from '../../constants/siteData'
 
 const AUTO_PLAY_INTERVAL = 5000
 
@@ -45,13 +45,20 @@ const HeroSection = () => {
 
   return (
     <Container maxWidth="lg">
-      {/* 다른 섹션과 같은 폭(1200px)에 원본 비율(1140:600)을 그대로 따름 */}
+      {/* 다른 섹션과 같은 폭(lg = 1360px).
+          모바일: 이미지 원본 비율(1140:600) 그대로.
+          데스크톱: 배너 전체가 첫 화면에 보이도록 높이를 화면 높이에 맞춰 600~640px로 조절하고,
+          이미지는 위아래만 조금 잘림(좌우는 그대로). 폭이 좁아 원본 비율보다 낮아질 때는 원본 높이까지만 */}
       <Box
         sx={{
           position: 'relative',
           width: '100%',
           overflow: 'hidden',
-          aspectRatio: '1140 / 600',
+          aspectRatio: { xs: '1140 / 600', md: 'auto' },
+          height: {
+            xs: 'auto',
+            md: 'min(clamp(600px, calc(100vh - 258px), 640px), calc((100vw - 64px) * 0.5263))',
+          },
           borderRadius: { xs: 2, md: 3 },
           bgcolor: '#0A0A0A',
         }}
@@ -71,7 +78,14 @@ const HeroSection = () => {
               component="img"
               src={slide}
               alt={`덕명눈솔 메인 배너 ${index + 1}`}
-              sx={{ flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover' }}
+              sx={{
+                flex: '0 0 100%',
+                display: 'block',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: HERO_OBJECT_POSITIONS[slide] ?? 'center',
+              }}
             />
           ))}
         </Box>

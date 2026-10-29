@@ -33,19 +33,17 @@ import productTest from '../assets/product/product-test.jpg'
 import productInterface from '../assets/product/product-interface.jpg'
 import productCounter from '../assets/product/product-counter.jpg'
 
-export const HERO_SLIDES = [hero1, hero2, hero3, hero4, hero5, hero6, hero7, hero8]
+// 첫 슬라이드는 제품 홍보(CRYSTA-Apex V), 공식 대리점 소개(hero1)는 마지막으로
+export const HERO_SLIDES = [hero3, hero2, hero4, hero5, hero6, hero7, hero8, hero1]
+
+// 슬라이드별 이미지 위치(위아래가 잘릴 때 어느 쪽을 더 자를지). 값이 클수록 위쪽을 더 많이 자름. 없으면 가운데
+export const HERO_OBJECT_POSITIONS = {
+  [hero2]: 'center 60%', // MiSTAR 555: 아래 기능 알약이 덜 잘리도록 위쪽을 더 자름
+}
 
 export const NAV_MENUS = ['온라인견적', '카탈로그', '의뢰/요청', '고객센터', '기술자료']
 
 export const NAV_RIGHT_MENUS = ['개인결제', '주문/배송조회']
-
-// 아이콘은 ServiceStrip 컴포넌트에서 id로 연결
-export const CONTACTS = [
-  { id: 'tel', title: '1644-9879', desc: '평일 09:00 - 18:00' },
-  { id: 'branch', title: '051-714-0949', desc: '부산 지사 문의' },
-  { id: 'kakao', title: '빠른 상담', desc: '카카오톡 @(주)덕명눈솔' },
-  { id: 'order', title: '주문/배송조회', desc: '실시간 확인 가능' },
-]
 
 export const CATEGORIES = [
   { id: 'equipment', name: '측정장비', image: equipment },
@@ -176,12 +174,12 @@ export const COMPANY_INFO = {
   address: '부산 해운대구 센텀중앙로 97 3801, 3802, 3803호 (재송동, 센텀스카이비즈)',
   email: 'shop@duckmyoung.com',
   tel: '1644-9879',
-  branchTel: '051-714-0949',
   fax: '051-775-9622',
-  hours: '평일 09:00 ~ 18:00 (일요일·공휴일 휴무)',
+  hours: '평일 09:00 ~ 18:00',
+  holiday: '일요일 및 공휴일은 휴무',
+  delivery: '배송마감 오후 4시 (주말 및 공휴일 휴무)',
   bank: '국민은행 954601-01-125611',
   accountNumber: '954601-01-125611',
-  kakao: '@(주)덕명눈솔',
   accountHolder: '(주)덕명눈솔',
 }
 
@@ -198,3 +196,18 @@ export const COMPANY_INTRO = {
   years: '38',
   yearsLabel: '년 이상의 노하우',
 }
+
+// 푸터 SNS 아이콘 (서비스 대표 색상)
+export const SOCIAL_LINKS = [
+  { id: 'facebook', label: '페이스북', bgcolor: '#3B5998', color: '#fff' },
+  { id: 'twitter', label: '트위터', bgcolor: '#1DA1F2', color: '#fff' },
+  { id: 'googleplus', label: '구글플러스', bgcolor: '#DD4B39', color: '#fff' },
+  { id: 'youtube', label: '유튜브', bgcolor: '#E52D27', color: '#fff' },
+  { id: 'instagram', label: '인스타그램', bgcolor: '#3F729B', color: '#fff' },
+  { id: 'band', label: '밴드', bgcolor: '#333333', color: '#fff' },
+  { id: 'kakaostory', label: '카카오스토리', bgcolor: '#FFCD00', color: '#3A1D1D' },
+  { id: 'pinterest', label: '핀터레스트', bgcolor: '#CB2027', color: '#fff' },
+]
+
+// 푸터 공지사항 (기존 사이트에 올라와 있는 내용)
+export const NOTICES = [{ id: 1, title: '디지매틱 캘리퍼스 가품(유사품)주의', date: '2022-06-17' }]

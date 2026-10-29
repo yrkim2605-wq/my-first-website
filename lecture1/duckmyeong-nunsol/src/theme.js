@@ -1,6 +1,10 @@
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
+  // lg = 콘텐츠 최대 너비. 모든 섹션이 <Container maxWidth="lg">를 쓰므로 여기서 바꾸면 좌우 정렬선이 함께 바뀜
+  breakpoints: {
+    values: { xs: 0, sm: 600, md: 900, lg: 1360, xl: 1600 },
+  },
   palette: {
     primary: {
       main: '#F26A1B',

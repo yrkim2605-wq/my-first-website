@@ -47,10 +47,11 @@ const ProductCard = ({ name, price, originalPrice, discountRate, badges = [], im
               sx={{
                 bgcolor: BADGE_COLORS[badge] ?? 'primary.main',
                 color: '#fff',
-                fontSize: '0.75rem',
+                fontSize: { xs: '0.625rem', sm: '0.75rem' },
                 fontWeight: 700,
                 lineHeight: 1,
-                px: 1,
+                whiteSpace: 'nowrap',
+                px: { xs: 0.625, sm: 1 },
                 py: 0.5,
                 borderRadius: 0.5,
               }}
@@ -84,6 +85,7 @@ const ProductCard = ({ name, price, originalPrice, discountRate, badges = [], im
           variant="body2"
           sx={{
             mb: 0.5,
+            fontSize: { xs: '0.875rem', lg: '0.9375rem' },
             lineHeight: 1.5,
             height: '3em',
             overflow: 'hidden',
