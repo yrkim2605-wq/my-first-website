@@ -4,7 +4,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { BRANDS, COMPANY_INFO, COMPANY_INTRO } from '../../constants/siteData'
 
 // 신뢰 요소: 모두 기존 사이트에 공개된 사실만 사용
-// (38년, 공식 대리점은 왼쪽 패널과 제목에 이미 있어서 중복하지 않음)
+// (40년, 공식 대리점은 왼쪽 패널과 제목에 이미 있어서 중복하지 않음)
 const TRUST_POINTS = [
   `${BRANDS.length}개 브랜드 취급 (${BRANDS.map((brand) => brand.logo).join(', ')})`,
   '사업자등록 및 통신판매업 신고 사업자',
