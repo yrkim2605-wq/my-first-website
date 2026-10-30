@@ -1,15 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  Alert,
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  Popover,
-  Snackbar,
-  Typography,
-  useMediaQuery,
-} from '@mui/material'
+import { Box, Button, IconButton, Paper, Popover, Typography, useMediaQuery } from '@mui/material'
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble'
 import SupportAgentIcon from '@mui/icons-material/SupportAgent'
 import EditNoteIcon from '@mui/icons-material/EditNote'
@@ -20,6 +10,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic'
 import CloseIcon from '@mui/icons-material/Close'
 import { COMPANY_INFO } from '../../constants/siteData'
+import useShop from '../../hooks/useShop'
 
 const SCROLL_SHOW_POSITION = 300
 
@@ -43,7 +34,7 @@ const FloatingMenu = () => {
   const [isTopButtonVisible, setIsTopButtonVisible] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [panel, setPanel] = useState({ id: null, anchorEl: null })
-  const [isCopied, setIsCopied] = useState(false)
+  const { notify } = useShop()
 
   const handleScrollTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -64,14 +55,11 @@ const FloatingMenu = () => {
   const handleCopyAccount = async () => {
     try {
       await navigator.clipboard.writeText(COMPANY_INFO.accountNumber)
-      setIsCopied(true)
+      notify('계좌번호가 복사되었습니다')
     } catch {
-      // 복사 권한이 없는 환경: 번호가 화면에 그대로 보이므로 직접 선택해서 복사할 수 있음
+      // 복사 권한이 없거나 지원하지 않는 환경: 번호가 화면에 그대로 보이므로 직접 선택해서 복사하도록 안내
+      notify('복사하지 못했어요. 계좌번호를 직접 선택해서 복사해 주세요', 'warning')
     }
-  }
-
-  const handleSnackbarClose = () => {
-    setIsCopied(false)
   }
 
   useEffect(() => {
@@ -215,17 +203,6 @@ const FloatingMenu = () => {
           </Box>
         )}
       </Popover>
-
-      <Snackbar
-        open={isCopied}
-        autoHideDuration={2000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="success" variant="filled" onClose={handleSnackbarClose}>
-          계좌번호가 복사되었습니다
-        </Alert>
-      </Snackbar>
     </>
   )
 }
