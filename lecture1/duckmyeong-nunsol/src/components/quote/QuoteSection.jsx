@@ -1,38 +1,47 @@
 import { useId } from 'react'
-import { Box, Typography } from '@mui/material'
+import { Box, Paper, Typography } from '@mui/material'
 
-// 견적 페이지의 번호가 붙은 구획 (1. 제품 검색 / 2. 제품 관리 / 3. 요청 정보)
+// 견적 페이지의 흰 카드 한 장 (번호 배지 + 제목 + 오른쪽 보조 문구)
 const QuoteSection = ({ id, step, title, hint, children }) => {
   const titleId = useId()
 
   return (
-    <Box component="section" id={id} aria-labelledby={titleId} sx={{ mb: { xs: 5, md: 6 }, scrollMarginTop: 16 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'baseline',
-          flexWrap: 'wrap',
-          columnGap: 1.5,
-          pb: 1.5,
-          mb: 2.5,
-          borderBottom: '2px solid',
-          borderColor: 'secondary.main',
-        }}
-      >
-        <Typography id={titleId} variant="h3" component="h2">
-          <Box component="span" sx={{ color: 'primary.main', mr: 0.75 }}>
-            {step}.
-          </Box>
+    <Paper
+      component="section"
+      id={id}
+      aria-labelledby={titleId}
+      variant="outlined"
+      sx={{ p: { xs: 2.5, md: 3.5 }, borderRadius: 1.5, borderColor: '#E8EAED', scrollMarginTop: 16 }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
+        <Box
+          aria-hidden
+          sx={{
+            width: 28,
+            height: 28,
+            flexShrink: 0,
+            display: 'grid',
+            placeItems: 'center',
+            borderRadius: '50%',
+            bgcolor: 'primary.main',
+            color: '#fff',
+            fontSize: '0.875rem',
+            fontWeight: 700,
+          }}
+        >
+          {step}
+        </Box>
+        <Typography id={titleId} variant="h3" component="h2" sx={{ fontSize: '1.125rem' }}>
           {title}
         </Typography>
         {hint && (
-          <Typography variant="body2" color="text.secondary" sx={{ ml: { sm: 'auto' } }}>
+          <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto', textAlign: 'right' }}>
             {hint}
           </Typography>
         )}
       </Box>
       {children}
-    </Box>
+    </Paper>
   )
 }
 

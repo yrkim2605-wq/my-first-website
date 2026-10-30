@@ -1,5 +1,6 @@
 import { Box, Button, IconButton, TextField } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
 import { ALLOWED_FILE_EXTENSIONS, validateFile } from '../../utils/validateFile'
 
 // 파일 선택 칸: 선택한 파일 이름을 보여주고, 형식·크기가 맞지 않으면 안내 (데모라 서버로 보내지는 않음)
@@ -37,11 +38,12 @@ const FileField = ({ label, value, onChange }) => {
       )}
       <Button
         component="label"
-        variant="contained"
-        color="secondary"
-        sx={{ flexShrink: 0, height: 40, '&:focus-within': { outline: '2px solid #f26a1b', outlineOffset: 2 } }}
+        variant="outlined"
+        color="inherit"
+        startIcon={<AttachFileIcon />}
+        sx={{ flexShrink: 0, height: 40, borderColor: '#D5D8DD', '&:focus-within': { outline: '2px solid #f26a1b', outlineOffset: 2 } }}
       >
-        파일 선택
+        선택
         <input
           hidden
           type="file"
