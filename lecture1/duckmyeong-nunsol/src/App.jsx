@@ -6,15 +6,18 @@ import HeroSection from './components/home/HeroSection'
 import ProductSection from './components/home/ProductSection'
 import BrandSection from './components/home/BrandSection'
 import CompanyIntro from './components/home/CompanyIntro'
+import useProductFilter from './hooks/useProductFilter'
 
 const App = () => {
+  const { filter, isFiltering, search, toggleCategory, showAll, clear } = useProductFilter()
+
   return (
     <>
-      <Header />
+      <Header query={filter.query} onSearch={search} />
       <main>
-        <CategoryCards />
+        <CategoryCards selectedId={filter.categoryId} onSelect={toggleCategory} />
         <HeroSection />
-        <ProductSection />
+        <ProductSection filter={filter} isFiltering={isFiltering} onShowAll={showAll} onClear={clear} />
         <BrandSection />
         <CompanyIntro />
       </main>

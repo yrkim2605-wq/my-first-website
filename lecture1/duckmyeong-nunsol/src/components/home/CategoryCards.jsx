@@ -2,7 +2,7 @@ import { Box, Container, Paper, Typography } from '@mui/material'
 import { CATEGORIES } from '../../constants/siteData'
 
 // 헤더 바로 아래, 히어로 위에 놓이는 카테고리 카드
-const CategoryCards = () => {
+const CategoryCards = ({ selectedId, onSelect }) => {
   return (
     <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 2 }, pb: { xs: 2, md: 2 } }}>
       <Box
@@ -12,11 +12,22 @@ const CategoryCards = () => {
           gap: { xs: 1, md: 1.5 },
         }}
       >
-        {CATEGORIES.map((category) => (
+        {CATEGORIES.map((category) => {
+          const isSelected = selectedId === category.id
+          return (
           <Paper
             key={category.id}
+            component="button"
+            type="button"
             variant="outlined"
+            aria-pressed={isSelected}
+            onClick={() => onSelect(category.id)}
             sx={{
+              font: 'inherit',
+              color: 'inherit',
+              borderColor: isSelected ? 'primary.main' : undefined,
+              bgcolor: isSelected ? '#FFF4ED' : undefined,
+              '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -55,7 +66,8 @@ const CategoryCards = () => {
               {category.name}
             </Typography>
           </Paper>
-        ))}
+          )
+        })}
       </Box>
     </Container>
   )

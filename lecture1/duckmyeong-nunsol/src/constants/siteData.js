@@ -72,6 +72,7 @@ export const PRODUCTS = {
       name: '디지매틱 외측 마이크로-고정도 ,0.1μm',
       price: 1767480,
       image: productMicrometer,
+      category: 'micrometer',
     },
     {
       id: 2,
@@ -80,6 +81,7 @@ export const PRODUCTS = {
       name: '리니어 하이트-고성능 2차원측정-에어부상형',
       price: 11165660,
       image: productHeight,
+      category: 'height',
     },
     {
       id: 3,
@@ -88,6 +90,7 @@ export const PRODUCTS = {
       name: '투영기 PH-3515F 정립상 윤곽형상용(QM/KA카운터 선택)',
       price: 18241080,
       image: productProjector,
+      category: 'optical',
     },
     {
       id: 4,
@@ -96,6 +99,7 @@ export const PRODUCTS = {
       name: '보어 게이지-표준',
       price: 264220,
       image: productBore,
+      category: 'bore',
     },
   ],
   신상품: [
@@ -106,6 +110,7 @@ export const PRODUCTS = {
       name: '3차원 측정기 CRYSTA-APEX V9106',
       price: null,
       image: productCmm,
+      category: 'equipment',
     },
     {
       id: 6,
@@ -114,6 +119,7 @@ export const PRODUCTS = {
       name: '디지매틱 인디게이터=바그래프 다기능절환',
       price: 819060,
       image: productIndicator,
+      category: 'indicator',
     },
     {
       id: 7,
@@ -122,6 +128,7 @@ export const PRODUCTS = {
       name: '리니어 하이트-고성능 2차원측정-에어부상형',
       price: 11165660,
       image: productHeight,
+      category: 'height',
     },
     {
       id: 8,
@@ -130,6 +137,7 @@ export const PRODUCTS = {
       name: '다이얼 테스트=만능 360˚',
       price: 367400,
       image: productTest,
+      category: 'indicator',
     },
   ],
   특가상품: [
@@ -142,6 +150,7 @@ export const PRODUCTS = {
       originalPrice: 959400,
       discountRate: 7,
       image: productInterface,
+      category: 'equipment',
     },
     {
       id: 10,
@@ -152,6 +161,7 @@ export const PRODUCTS = {
       originalPrice: 587100,
       discountRate: 7,
       image: productCounter,
+      category: 'equipment',
     },
   ],
 }
