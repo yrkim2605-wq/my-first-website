@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Box, Button, Chip, Container, Tab, Tabs, Typography } from '@mui/material'
+import { Box, Button, Chip, Container, Link, Tab, Tabs, Typography } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import SearchOffIcon from '@mui/icons-material/SearchOff'
 import ProductCard from '../common/ProductCard'
-import { PRODUCT_TABS, PRODUCTS } from '../../constants/siteData'
-import { ALL_PRODUCTS, getCategoryName, searchProducts } from '../../utils/productSearch'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import { PRODUCT_TABS, PRODUCTS, getOriginalListUrl } from '../../constants/siteData'
+import { ALL_PRODUCTS, PRODUCT_CATEGORIES, getCategoryName, searchProducts } from '../../utils/productSearch'
 
 const GRID_SX = {
   display: 'grid',
@@ -23,12 +24,18 @@ const ProductSection = ({ filter, isFiltering, onShowAll, onClear }) => {
   const products = isShowAll ? ALL_PRODUCTS : isFiltering ? searchProducts(query, categoryId) : PRODUCTS[selectedTab]
 
   // 검색·카테고리 필터가 켜져 있을 때 제목 옆에 보여줄 조건 칩
+  // 분류만 골랐을 때는 제목을 분류명으로, 그 분류의 기존 쇼핑몰 목록 주소도 함께 제공
+  const category = PRODUCT_CATEGORIES.find(({ id }) => id === categoryId)
+  const isCategoryOnly = Boolean(categoryId) && !query
+  const originalListUrl = category ? getOriginalListUrl(category.listId) : null
   const conditionChips = [query && `검색어: ${query}`, categoryId && `분류: ${getCategoryName(categoryId)}`].filter(Boolean)
 
   return (
     <Container id="products" maxWidth="lg" sx={{ pt: { xs: 5, md: 6 }, pb: { xs: 5, md: 6 }, scrollMarginTop: 16 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3, flexWrap: 'wrap' }}>
-        <Typography variant="h2">{isShowAll ? '전체 상품' : isFiltering ? '상품 찾기 결과' : '추천 상품'}</Typography>
+        <Typography variant="h2">
+          {isShowAll ? '전체 상품' : isCategoryOnly ? category.name : isFiltering ? '상품 찾기 결과' : '추천 상품'}
+        </Typography>
 
         {isFiltering ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -39,6 +46,19 @@ const ProductSection = ({ filter, isFiltering, onShowAll, onClear }) => {
             <Typography role="status" variant="body2" color="text.secondary">
               {products.length}개
             </Typography>
+            {originalListUrl && (
+              <Link
+                href={originalListUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+                variant="body2"
+                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25, color: 'primary.dark' }}
+              >
+                기존 쇼핑몰에서 전체 상품 보기
+                <OpenInNewIcon sx={{ fontSize: 14 }} />
+              </Link>
+            )}
           </Box>
         ) : (
           // 선택된 탭: 오렌지 + 굵게 + 두꺼운 밑줄 / 선택 안 된 탭: 회색
@@ -103,10 +123,27 @@ const ProductSection = ({ filter, isFiltering, onShowAll, onClear }) => {
           }}
         >
           <SearchOffIcon sx={{ fontSize: 48, opacity: 0.5 }} />
-          <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>조건에 맞는 상품이 없어요</Typography>
-          <Typography variant="body2" sx={{ wordBreak: 'keep-all', px: 2 }}>
-            찾으시는 제품은 대표전화 1644-9879로 문의해 주시면 안내해 드려요.
+          <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>
+            {isCategoryOnly ? `${category.name} 상품이 아직 준비되지 않았어요` : '조건에 맞는 상품이 없어요'}
           </Typography>
+          <Typography variant="body2" sx={{ wordBreak: 'keep-all', px: 2 }}>
+            {isCategoryOnly
+              ? '기존 쇼핑몰에서 이 분류의 전체 상품을 보실 수 있어요. 대표전화 1644-9879로 문의하셔도 안내해 드려요.'
+              : '찾으시는 제품은 대표전화 1644-9879로 문의해 주시면 안내해 드려요.'}
+          </Typography>
+          {isCategoryOnly && (
+            <Button
+              component="a"
+              href={originalListUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="contained"
+              endIcon={<OpenInNewIcon />}
+              sx={{ mt: 1 }}
+            >
+              기존 쇼핑몰에서 보기
+            </Button>
+          )}
           <Button variant="outlined" onClick={onClear} sx={{ mt: 1 }}>
             필터 해제하고 전체 보기
           </Button>

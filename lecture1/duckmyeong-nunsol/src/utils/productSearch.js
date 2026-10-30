@@ -1,8 +1,11 @@
-import { CATEGORIES, PRODUCTS } from '../constants/siteData'
+import { CATEGORIES, PRODUCTS, SENSOR_CATEGORY } from '../constants/siteData'
 
 const MAX_SUGGESTIONS = 6
 
-const CATEGORY_NAMES = Object.fromEntries(CATEGORIES.map(({ id, name }) => [id, name]))
+// 카드 8개 + 카드에는 없는 정밀센서측정(인터페이스 유닛, EJ 카운터가 속함)
+export const PRODUCT_CATEGORIES = [...CATEGORIES, SENSOR_CATEGORY]
+
+const CATEGORY_NAMES = Object.fromEntries(PRODUCT_CATEGORIES.map(({ id, name }) => [id, name]))
 
 // 같은 상품이 여러 탭(인기·신상품)에 나오므로 이름 기준으로 한 번만 남김
 export const ALL_PRODUCTS = [...new Map(Object.values(PRODUCTS).flat().map((product) => [product.name, product])).values()]

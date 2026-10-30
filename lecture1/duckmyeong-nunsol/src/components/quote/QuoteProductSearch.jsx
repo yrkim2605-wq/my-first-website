@@ -14,9 +14,9 @@ import {
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import AddIcon from '@mui/icons-material/Add'
-import { CATEGORIES, MAX_ORDER_QUANTITY } from '../../constants/siteData'
+import { MAX_ORDER_QUANTITY } from '../../constants/siteData'
 import useShop from '../../hooks/useShop'
-import { getCategoryName, searchProducts } from '../../utils/productSearch'
+import { PRODUCT_CATEGORIES, getCategoryName, searchProducts } from '../../utils/productSearch'
 
 const ROW_BORDER = '#F0F1F3'
 // 처음에는 이만큼만 보여주고 나머지는 "더 보기"로 펼침 (목록 안쪽 스크롤은 페이지 스크롤을 가로막아서 쓰지 않음)
@@ -69,7 +69,7 @@ const QuoteProductSearch = () => {
       >
         <TextField select size="small" label="분류" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
           <MenuItem value="">전체분류</MenuItem>
-          {CATEGORIES.map((category) => (
+          {PRODUCT_CATEGORIES.map((category) => (
             <MenuItem key={category.id} value={category.id}>
               {category.name}
             </MenuItem>

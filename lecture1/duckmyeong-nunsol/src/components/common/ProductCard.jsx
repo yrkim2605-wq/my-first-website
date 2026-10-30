@@ -4,6 +4,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
 import { useNavigate } from 'react-router-dom'
 import useShop from '../../hooks/useShop'
+import { splitProductName } from '../../utils/productName'
 import ImagePlaceholder from './ImagePlaceholder'
 
 // 기존 사이트의 태그 종류별 색상 (그 외 태그는 기본 오렌지)
@@ -21,6 +22,10 @@ const ProductCard = ({ id, name, brand, price, originalPrice, discountRate, badg
   const isWished = wishIds.includes(id)
   const isQuoteOnly = price === null
   const product = { id, name, brand, price, image }
+  // 원본 상품명의 " ," 때문에 줄이 쉼표로 시작하지 않도록 화면에서만 붙여서 표시 (데이터는 그대로)
+  const displayName = name.replace(/ ,/g, '\u00A0,')
+  const nameSegments = splitProductName(displayName)
+  const highlights = nameSegments.filter((segment) => segment.isHighlight)
 
   // 가격문의 상품: 견적 목록에 담고, 바로 견적서로 갈 수 있게 알림에 버튼을 붙임
   const handleAddToQuote = () => {
@@ -101,23 +106,71 @@ const ProductCard = ({ id, name, brand, price, originalPrice, discountRate, badg
         <ImagePlaceholder label="상품 이미지" sx={{ aspectRatio: '1 / 1' }} />
       )}
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, p: 2 }}>
-        {/* 상품명은 최대 2줄, 항상 2줄 높이를 차지해서 카드 높이가 같아짐 */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, p: { xs: 1.5, sm: 2 } }}>
+        {/* 브랜드(작게) + 상품명(최대 2줄). 항상 2줄 높이를 차지해서 가격·버튼 위치가 모든 카드에서 같음.
+            산업용 공구는 모델명·규격이 중요해서 굵게 강조하고, 길어서 잘려도 title로 전체 이름을 볼 수 있음 */}
+        {brand && (
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, lineHeight: 1.4, mb: 0.25 }}>
+            {brand}
+          </Typography>
+        )}
         <Typography
-          variant="body2"
+          component="h3"
+          title={name}
           sx={{
-            mb: 0.5,
-            fontSize: { xs: '0.875rem', lg: '0.9375rem' },
-            lineHeight: 1.5,
-            height: '3em',
+            mb: 0.75,
+            fontSize: { xs: '0.9375rem', lg: '1.0625rem' },
+            fontWeight: 500,
+            lineHeight: 1.45,
+            height: '2.9em',
             overflow: 'hidden',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
+            wordBreak: 'keep-all',
           }}
         >
-          {name}
+          {nameSegments.map((segment, index) =>
+            segment.isHighlight ? (
+              <Box
+                key={index}
+                component="span"
+                sx={{ fontWeight: 700, color: '#111', bgcolor: '#F1F2F4', px: 0.5, borderRadius: 0.5, boxDecorationBreak: 'clone' }}
+              >
+                {segment.text}
+              </Box>
+            ) : (
+              segment.text
+            ),
+          )}
         </Typography>
+        {/* 좁은 화면(2열)에서는 이름이 2줄에서 잘릴 수 있어서 모델명·규격을 한 줄로 따로 보여줌 (스크린리더는 이름에서 읽으므로 숨김) */}
+        <Box
+          aria-hidden
+          sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 0.5, height: 22, mb: 0.75, overflow: 'hidden' }}
+        >
+          {highlights.map((segment) => (
+            <Box
+              key={segment.text}
+              component="span"
+              sx={{
+                maxWidth: '100%',
+                px: 0.75,
+                bgcolor: '#F1F2F4',
+                borderRadius: 0.5,
+                color: '#111',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                lineHeight: '20px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {segment.text}
+            </Box>
+          ))}
+        </Box>
         {/* 정가(할인 상품만): 없는 카드도 같은 높이를 차지해서 가격 위치가 통일됨 */}
         <Box sx={{ mt: 'auto', height: '1.4em', display: 'flex', alignItems: 'center', gap: 0.75 }}>
           {originalPrice && (
@@ -135,8 +188,8 @@ const ProductCard = ({ id, name, brand, price, originalPrice, discountRate, badg
           )}
         </Box>
         {/* 가격과 장바구니 버튼은 카드 맨 아래에 고정 */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography sx={{ color: 'primary.main', fontWeight: 700 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 36 }}>
+          <Typography sx={{ color: 'primary.main', fontWeight: 700, fontSize: { xs: '0.9375rem', lg: '1.0625rem' }, whiteSpace: 'nowrap' }}>
             {price === null ? '가격문의' : `₩ ${price.toLocaleString()}`}
           </Typography>
           {isQuoteOnly ? (

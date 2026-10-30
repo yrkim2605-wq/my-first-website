@@ -75,16 +75,24 @@ export const NAV_RIGHT_MENUS = [
   { id: 'order-track', label: '주문/배송조회', action: { type: 'soon' } },
 ]
 
+// 기존 덕명눈솔 쇼핑몰(mitutoyosquare.com) 메인의 카테고리 이미지 띠 8개: 이름과 순서를 그대로 따름 (2026-10-30 확인)
+// listId = 기존 쇼핑몰의 분류 번호 (https://mitutoyosquare.com/shop/list-{listId}). 80번(정밀센서 측정)은 띠에 없어서 건너뜀
 export const CATEGORIES = [
-  { id: 'equipment', name: '측정장비', image: equipment },
-  { id: 'optical', name: '광학측정', image: optical },
-  { id: 'caliper', name: '캘리퍼스측정', image: caliper },
-  { id: 'micrometer', name: '외측마이크로미터', image: micrometer },
-  { id: 'indicator', name: '인디케이터측정', image: indicator },
-  { id: 'bore', name: '내측/보어측정', image: bore },
-  { id: 'height', name: '높이/깊이측정', image: height },
-  { id: 'reference', name: '기준/규범측정', image: reference },
+  { id: 'equipment', name: '측정장비', listId: '10', image: equipment },
+  { id: 'optical', name: '광학측정', listId: '20', image: optical },
+  { id: 'caliper', name: '캘리퍼스측정', listId: '30', image: caliper },
+  { id: 'micrometer', name: '외측마이크로미터', listId: '40', image: micrometer },
+  { id: 'indicator', name: '인디게이터측정', listId: '50', image: indicator },
+  { id: 'bore', name: '내측/보어측정', listId: '60', image: bore },
+  { id: 'height', name: '높이/깊이측정', listId: '70', image: height },
+  { id: 'reference', name: '기준/규범측정', listId: '90', image: reference },
 ]
+
+// 카드에는 없지만 기존 쇼핑몰에 있는 분류: 인터페이스 유닛, EJ 카운터가 여기에 속함
+// (카드 8개에는 넣지 않고, 상품 정보·검색에서 이름만 보여줌)
+export const SENSOR_CATEGORY = { id: 'sensor', name: '정밀센서측정', listId: '80' }
+
+export const getOriginalListUrl = (listId) => `https://mitutoyosquare.com/shop/list-${listId}`
 
 export const PRODUCT_TABS = ['인기상품', '신상품', '특가상품']
 
@@ -180,7 +188,7 @@ export const PRODUCTS = {
       originalPrice: 959400,
       discountRate: 7,
       image: productInterface,
-      category: 'equipment',
+      category: 'sensor',
     },
     {
       id: 10,
@@ -191,7 +199,7 @@ export const PRODUCTS = {
       originalPrice: 587100,
       discountRate: 7,
       image: productCounter,
-      category: 'equipment',
+      category: 'sensor',
     },
   ],
 }
