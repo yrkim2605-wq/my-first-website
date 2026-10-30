@@ -223,7 +223,12 @@ export const COMPANY_INFO = {
   accountHolder: '(주)덕명눈솔',
 }
 
-export const FOOTER_LINKS = ['회사소개', '서비스이용약관', '개인정보처리방침', '마이페이지']
+export const FOOTER_LINKS = [
+  { id: 'about', label: '회사소개', action: { type: 'scroll', target: 'company' } },
+  { id: 'terms', label: '서비스이용약관', action: { type: 'soon' } },
+  { id: 'privacy', label: '개인정보처리방침', action: { type: 'soon' } },
+  { id: 'mypage', label: '마이페이지', action: { type: 'soon' } },
+]
 
 export const COMPANY_INTRO = {
   name: '(주)덕명눈솔',

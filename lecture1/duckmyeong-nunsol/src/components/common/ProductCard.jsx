@@ -2,7 +2,7 @@ import { Box, Button, Card, IconButton, Typography } from '@mui/material'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
-import { useShop } from '../../context/ShopContext'
+import useShop from '../../hooks/useShop'
 import ImagePlaceholder from './ImagePlaceholder'
 
 // 기존 사이트의 태그 종류별 색상 (그 외 태그는 기본 오렌지)
@@ -83,6 +83,8 @@ const ProductCard = ({ id, name, brand, price, originalPrice, discountRate, badg
           <Box
             component="img"
             src={image}
+            loading="lazy"
+            decoding="async"
             alt={name}
             sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
           />

@@ -7,3 +7,22 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* 키보드로 이동할 때만 보이는 포커스 표시 (마우스 클릭에는 나타나지 않음) */
+:focus-visible {
+  outline: 2px solid #f26a1b;
+  outline-offset: 2px;
+}
+
+/* 운영체제에서 "동작 줄이기"를 켠 사용자에게는 부드러운 스크롤·전환을 끔 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

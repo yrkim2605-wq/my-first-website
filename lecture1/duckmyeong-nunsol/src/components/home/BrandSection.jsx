@@ -3,12 +3,12 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { BRANDS } from '../../constants/siteData'
 
 // 로고 이미지가 없는 브랜드는 텍스트로 표시 (brand.logoImage가 있으면 이미지 사용)
-const BrandSection = () => {
+const BrandSection = ({ onSelectBrand, onShowAll }) => {
   return (
     <Container maxWidth="lg" sx={{ pb: { xs: 5, md: 6 } }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <Typography variant="h2">브랜드 바로가기</Typography>
-        <Button color="inherit" size="small" endIcon={<ArrowForwardIcon />} sx={{ ml: 'auto' }}>
+        <Button color="inherit" size="small" endIcon={<ArrowForwardIcon />} onClick={onShowAll} sx={{ ml: 'auto' }}>
           전체 브랜드 보기
         </Button>
       </Box>
@@ -23,6 +23,8 @@ const BrandSection = () => {
           <ButtonBase
             key={brand.id}
             focusRipple
+            onClick={() => onSelectBrand(brand.logo)}
+            aria-label={`${brand.name} 상품 보기`}
             sx={{
               display: 'flex',
               flexDirection: 'column',
@@ -55,6 +57,7 @@ const BrandSection = () => {
               {brand.logoImage ? (
                 <Box
                   component="img"
+                  loading="lazy"
                   src={brand.logoImage}
                   alt={brand.logo}
                   // 흰 배경이 호버 색 위에서 네모로 보이지 않게 multiply로 섞음

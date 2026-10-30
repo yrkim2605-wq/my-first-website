@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material'
-import { useShop } from '../../context/ShopContext'
+import useShop from '../../hooks/useShop'
 
 const INITIAL_FORM = { company: '', name: '', phone: '', quantity: '1', memo: '' }
 

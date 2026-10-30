@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
-import { useShop } from '../../context/ShopContext'
+import useShop from '../../hooks/useShop'
 
 const CartDrawer = ({ open, onClose }) => {
   const { cartItems, cartCount, cartTotal, changeQuantity, removeFromCart, clearCart, notify } = useShop()

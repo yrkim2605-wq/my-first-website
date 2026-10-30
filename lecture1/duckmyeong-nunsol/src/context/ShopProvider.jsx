@@ -1,13 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Snackbar } from '@mui/material'
 import CartDrawer from '../components/shop/CartDrawer'
 import QuoteDialog from '../components/shop/QuoteDialog'
+import { ShopContext } from './shopContext'
 
 const CART_KEY = 'dmns-cart'
 const WISH_KEY = 'dmns-wishlist'
 const MAX_QUANTITY = 99
-
-const ShopContext = createContext(null)
 
 // localStorage가 막힌 환경(시크릿 모드 등)에서도 사이트가 멈추지 않도록 감싸서 읽고 씀
 const readStorage = (key, fallback) => {
@@ -117,11 +116,4 @@ export const ShopProvider = ({ children }) => {
       </Snackbar>
     </ShopContext.Provider>
   )
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useShop = () => {
-  const context = useContext(ShopContext)
-  if (!context) throw new Error('useShop은 ShopProvider 안에서만 쓸 수 있어요')
-  return context
 }

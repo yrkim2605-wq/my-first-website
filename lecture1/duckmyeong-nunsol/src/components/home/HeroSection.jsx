@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Box, Container, IconButton, Typography } from '@mui/material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
@@ -7,6 +7,10 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { HERO_OBJECT_POSITIONS, HERO_SLIDES } from '../../constants/siteData'
 
 const AUTO_PLAY_INTERVAL = 5000
+const SWIPE_MIN_DISTANCE = 50
+
+// 운영체제에서 "동작 줄이기"를 켠 사용자는 자동 재생 없이 시작
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const formatNumber = (number) => String(number).padStart(2, '0')
 
@@ -19,7 +23,9 @@ const controlButtonSx = {
 
 const HeroSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(() => !prefersReducedMotion())
+  const [isInteracting, setIsInteracting] = useState(false)
+  const touchStartX = useRef(null)
   const slideCount = HERO_SLIDES.length
 
   const handlePrev = () => {
@@ -34,14 +40,31 @@ const HeroSection = () => {
     setIsPlaying((prev) => !prev)
   }
 
-  // 자동 재생: 5초마다 다음 슬라이드로 (재생 중일 때만)
+  // 마우스를 올리거나 키보드 포커스가 있는 동안에는 넘어가지 않음 (읽는 중에 바뀌면 불편해서)
+  const handleInteractStart = () => setIsInteracting(true)
+  const handleInteractEnd = () => setIsInteracting(false)
+
+  // 터치: 좌우로 밀면 이전/다음 슬라이드
+  const handleTouchStart = (event) => {
+    touchStartX.current = event.touches[0].clientX
+  }
+
+  const handleTouchEnd = (event) => {
+    if (touchStartX.current === null) return
+    const distance = event.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+    if (distance > SWIPE_MIN_DISTANCE) handlePrev()
+    else if (distance < -SWIPE_MIN_DISTANCE) handleNext()
+  }
+
+  // 자동 재생: 5초마다 다음 슬라이드로 (재생 중이고 사용자가 만지고 있지 않을 때만)
   useEffect(() => {
-    if (!isPlaying) return undefined
+    if (!isPlaying || isInteracting) return undefined
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slideCount)
     }, AUTO_PLAY_INTERVAL)
     return () => clearInterval(timer)
-  }, [isPlaying, slideCount, currentIndex])
+  }, [isPlaying, isInteracting, slideCount, currentIndex])
 
   return (
     <Container maxWidth="lg">
@@ -50,6 +73,15 @@ const HeroSection = () => {
           데스크톱: 배너 전체가 첫 화면에 보이도록 높이를 화면 높이에 맞춰 600~640px로 조절하고,
           이미지는 위아래만 조금 잘림(좌우는 그대로). 폭이 좁아 원본 비율보다 낮아질 때는 원본 높이까지만 */}
       <Box
+        component="section"
+        aria-roledescription="carousel"
+        aria-label="메인 배너"
+        onMouseEnter={handleInteractStart}
+        onMouseLeave={handleInteractEnd}
+        onFocus={handleInteractStart}
+        onBlur={handleInteractEnd}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         sx={{
           position: 'relative',
           width: '100%',
@@ -65,6 +97,8 @@ const HeroSection = () => {
       >
         {/* 슬라이드 트랙: 가로로 이어 붙이고 translateX로 이동 */}
         <Box
+          // 자동 재생 중에는 바뀔 때마다 읽어 주지 않고, 멈춘 상태에서 직접 넘길 때만 알려 줌
+          aria-live={isPlaying ? 'off' : 'polite'}
           sx={{
             display: 'flex',
             height: '100%',
@@ -78,6 +112,11 @@ const HeroSection = () => {
               component="img"
               src={slide}
               alt={`덕명눈솔 메인 배너 ${index + 1}`}
+              // 화면 밖 슬라이드는 스크린리더가 읽지 않고, 처음 두 장 말고는 나중에 불러옴
+              aria-hidden={index !== currentIndex}
+              loading={index <= 1 ? 'eager' : 'lazy'}
+              decoding="async"
+              draggable={false}
               sx={{
                 flex: '0 0 100%',
                 display: 'block',

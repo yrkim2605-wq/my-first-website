@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useShop } from '../context/ShopContext'
+import useShop from '../hooks/useShop'
 import { COMPANY_INFO } from '../constants/siteData'
 
 // 메뉴 항목의 action을 실제 동작으로 바꿔 줌 (데스크톱 메뉴와 모바일 메뉴가 같이 사용)

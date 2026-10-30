@@ -24,7 +24,7 @@ import { CATEGORIES, NAV_MENUS, NAV_RIGHT_MENUS } from '../../constants/siteData
 import useNavAction from '../../hooks/useNavAction'
 import MobileMenu from './MobileMenu'
 import NavDropdown from './NavDropdown'
-import { useShop } from '../../context/ShopContext'
+import useShop from '../../hooks/useShop'
 import { getCategoryName, getSuggestions } from '../../utils/productSearch'
 
 // 검색창: 입력하면 상품 제안이 뜨고, 엔터·제안 선택·돋보기 클릭으로 검색

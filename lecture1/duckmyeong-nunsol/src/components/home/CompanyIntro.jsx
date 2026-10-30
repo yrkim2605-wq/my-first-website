@@ -13,7 +13,7 @@ const TRUST_POINTS = [
 // 회사 소개: 왼쪽 검정 패널(핵심 수치) + 오른쪽 소개글, 하단에 사업자 정보
 const CompanyIntro = () => {
   return (
-    <Container maxWidth="lg" sx={{ pb: { xs: 5, md: 6 } }}>
+    <Container id="company" maxWidth="lg" sx={{ pb: { xs: 5, md: 6 }, scrollMarginTop: 16 }}>
       <Paper
         variant="outlined"
         sx={{

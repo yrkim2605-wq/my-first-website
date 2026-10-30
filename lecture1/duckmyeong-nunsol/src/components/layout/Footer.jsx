@@ -1,7 +1,8 @@
-import { Box, Container, Typography } from '@mui/material'
+import { Box, Container, Link, Typography } from '@mui/material'
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import { COMPANY_INFO, FOOTER_LINKS, NOTICES } from '../../constants/siteData'
+import useNavAction from '../../hooks/useNavAction'
 import SocialLinks from './SocialLinks'
 import logo from '../../assets/logo.png'
 
@@ -31,15 +32,26 @@ const BlockTitle = ({ children }) => (
 
 // 기존 덕명눈솔 사이트의 푸터 구조: 링크 / 전화·상담시간·SNS / 회사 정보·입금계좌·공지사항
 const Footer = () => {
+  const handleNavAction = useNavAction()
+
   return (
     <Box component="footer" sx={{ bgcolor: '#F5F6F8', pt: 4, pb: 5 }}>
       <Container maxWidth="lg">
         {/* 1줄: 링크 */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1.5, md: 3 }, mb: 2.5 }}>
           {FOOTER_LINKS.map((link) => (
-            <Typography key={link} variant="body2" sx={{ fontWeight: 500, cursor: 'pointer' }}>
-              {link}
-            </Typography>
+            <Link
+              key={link.id}
+              component="button"
+              type="button"
+              variant="body2"
+              color="inherit"
+              underline="hover"
+              onClick={() => handleNavAction(link)}
+              sx={{ fontWeight: 500 }}
+            >
+              {link.label}
+            </Link>
           ))}
         </Box>
 
