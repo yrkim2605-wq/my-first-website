@@ -41,9 +41,39 @@ export const HERO_OBJECT_POSITIONS = {
   [hero2]: 'center 60%', // MiSTAR 555: 아래 기능 알약이 덜 잘리도록 위쪽을 더 자름
 }
 
-export const NAV_MENUS = ['온라인견적', '카탈로그', '의뢰/요청', '고객센터', '기술자료']
+// 메뉴 항목의 action 종류
+// quote: 견적·상담 요청 창 열기(title이 요청 항목 이름) / scroll: 해당 id 위치로 이동 / tel: 전화 연결 / soon: 준비 중 안내
+// children이 있으면 마우스를 올리거나 눌렀을 때 하위 메뉴가 펼쳐짐
+export const NAV_MENUS = [
+  { id: 'quote', label: '온라인견적', action: { type: 'quote', title: '온라인 견적' } },
+  { id: 'catalog', label: '카탈로그', action: { type: 'soon' } },
+  {
+    id: 'request',
+    label: '의뢰/요청',
+    children: [
+      { id: 'request-quote', label: '견적 의뢰', action: { type: 'quote', title: '견적 의뢰' } },
+      { id: 'request-service', label: 'AS/교육', action: { type: 'quote', title: 'AS/교육 요청' } },
+      { id: 'request-calibration', label: '검교정', action: { type: 'quote', title: '검교정 의뢰' } },
+      { id: 'request-sample', label: '샘플측정', action: { type: 'quote', title: '샘플측정 의뢰' } },
+      { id: 'request-demo', label: '데모 신청', action: { type: 'quote', title: '제품 데모 신청' } },
+    ],
+  },
+  {
+    id: 'support',
+    label: '고객센터',
+    children: [
+      { id: 'support-inquiry', label: '1:1 문의', action: { type: 'quote', title: '1:1 문의' } },
+      { id: 'support-notice', label: '공지사항', action: { type: 'scroll', target: 'notices' } },
+      { id: 'support-tel', label: '전화 상담 1644-9879', action: { type: 'tel' } },
+    ],
+  },
+  { id: 'docs', label: '기술자료', action: { type: 'soon' } },
+]
 
-export const NAV_RIGHT_MENUS = ['개인결제', '주문/배송조회']
+export const NAV_RIGHT_MENUS = [
+  { id: 'personal-pay', label: '개인결제', action: { type: 'soon' } },
+  { id: 'order-track', label: '주문/배송조회', action: { type: 'soon' } },
+]
 
 export const CATEGORIES = [
   { id: 'equipment', name: '측정장비', image: equipment },

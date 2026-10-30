@@ -118,7 +118,7 @@ const Footer = () => {
             </Typography>
           </Box>
 
-          <Box>
+          <Box id="notices" sx={{ scrollMarginTop: 80 }}>
             <BlockTitle>공지사항</BlockTitle>
             {NOTICES.map((notice) => (
               <Box key={notice.id} sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, py: 0.25 }}>

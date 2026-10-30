@@ -42,7 +42,7 @@ const QuoteDialog = ({ product, onClose }) => {
     event.preventDefault()
     setIsTouched(true)
     if (hasError) return
-    notify('견적 요청이 접수되었어요. 영업일 기준 1일 이내에 연락드릴게요.')
+    notify('요청이 접수되었어요. 영업일 기준 1일 이내에 연락드릴게요.')
     handleClose()
   }
 
@@ -59,11 +59,11 @@ const QuoteDialog = ({ product, onClose }) => {
   return (
     <Dialog open={Boolean(product)} onClose={handleClose} fullWidth maxWidth="xs">
       <Box component="form" onSubmit={handleSubmit} noValidate>
-        <DialogTitle sx={{ fontWeight: 700 }}>견적 요청</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>견적·상담 요청</DialogTitle>
         <DialogContent>
           <Box sx={{ p: 1.5, mb: 2.5, bgcolor: '#F7F7F8', borderRadius: 1 }}>
             <Typography variant="caption" color="text.secondary">
-              요청 상품
+              요청 항목
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 500, wordBreak: 'keep-all' }}>
               {product?.name}
@@ -92,7 +92,7 @@ const QuoteDialog = ({ product, onClose }) => {
             취소
           </Button>
           <Button type="submit" variant="contained">
-            견적 요청하기
+            요청하기
           </Button>
         </DialogActions>
       </Box>

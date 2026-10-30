@@ -18,6 +18,12 @@ const useProductFilter = () => {
     scrollToProducts()
   }, [])
 
+  // 메뉴에서 고를 때: 이미 선택된 분류를 다시 골라도 해제되지 않음
+  const selectCategory = useCallback((categoryId) => {
+    setFilter((prev) => ({ ...prev, categoryId, isShowAll: false }))
+    scrollToProducts()
+  }, [])
+
   const toggleCategory = useCallback((categoryId) => {
     setFilter((prev) => ({ ...prev, categoryId: prev.categoryId === categoryId ? null : categoryId, isShowAll: false }))
     scrollToProducts()
@@ -31,7 +37,7 @@ const useProductFilter = () => {
 
   const isFiltering = Boolean(filter.query || filter.categoryId || filter.isShowAll)
 
-  return { filter, isFiltering, search, toggleCategory, showAll, clear }
+  return { filter, isFiltering, search, selectCategory, toggleCategory, showAll, clear }
 }
 
 export default useProductFilter

@@ -9,11 +9,11 @@ import CompanyIntro from './components/home/CompanyIntro'
 import useProductFilter from './hooks/useProductFilter'
 
 const App = () => {
-  const { filter, isFiltering, search, toggleCategory, showAll, clear } = useProductFilter()
+  const { filter, isFiltering, search, selectCategory, toggleCategory, showAll, clear } = useProductFilter()
 
   return (
     <>
-      <Header query={filter.query} onSearch={search} />
+      <Header query={filter.query} onSearch={search} onSelectCategory={selectCategory} />
       <main>
         <CategoryCards selectedId={filter.categoryId} onSelect={toggleCategory} />
         <HeroSection />

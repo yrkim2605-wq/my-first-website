@@ -5,13 +5,12 @@ import {
   Badge,
   Box,
   Button,
+  ButtonBase,
   Container,
-  Drawer,
   IconButton,
   InputBase,
-  List,
-  ListItemButton,
-  ListItemText,
+  MenuItem,
+  MenuList,
   Typography,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
@@ -21,11 +20,16 @@ import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined'
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
 import logo from '../../assets/logo.png'
-import { NAV_MENUS, NAV_RIGHT_MENUS } from '../../constants/siteData'
+import { CATEGORIES, NAV_MENUS, NAV_RIGHT_MENUS } from '../../constants/siteData'
+import useNavAction from '../../hooks/useNavAction'
+import MobileMenu from './MobileMenu'
+import NavDropdown from './NavDropdown'
 import { useShop } from '../../context/ShopContext'
 import { getCategoryName, getSuggestions } from '../../utils/productSearch'
 
 // 검색창: 입력하면 상품 제안이 뜨고, 엔터·제안 선택·돋보기 클릭으로 검색
+const NAV_BUTTON_SX = { px: 0, minWidth: 0, fontWeight: 500, height: '100%', borderRadius: 0 }
+
 const SearchBox = ({ query, onSearch, sx }) => {
   const [input, setInput] = useState(query)
   const [prevQuery, setPrevQuery] = useState(query)
@@ -118,9 +122,10 @@ const SearchBox = ({ query, onSearch, sx }) => {
   )
 }
 
-const Header = ({ query, onSearch }) => {
+const Header = ({ query, onSearch, onSelectCategory }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const { cartCount, openCart } = useShop()
+  const handleNavAction = useNavAction()
 
   const handleDrawerToggle = () => {
     setIsDrawerOpen((prev) => !prev)
@@ -172,6 +177,7 @@ const Header = ({ query, onSearch }) => {
               startIcon={<PersonOutlinedIcon sx={{ color: 'primary.main' }} />}
               color="inherit"
               size="small"
+              onClick={() => handleNavAction({ id: 'login', action: { type: 'soon' } })}
               sx={{ display: { xs: 'none', md: 'inline-flex' } }}
             >
               로그인
@@ -180,6 +186,7 @@ const Header = ({ query, onSearch }) => {
               startIcon={<PersonAddAltOutlinedIcon sx={{ color: 'primary.main' }} />}
               color="inherit"
               size="small"
+              onClick={() => handleNavAction({ id: 'signup', action: { type: 'soon' } })}
               sx={{ display: { xs: 'none', md: 'inline-flex' } }}
             >
               회원가입
@@ -215,42 +222,83 @@ const Header = ({ query, onSearch }) => {
       {/* 2단: 검정 메뉴 바 */}
       <Box sx={{ display: { xs: 'none', md: 'block' }, bgcolor: '#111', color: '#fff' }}>
         <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', alignItems: 'center', height: 48, gap: 4 }}>
-            <Button
-              color="inherit"
+          <Box component="nav" aria-label="주 메뉴" sx={{ display: 'flex', alignItems: 'center', height: 48, gap: 4 }}>
+            <NavDropdown
+              label="전체 카테고리"
               startIcon={<MenuIcon sx={{ color: 'primary.main' }} />}
-              sx={{ fontWeight: 700, px: 0 }}
+              buttonSx={{ fontWeight: 700 }}
+              panelSx={{ width: 640, p: 2 }}
             >
-              전체 카테고리
-            </Button>
-            {NAV_MENUS.map((menu) => (
-              <Typography key={menu} variant="body2" sx={{ cursor: 'pointer', fontWeight: 500 }}>
-                {menu}
-              </Typography>
-            ))}
-            <Box sx={{ ml: 'auto', display: 'flex', gap: 3 }}>
+              {(close) => (
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
+                  {CATEGORIES.map((category) => (
+                    <ButtonBase
+                      key={category.id}
+                      onClick={() => {
+                        close()
+                        onSelectCategory(category.id)
+                      }}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.5,
+                        p: 1,
+                        borderRadius: 1,
+                        fontSize: '0.8125rem',
+                        '&:hover, &:focus-visible': { bgcolor: '#FFF4ED', color: 'primary.dark' },
+                      }}
+                    >
+                      <Box component="img" src={category.image} alt="" sx={{ width: 48, height: 48, objectFit: 'contain', mixBlendMode: 'multiply' }} />
+                      {category.name}
+                    </ButtonBase>
+                  ))}
+                </Box>
+              )}
+            </NavDropdown>
+
+            {NAV_MENUS.map((menu) =>
+              menu.children ? (
+                <NavDropdown key={menu.id} label={menu.label}>
+                  {(close) => (
+                    <MenuList>
+                      {menu.children.map((child) => (
+                        <MenuItem
+                          key={child.id}
+                          onClick={() => {
+                            close()
+                            handleNavAction(child)
+                          }}
+                        >
+                          {child.label}
+                        </MenuItem>
+                      ))}
+                    </MenuList>
+                  )}
+                </NavDropdown>
+              ) : (
+                <Button key={menu.id} color="inherit" onClick={() => handleNavAction(menu)} sx={NAV_BUTTON_SX}>
+                  {menu.label}
+                </Button>
+              ),
+            )}
+
+            <Box sx={{ ml: 'auto', display: 'flex', gap: 3, height: '100%' }}>
               {NAV_RIGHT_MENUS.map((menu) => (
-                <Typography key={menu} variant="body2" sx={{ cursor: 'pointer', fontWeight: 500 }}>
-                  {menu}
-                </Typography>
+                <Button key={menu.id} color="inherit" onClick={() => handleNavAction(menu)} sx={NAV_BUTTON_SX}>
+                  {menu.label}
+                </Button>
               ))}
             </Box>
           </Box>
         </Container>
       </Box>
 
-      <Drawer anchor="left" open={isDrawerOpen} onClose={handleDrawerToggle}>
-        <List sx={{ width: 240 }}>
-          <ListItemButton onClick={handleDrawerToggle}>
-            <ListItemText primary="전체 카테고리" slotProps={{ primary: { fontWeight: 700 } }} />
-          </ListItemButton>
-          {[...NAV_MENUS, ...NAV_RIGHT_MENUS].map((menu) => (
-            <ListItemButton key={menu} onClick={handleDrawerToggle}>
-              <ListItemText primary={menu} />
-            </ListItemButton>
-          ))}
-        </List>
-      </Drawer>
+      <MobileMenu
+        open={isDrawerOpen}
+        onClose={handleDrawerToggle}
+        onSelectCategory={onSelectCategory}
+        onSelectItem={handleNavAction}
+      />
     </AppBar>
   )
 }
