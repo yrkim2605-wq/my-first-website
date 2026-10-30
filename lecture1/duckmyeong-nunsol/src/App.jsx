@@ -49,7 +49,7 @@ const App = () => {
       >
         본문 바로가기
       </Box>
-      <Header query={filter.query} onSearch={search} onSelectCategory={selectCategory} />
+      <Header query={filter.query} onSearch={search} onSelectCategory={selectCategory} onHome={clear} />
       <main id="main" tabIndex={-1} style={{ outline: 'none' }}>
         <Routes>
           <Route

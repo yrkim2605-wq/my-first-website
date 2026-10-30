@@ -19,6 +19,7 @@ import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined'
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
+import { Link as RouterLink } from 'react-router-dom'
 import logo from '../../assets/logo.png'
 import { CATEGORIES, NAV_MENUS, NAV_RIGHT_MENUS } from '../../constants/siteData'
 import useNavAction from '../../hooks/useNavAction'
@@ -122,10 +123,15 @@ const SearchBox = ({ query, onSearch, sx }) => {
   )
 }
 
-const Header = ({ query, onSearch, onSelectCategory }) => {
+const Header = ({ query, onSearch, onSelectCategory, onHome }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const { cartCount, openCart } = useShop()
   const handleNavAction = useNavAction()
+
+  const handleLogoClick = () => {
+    onHome()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const handleDrawerToggle = () => {
     setIsDrawerOpen((prev) => !prev)
@@ -139,7 +145,16 @@ const Header = ({ query, onSearch, onSelectCategory }) => {
           <IconButton onClick={handleDrawerToggle} sx={{ display: { md: 'none' } }} aria-label="메뉴 열기">
             <MenuIcon />
           </IconButton>
-          <Box component="img" src={logo} alt="DMNS 덕명눈솔" sx={{ height: { xs: 28, md: 38 } }} />
+          {/* 로고 = 홈으로 가는 링크 (이미 홈이면 필터를 풀고 맨 위로) */}
+          <Box
+            component={RouterLink}
+            to="/"
+            onClick={handleLogoClick}
+            aria-label="덕명눈솔 홈으로 이동"
+            sx={{ display: 'flex', flexShrink: 0 }}
+          >
+            <Box component="img" src={logo} alt="DMNS 덕명눈솔" sx={{ display: 'block', height: { xs: 28, md: 38 } }} />
+          </Box>
 
           <SearchBox query={query} onSearch={onSearch} sx={{ display: { xs: 'none', md: 'flex' }, maxWidth: 560 }} />
 

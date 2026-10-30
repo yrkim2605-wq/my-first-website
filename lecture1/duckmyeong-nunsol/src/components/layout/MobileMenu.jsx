@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
+import { Link as RouterLink } from 'react-router-dom'
 import logo from '../../assets/logo.png'
 import { CATEGORIES, COMPANY_INFO, NAV_MENUS, NAV_RIGHT_MENUS } from '../../constants/siteData'
 
@@ -56,7 +57,9 @@ const MobileMenu = ({ open, onClose, onSelectCategory, onSelectItem }) => {
       slotProps={{ paper: { sx: { width: 'min(300px, 85vw)' } } }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, height: 56, flexShrink: 0 }}>
-        <Box component="img" src={logo} alt="DMNS 덕명눈솔" sx={{ height: 26 }} />
+        <Box component={RouterLink} to="/" onClick={onClose} aria-label="덕명눈솔 홈으로 이동" sx={{ display: 'flex' }}>
+          <Box component="img" src={logo} alt="DMNS 덕명눈솔" sx={{ display: 'block', height: 26 }} />
+        </Box>
         <IconButton aria-label="메뉴 닫기" onClick={onClose}>
           <CloseIcon />
         </IconButton>
