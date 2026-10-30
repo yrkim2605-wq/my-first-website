@@ -1,6 +1,8 @@
-import { Box, Card, IconButton, Typography } from '@mui/material'
+import { Box, Button, Card, IconButton, Typography } from '@mui/material'
+import FavoriteIcon from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
+import { useShop } from '../../context/ShopContext'
 import ImagePlaceholder from './ImagePlaceholder'
 
 // 기존 사이트의 태그 종류별 색상 (그 외 태그는 기본 오렌지)
@@ -12,7 +14,12 @@ const BADGE_COLORS = {
 }
 
 // image가 없으면 회색 플레이스홀더를 보여줌 / badges는 ['히트', '추천', 'NEW'] 처럼 여러 개 가능
-const ProductCard = ({ name, price, originalPrice, discountRate, badges = [], image }) => {
+const ProductCard = ({ id, name, brand, price, originalPrice, discountRate, badges = [], image }) => {
+  const { wishIds, toggleWish, addToCart, openQuote } = useShop()
+  const isWished = wishIds.includes(id)
+  const isQuoteOnly = price === null
+  const product = { id, name, brand, price, image }
+
   return (
     <Card
       variant="outlined"
@@ -60,8 +67,13 @@ const ProductCard = ({ name, price, originalPrice, discountRate, badges = [], im
             </Box>
           ))}
         </Box>
-        <IconButton aria-label="찜" size="small">
-          <FavoriteBorderIcon fontSize="small" />
+        <IconButton
+          aria-label={isWished ? `${name} 찜 해제` : `${name} 찜하기`}
+          aria-pressed={isWished}
+          size="small"
+          onClick={() => toggleWish(product)}
+        >
+          {isWished ? <FavoriteIcon fontSize="small" color="primary" /> : <FavoriteBorderIcon fontSize="small" />}
         </IconButton>
       </Box>
 
@@ -117,13 +129,21 @@ const ProductCard = ({ name, price, originalPrice, discountRate, badges = [], im
           <Typography sx={{ color: 'primary.main', fontWeight: 700 }}>
             {price === null ? '가격문의' : `₩ ${price.toLocaleString()}`}
           </Typography>
-          <IconButton
-            aria-label="장바구니 담기"
-            size="small"
-            sx={{ bgcolor: 'primary.main', color: '#fff', borderRadius: 1, '&:hover': { bgcolor: 'primary.dark' } }}
-          >
-            <ShoppingCartOutlinedIcon fontSize="small" />
-          </IconButton>
+          {isQuoteOnly ? (
+            // 가격문의 상품은 장바구니 대신 견적 요청
+            <Button variant="contained" size="small" onClick={() => openQuote(product)} sx={{ py: 0.25, px: 1.5 }}>
+              견적 요청
+            </Button>
+          ) : (
+            <IconButton
+              aria-label={`${name} 장바구니 담기`}
+              size="small"
+              onClick={() => addToCart(product)}
+              sx={{ bgcolor: 'primary.main', color: '#fff', borderRadius: 1, '&:hover': { bgcolor: 'primary.dark' } }}
+            >
+              <ShoppingCartOutlinedIcon fontSize="small" />
+            </IconButton>
+          )}
         </Box>
       </Box>
     </Card>

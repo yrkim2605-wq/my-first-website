@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   AppBar,
+  Badge,
   Box,
   Button,
   Container,
@@ -20,6 +21,7 @@ import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
 import logo from '../../assets/logo.png'
 import { NAV_MENUS, NAV_RIGHT_MENUS } from '../../constants/siteData'
+import { useShop } from '../../context/ShopContext'
 
 const SearchBox = ({ sx }) => (
   <Box
@@ -54,6 +56,7 @@ const SearchBox = ({ sx }) => (
 
 const Header = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const { cartCount, openCart } = useShop()
 
   const handleDrawerToggle = () => {
     setIsDrawerOpen((prev) => !prev)
@@ -118,15 +121,23 @@ const Header = () => {
               회원가입
             </Button>
             <Button
-              startIcon={<ShoppingCartOutlinedIcon sx={{ color: 'primary.main' }} />}
+              startIcon={
+                <Badge badgeContent={cartCount} color="primary" max={99}>
+                  <ShoppingCartOutlinedIcon sx={{ color: 'primary.main' }} />
+                </Badge>
+              }
               color="inherit"
               size="small"
+              onClick={openCart}
+              aria-label={`장바구니 (${cartCount}개)`}
               sx={{ display: { xs: 'none', md: 'inline-flex' } }}
             >
               장바구니
             </Button>
-            <IconButton aria-label="장바구니" sx={{ display: { md: 'none' } }}>
-              <ShoppingCartOutlinedIcon />
+            <IconButton aria-label={`장바구니 (${cartCount}개)`} onClick={openCart} sx={{ display: { md: 'none' } }}>
+              <Badge badgeContent={cartCount} color="primary" max={99}>
+                <ShoppingCartOutlinedIcon />
+              </Badge>
             </IconButton>
           </Box>
         </Box>
