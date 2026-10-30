@@ -1,18 +1,9 @@
 import { useState } from 'react'
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material'
 import useShop from '../../hooks/useShop'
+import { formatPhone, isValidPhone } from '../../utils/formatPhone'
 
 const INITIAL_FORM = { company: '', name: '', phone: '', quantity: '1', memo: '' }
-
-// 숫자만 남기고 010-1234-5678 / 051-123-4567 / 1644-9879 형태로 보기 좋게 맞춤
-const formatPhone = (value) => {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.startsWith('02')) return digits.replace(/^(\d{2})(\d{3,4})(\d{0,4})$/, '$1-$2-$3').replace(/-$/, '')
-  if (digits.length <= 8) return digits.replace(/^(\d{4})(\d{0,4})$/, '$1-$2').replace(/-$/, '')
-  return digits.replace(/^(\d{3})(\d{3,4})(\d{0,4})$/, '$1-$2-$3').replace(/-$/, '')
-}
-
-const isValidPhone = (value) => /^\d{2,4}-\d{3,4}(-\d{4})?$/.test(value)
 
 // 가격문의 상품의 견적 요청 창 (데모: 서버로 보내지 않고 접수 안내만 보여줌)
 const QuoteDialog = ({ product, onClose }) => {

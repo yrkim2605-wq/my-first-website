@@ -1,10 +1,9 @@
 import { Box, Button, Divider, Drawer, IconButton, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
-import AddIcon from '@mui/icons-material/Add'
-import RemoveIcon from '@mui/icons-material/Remove'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
 import useShop from '../../hooks/useShop'
+import QuantityStepper from '../common/QuantityStepper'
 
 const CartDrawer = ({ open, onClose }) => {
   const { cartItems, cartCount, cartTotal, changeQuantity, removeFromCart, clearCart, notify } = useShop()
@@ -66,22 +65,11 @@ const CartDrawer = ({ open, onClose }) => {
                     </IconButton>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                      <IconButton
-                        size="small"
-                        aria-label="수량 줄이기"
-                        disabled={item.quantity <= 1}
-                        onClick={() => changeQuantity(item.id, item.quantity - 1)}
-                      >
-                        <RemoveIcon fontSize="small" />
-                      </IconButton>
-                      <Typography aria-live="polite" sx={{ minWidth: 28, textAlign: 'center', fontWeight: 700 }}>
-                        {item.quantity}
-                      </Typography>
-                      <IconButton size="small" aria-label="수량 늘리기" onClick={() => changeQuantity(item.id, item.quantity + 1)}>
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
+                    <QuantityStepper
+                      value={item.quantity}
+                      name={item.name}
+                      onChange={(quantity) => changeQuantity(item.id, quantity)}
+                    />
                     <Typography sx={{ fontWeight: 700 }}>₩ {(item.price * item.quantity).toLocaleString()}</Typography>
                   </Box>
                 </Box>

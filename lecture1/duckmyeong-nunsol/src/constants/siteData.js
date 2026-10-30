@@ -42,10 +42,10 @@ export const HERO_OBJECT_POSITIONS = {
 }
 
 // 메뉴 항목의 action 종류
-// quote: 견적·상담 요청 창 열기(title이 요청 항목 이름) / scroll: 해당 id 위치로 이동 / tel: 전화 연결 / soon: 준비 중 안내
+// quote: 견적·상담 요청 창 열기(title이 요청 항목 이름) / route: 페이지 이동 / scroll: 해당 id 위치로 이동 / tel: 전화 연결 / soon: 준비 중 안내
 // children이 있으면 마우스를 올리거나 눌렀을 때 하위 메뉴가 펼쳐짐
 export const NAV_MENUS = [
-  { id: 'quote', label: '온라인견적', action: { type: 'quote', title: '온라인 견적' } },
+  { id: 'quote', label: '온라인견적', action: { type: 'route', to: '/quote' } },
   { id: 'catalog', label: '카탈로그', action: { type: 'soon' } },
   {
     id: 'request',
@@ -214,6 +214,7 @@ export const COMPANY_INFO = {
   address: '부산 해운대구 센텀중앙로 97 3801, 3802, 3803호 (재송동, 센텀스카이비즈)',
   email: 'shop@duckmyoung.com',
   tel: '1644-9879',
+  officeTel: '051-714-0949',
   fax: '051-775-9622',
   hours: '평일 09:00 ~ 18:00',
   holiday: '일요일 및 공휴일은 휴무',
@@ -256,3 +257,6 @@ export const SOCIAL_LINKS = [
 
 // 푸터 공지사항 (기존 사이트에 올라와 있는 내용)
 export const NOTICES = [{ id: 1, title: '디지매틱 캘리퍼스 가품(유사품)주의', date: '2022-06-17' }]
+
+// 장바구니·견적 목록에서 한 상품당 담을 수 있는 최대 수량
+export const MAX_ORDER_QUANTITY = 99

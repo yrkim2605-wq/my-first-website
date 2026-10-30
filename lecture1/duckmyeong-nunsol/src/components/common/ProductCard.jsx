@@ -2,6 +2,7 @@ import { Box, Button, Card, IconButton, Typography } from '@mui/material'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
+import { useNavigate } from 'react-router-dom'
 import useShop from '../../hooks/useShop'
 import ImagePlaceholder from './ImagePlaceholder'
 
@@ -15,10 +16,17 @@ const BADGE_COLORS = {
 
 // image가 없으면 회색 플레이스홀더를 보여줌 / badges는 ['히트', '추천', 'NEW'] 처럼 여러 개 가능
 const ProductCard = ({ id, name, brand, price, originalPrice, discountRate, badges = [], image }) => {
-  const { wishIds, toggleWish, addToCart, openQuote } = useShop()
+  const { wishIds, toggleWish, addToCart, addToQuote, notify } = useShop()
+  const navigate = useNavigate()
   const isWished = wishIds.includes(id)
   const isQuoteOnly = price === null
   const product = { id, name, brand, price, image }
+
+  // 가격문의 상품: 견적 목록에 담고, 바로 견적서로 갈 수 있게 알림에 버튼을 붙임
+  const handleAddToQuote = () => {
+    addToQuote(product)
+    notify('견적 목록에 담았어요', 'success', { label: '견적서 보기', onClick: () => navigate('/quote') })
+  }
 
   return (
     <Card
@@ -133,7 +141,7 @@ const ProductCard = ({ id, name, brand, price, originalPrice, discountRate, badg
           </Typography>
           {isQuoteOnly ? (
             // 가격문의 상품은 장바구니 대신 견적 요청
-            <Button variant="contained" size="small" onClick={() => openQuote(product)} sx={{ py: 0.25, px: 1.5 }}>
+            <Button variant="contained" size="small" onClick={handleAddToQuote} sx={{ py: 0.25, px: 1.5 }}>
               견적 요청
             </Button>
           ) : (

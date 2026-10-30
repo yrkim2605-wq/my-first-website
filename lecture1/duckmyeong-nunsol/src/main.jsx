@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { HashRouter } from 'react-router-dom'
 import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import '@fontsource/noto-sans-kr/400.css'
@@ -16,9 +17,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ErrorBoundary>
-        <ShopProvider>
-          <App />
-        </ShopProvider>
+        <HashRouter>
+          <ShopProvider>
+            <App />
+          </ShopProvider>
+        </HashRouter>
       </ErrorBoundary>
     </ThemeProvider>
   </React.StrictMode>,
